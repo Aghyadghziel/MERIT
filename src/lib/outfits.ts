@@ -2,21 +2,26 @@
  * The outfit carousel's image contract.
  *
  * Every outfit is one full-frame picture of the SAME model in the SAME pose,
- * in the same light, at the same scale, on the same plain background. Only the
+ * in the same light, at the same scale, on a transparent background. Only the
  * garment differs. The carousel never moves the model: it keeps the base frame
  * on screen and crossfades the others through a mask that covers the torso and
  * arms, so a face or a trouser leg that drifted a pixel between shots is never
  * seen changing.
  *
- * To replace the placeholder figure with photography, supply one file per
- * outfit at the paths below and flip PLACEHOLDER to false. Nothing else changes.
+ * The frames are photography-style renders supplied by the client, cut out and
+ * normalised to the contract below (figure height, feet line and horizontal
+ * centre matched across files). The mask still governs what may change between
+ * frames; everything outside it is always drawn from the base.
  *
- *   public/img/outfits/base.webp        model, tee, trousers — no jacket
+ *   public/img/outfits/base.webp        model, tee, jeans — no jacket
  *   public/img/outfits/jacket-01.webp   same frame, first jacket
  *   public/img/outfits/jacket-02.webp   …
+ *   public/img/outfits/preview-*.webp   the garment alone, flat, shown beside
+ *                                       the model in the ring
  *
  * Frame:  1200 × 1800 px (2:3), portrait, model centred, feet at ~97% height,
- *         crown at ~8%. Background #F4F2ED, or transparent.
+ *         crown at ~6%. Transparent background.
+ * Preview: 900 × 900 px, garment centred, transparent background.
  * Mask:   the region that is allowed to change between frames, as fractions of
  *         the frame. Everything outside it is always drawn from the base.
  */
@@ -27,13 +32,15 @@ export const FRAME = {
 } as const;
 
 /** True while the frames are drawn placeholders rather than photographs. */
-export const PLACEHOLDER = true;
+export const PLACEHOLDER = false;
 
 export type Outfit = {
   /** Product this frame shows; name, price and sizes come from the catalogue. */
   slug: string;
   /** File under /img/outfits/, with extension. */
   file: string;
+  /** File under /img/outfits/ for the flat garment shown beside the model. */
+  preview: string;
   /** The colour depicted, which is the colour "Add to bag" adds. */
   colour: string;
   /** Meaningful alternative text for the whole outfit. */
@@ -43,33 +50,24 @@ export type Outfit = {
 export const outfits: Outfit[] = [
   {
     slug: 'baseline-tee',
-    file: 'base.svg',
-    colour: 'Bone',
-    alt: 'The model in the Baseline Tee in bone and Column trousers in stone, standing square to the camera, arms at the sides.',
+    file: 'base.webp',
+    preview: 'preview-tee.webp',
+    colour: 'Ink',
+    alt: 'The model in the Baseline Tee in ink and washed grey Column jeans, standing square to the camera, arms at the sides.',
   },
   {
-    slug: 'meridian-overcoat',
-    file: 'jacket-01.svg',
-    colour: 'Camel',
-    alt: 'The same model and pose, wearing the Meridian Overcoat in camel open over the tee. The coat reaches mid-thigh.',
+    slug: 'plane-technical-jacket',
+    file: 'jacket-01.webp',
+    preview: 'preview-technical.webp',
+    colour: 'Sand',
+    alt: 'The same model and pose, wearing the Plane Technical Jacket in sand, zipped open over the tee.',
   },
   {
-    slug: 'rule-two-button-jacket',
-    file: 'jacket-02.svg',
-    colour: 'Navy',
-    alt: 'The same model and pose, wearing the Rule Two-Button Jacket in navy, fastened, with the tee showing at the neck.',
-  },
-  {
-    slug: 'ledger-field-jacket',
-    file: 'jacket-03.svg',
-    colour: 'Olive',
-    alt: 'The same model and pose, wearing the Ledger Field Jacket in olive open over the tee, with four patch pockets.',
-  },
-  {
-    slug: 'margin-overshirt',
-    file: 'jacket-04.svg',
-    colour: 'Stone',
-    alt: 'The same model and pose, wearing the Margin Overshirt in stone, unbuttoned over the tee.',
+    slug: 'axis-leather-jacket',
+    file: 'jacket-02.webp',
+    preview: 'preview-leather.webp',
+    colour: 'Ink',
+    alt: 'The same model and pose, wearing the Axis Leather Jacket in ink, open over the tee.',
   },
 ];
 

@@ -26,10 +26,10 @@ const ringOffset = (from: number, to: number, n: number) => {
 };
 
 /**
- * One model, one pose, five garments. The base frame never moves. Each jacket
+ * One model, one pose, three garments. The base frame never moves. Each jacket
  * frame sits over it through a mask that only admits the torso and arms, so
  * a change reads as the garment changing, not the picture. Side previews are
- * the same frames, smaller and softer, and slide as the ring turns.
+ * the garments alone, flat, either side of the model, and slide as the ring turns.
  */
 export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
   const n = items.length;
@@ -69,9 +69,9 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
       const a = Math.abs(d);
       const sign = Math.sign(d);
       if (a === 0) return { x: 0, scale: 1, opacity: 0, blur: 0 };
-      if (a === 1) return { x: sign * w * (mobile ? 0.86 : 0.98), scale: mobile ? 0.5 : 0.58, opacity: 0.55, blur: 1.5 };
-      if (a === 2) return { x: sign * w * (mobile ? 1.5 : 1.62), scale: 0.42, opacity: mobile ? 0 : 0.2, blur: 3 };
-      return { x: sign * w * 2.2, scale: 0.4, opacity: 0, blur: 3 };
+      if (a === 1) return { x: sign * w * (mobile ? 0.95 : 1.05), scale: 1, opacity: 0.9, blur: 0 };
+      if (a === 2) return { x: sign * w * 1.75, scale: 0.85, opacity: mobile ? 0 : 0.35, blur: 1.5 };
+      return { x: sign * w * 2.2, scale: 0.85, opacity: 0, blur: 1.5 };
     },
     [],
   );
@@ -271,17 +271,20 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
         onPointerLeave={endDrag}
         style={{ touchAction: 'pan-y' }}
       >
-        {/* Ring of previews — the active one is invisible here; the stage shows it. */}
+        {/* Ring of previews: the garment alone, flat, either side of the model.
+            The active one is invisible here; the stage shows it worn. */}
         {items.map((it, i) => (
           <div
             key={it.slug}
             data-ring={i}
             aria-hidden
-            className="pointer-events-none absolute bottom-0 h-full will-change-transform"
-            style={{ aspectRatio: `${FRAME.width} / ${FRAME.height}`, transformOrigin: '50% 100%' }}
+            className="pointer-events-none absolute inset-y-0 flex items-center will-change-transform"
+            style={{ transformOrigin: '50% 50%' }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- fixed-frame layer, sized by the contract */}
-            <img src={`/img/outfits/${it.file}`} alt="" width={FRAME.width} height={FRAME.height} loading="lazy" decoding="async" className="h-full w-auto" />
+            <div className="aspect-square h-[34%] md:h-[40%]">
+              {/* eslint-disable-next-line @next/next/no-img-element -- flat garment preview, sized by the contract */}
+              <img src={`/img/outfits/${it.preview}`} alt="" width={900} height={900} loading="lazy" decoding="async" className="h-full w-full object-contain" />
+            </div>
           </div>
         ))}
 

@@ -42,6 +42,33 @@ export type Outfit = {
   /** Phone-sized version of `file` (800×1200), served under 768px. Optional. */
   mobile?: string;
   /**
+   * A filmed dressing transition for this garment. When present the carousel
+   * plays it instead of animating: the model physically puts the jacket on.
+   * `dressed` MUST be the video's own last frame, so the hand-off from video
+   * to still is pixel-identical; `start` is its first frame.
+   *
+   * The clip is pre-processed to the still contract by tools/outfits/video.md:
+   * the studio vignette is divided out so the backdrop is flat bone and the
+   * rectangle is invisible, and the crop is aligned on the model's head axis
+   * so he does not move between still, video and still.
+   */
+  video?: {
+    mp4: string;
+    webm?: string;
+    /** Phone-sized mp4, served under 768px. */
+    mobile?: string;
+    /** Taking it off again — the same clip reversed. */
+    reverseMp4?: string;
+    reverseMobile?: string;
+    /** Full-figure still matching the last video frame exactly. */
+    dressed: string;
+    dressedMobile?: string;
+    /** Full-figure still matching the first video frame. */
+    start?: string;
+    width: number;
+    height: number;
+  };
+  /**
    * The put-on sequence: 6–8 intermediate frames, in order, from "jacket
    * entering behind the shoulders" to "folds settling", NOT including the base
    * or the final worn frame. Same contract as `file`. When absent the carousel
@@ -72,6 +99,18 @@ export const outfits: Outfit[] = [
     slug: 'plane-technical-jacket',
     file: 'jacket-01.webp',
     mobile: 'jacket-01-m.webp',
+    video: {
+      mp4: 'dress-01.mp4',
+      webm: 'dress-01.webm',
+      mobile: 'dress-01-m.mp4',
+      reverseMp4: 'undress-01.mp4',
+      reverseMobile: 'undress-01-m.mp4',
+      dressed: 'outfit-01-dressed.webp',
+      dressedMobile: 'outfit-01-dressed-m.webp',
+      start: 'outfit-01-start.webp',
+      width: 1040,
+      height: 1200,
+    },
     preview: 'preview-technical.webp',
     colour: 'Sand',
     alt: 'The same model and pose, wearing the Plane Technical Jacket in sand, zipped open over the tee.',
@@ -85,6 +124,27 @@ export const outfits: Outfit[] = [
     alt: 'The same model and pose, wearing the Axis Leather Jacket in ink, open over the tee.',
   },
 ];
+
+/**
+ * The clip and its matching still are rectangles of near-bone, not cut-outs.
+ * Flattening the studio vignette gets the backdrop to within a few levels of
+ * the page, and this dissolves the last of it: the outer band fades out, so
+ * there is no edge to see. Applied to BOTH the video and the still it hands
+ * off to, or the hand-off would show the mask appearing.
+ *
+ * The bands are clear of the model — his arms reach the middle 60% at most,
+ * his head starts at 5.6% and his shoes end at 96.6% of the frame.
+ */
+export function edgeFadeStyle(): React.CSSProperties {
+  const h = 'linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%)';
+  const v = 'linear-gradient(to bottom, transparent 0%, #000 3%, #000 97.5%, transparent 100%)';
+  return {
+    WebkitMaskImage: `${h}, ${v}`,
+    maskImage: `${h}, ${v}`,
+    WebkitMaskComposite: 'source-in',
+    maskComposite: 'intersect',
+  };
+}
 
 /** CSS for the torso mask, shared by the stage and by anything previewing it. */
 export function maskStyle(): React.CSSProperties {

@@ -33,6 +33,17 @@ npm run build
 | `src/components/providers/` | Bag, wishlist, currency (`Store`), overlays (`Ui`), reveals (`Motion`) |
 | `public/img/CREDITS.md` | Photography sources — **attribution incomplete, see the file** |
 
+## The outfit carousel
+
+The homepage's centrepiece is one model in one pose changing jackets. It runs on a strict image
+contract in `src/lib/outfits.ts`: one full-frame picture per outfit, same model, same pose, same
+light, 1200×1800 on `#F4F2ED` (or transparent), model in the same pixel position. The base frame
+never moves; jackets crossfade over it through a mask that admits only the torso and arms.
+
+The frames shipped here are **drawn placeholders** (`tools/outfits/build.mjs`), labelled as such
+in the UI. To use photography: drop `base.webp` and `jacket-01…04.webp` into `public/img/outfits/`,
+point the `file` fields at them, and set `PLACEHOLDER = false`. Nothing else changes.
+
 ## Motion
 
 Three attributes cover most of the page and are driven by one `ScrollTrigger.batch` set per route

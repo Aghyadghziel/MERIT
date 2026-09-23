@@ -1,51 +1,38 @@
 import type { Metadata } from 'next';
-import { ProductCarousel } from '@/components/commerce/ProductCarousel';
-import { CollectionStatement } from '@/components/sections/CollectionStatement';
-import { EditorialArchive } from '@/components/sections/EditorialArchive';
-import { FeaturedCategories } from '@/components/sections/FeaturedCategories';
-import { Hero } from '@/components/sections/Hero';
-import { Manifesto } from '@/components/sections/Manifesto';
-import { SignatureStory } from '@/components/sections/SignatureStory';
+import { ProductGrid } from '@/components/commerce/ProductGrid';
+import { BrandStatement } from '@/components/sections/BrandStatement';
+import { CampaignIntro } from '@/components/sections/CampaignIntro';
+import { OutfitCarousel, type OutfitItem } from '@/components/sections/OutfitCarousel';
 import { SectionHead } from '@/components/ui/SectionHead';
-import { getCollection, getProduct, newArrivals, stories } from '@/lib/catalog';
+import { getProduct } from '@/lib/catalog';
+import { outfits } from '@/lib/outfits';
 
 export const metadata: Metadata = {
   title: 'MERIT — Contemporary fashion, Riyadh',
-  description:
-    'Autumn Winter 2026. Tailoring, outerwear and knitwear made in small counts in Riyadh, sold directly.',
+  description: 'Foundation, Autumn Winter 2026. One tee, four jackets — turn the rail and see how each one sits.',
   alternates: { canonical: '/' },
 };
 
+const FEATURED = ['atrium-wool-coat', 'rule-single-breasted-blazer', 'column-wide-trouser', 'axis-structured-bag'];
+
 export default function HomePage() {
-  const foundation = getCollection('foundation')!;
-  const signature = getProduct('column-wide-trouser')!;
-  const arrivals = newArrivals();
+  const items = outfits.map<OutfitItem>((o) => ({ ...o, product: getProduct(o.slug)! }));
+  const featured = FEATURED.map(getProduct).filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   return (
     <>
-      <Hero
-        kicker="Autumn Winter 2026"
-        title="Foundation"
-        sentence="Twelve pieces that set the proportions for everything that follows."
-        cta={{ label: 'Explore the collection', href: '/collections/foundation' }}
-        imageWide="campaign-rule-line-wide"
-        imagePortrait="campaign-rule-line"
-        alt="A look from the MERIT Autumn Winter 2026 campaign, photographed against a plain wall"
-      />
+      <CampaignIntro />
+      <OutfitCarousel items={items} />
 
-      <section className="page section-y" aria-labelledby="new-title">
-        <SectionHead index={1} title="New arrivals" link={{ label: 'View all new', href: '/new' }} as="h2" />
-        <h2 id="new-title" className="sr-only">New arrivals</h2>
-        <div className="mt-12 md:mt-14">
-          <ProductCarousel products={arrivals} label="New arrivals" />
+      <section className="page section-y-sm" aria-labelledby="featured-title">
+        <SectionHead index={1} title="Featured" link={{ label: 'View all new', href: '/new' }} as="p" />
+        <h2 id="featured-title" className="sr-only">Featured pieces</h2>
+        <div className="mt-8 md:mt-10">
+          <ProductGrid products={featured} columns={4} />
         </div>
       </section>
 
-      <CollectionStatement collection={foundation} index={2} />
-      <FeaturedCategories index={3} />
-      <SignatureStory product={signature} index={4} />
-      <EditorialArchive stories={stories.slice(0, 4)} index={5} />
-      <Manifesto />
+      <BrandStatement />
     </>
   );
 }

@@ -545,6 +545,55 @@ export const products: Product[] = [
     madeIn: 'Made in Italy',
   },
 
+  {
+    slug: 'baseline-tee',
+    name: 'Baseline Tee',
+    category: 'Knitwear',
+    gender: 'men',
+    collection: 'index',
+    price: 490,
+    colours: [
+      { name: 'Bone', hex: '#EDE9E0' },
+      { name: 'Ink', hex: '#161614' },
+    ],
+    sizes: APPAREL,
+    low: ['Bone/L'],
+    images: ['knit-baseline-1', 'material-fold'],
+    summary: 'Heavy jersey, cut boxy, bound at the neck.',
+    description:
+      'The tee the outerwear is drawn over. A 240g organic cotton jersey with a bound crew neck that will not stretch, cut boxy through the body and short in the sleeve so a jacket sits cleanly over it.',
+    fit: 'Boxy. Take your usual size.',
+    materials: ['100% organic cotton jersey, 240g', 'Bound neckline', 'Single-needle hems'],
+    care: ['Machine wash 30°', 'Line dry'],
+    madeIn: 'Made in Portugal',
+    modelNote: 'Model is 185cm and wears a size M.',
+  },
+  {
+    slug: 'margin-overshirt',
+    name: 'Margin Overshirt',
+    category: 'Outerwear',
+    gender: 'men',
+    collection: 'foundation',
+    price: 2150,
+    status: 'new',
+    colours: [
+      { name: 'Stone', hex: '#BDB6A9' },
+      { name: 'Olive', hex: '#6B6B4E' },
+    ],
+    sizes: APPAREL,
+    unavailable: ['Olive/XS'],
+    low: ['Stone/M'],
+    images: ['shirt-oxford-m-2', 'material-linen'],
+    summary: 'A wool overshirt that does the work of a jacket.',
+    description:
+      'A shirt in a brushed wool flannel heavy enough to be a jacket, with two chest pockets and a proper collar. Worn open over the tee or buttoned to the neck.',
+    fit: 'Relaxed. Size down to wear buttoned.',
+    materials: ['85% wool, 15% cashmere — brushed flannel, 420g', 'Corozo buttons', 'Unlined'],
+    care: ['Dry clean only', 'Brush with the nap'],
+    madeIn: 'Made in Portugal',
+    modelNote: 'Model is 185cm and wears a size M.',
+  },
+
   // ─── Accessories ─────────────────────────────────────────────────────────
   {
     slug: 'axis-structured-bag',

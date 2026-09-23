@@ -65,13 +65,23 @@ export function MotionRoot() {
         gsap.to(el, { opacity: 1, y: 0, duration: DUR.reveal, ease: EASE.reveal, delay, overwrite: true });
       };
 
-      const sweep = () => {
+      /**
+       * `settled` means: stop waiting for a scroll. While the reader is
+       * scrolling, the trigger line sits a little above the fold so a section
+       * reveals just before it is fully in view. But once the page has stopped
+       * moving — after load, after fonts, after the resize — anything with any
+       * part on screen is due. Otherwise a paragraph peeking over the fold on
+       * first paint stays blank until the reader scrolls, and on a page too
+       * short to scroll it stays blank for good.
+       */
+      const sweep = (settled = false) => {
         if (!pending.size) return;
-        const limit = window.innerHeight * 0.92;
+        const view = window.innerHeight;
+        const limit = settled ? view : view * 0.92;
         const due: { el: HTMLElement; top: number }[] = [];
         pending.forEach((el) => {
-          const top = el.getBoundingClientRect().top;
-          if (top < limit) due.push({ el, top });
+          const rect = el.getBoundingClientRect();
+          if (rect.top < limit) due.push({ el, top: rect.top });
         });
         if (!due.length) return;
         // Stagger in the order they sit on the page, not in DOM order.
@@ -80,9 +90,16 @@ export function MotionRoot() {
       };
 
       let frame = 0;
-      const schedule = () => {
+      let settledNext = false;
+      const schedule = (settled = false) => {
+        settledNext = settledNext || settled;
         if (frame) return;
-        frame = requestAnimationFrame(() => { frame = 0; sweep(); });
+        frame = requestAnimationFrame(() => {
+          frame = 0;
+          const s = settledNext;
+          settledNext = false;
+          sweep(s);
+        });
       };
 
       const bind = () => {
@@ -108,18 +125,24 @@ export function MotionRoot() {
       });
       mutations.observe(document.body, { childList: true, subtree: true });
 
-      window.addEventListener('scroll', schedule, { passive: true });
-      window.addEventListener('resize', schedule);
+      const onScroll = () => schedule();
+      const onSettled = () => schedule(true);
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onSettled);
       // Images decoding below the fold change where everything after them sits.
-      window.addEventListener('load', schedule);
+      window.addEventListener('load', onSettled);
+      // Fonts settle after first paint and move everything a few pixels.
+      document.fonts?.ready.then(onSettled).catch(() => {});
+      const settle = window.setTimeout(onSettled, 900);
 
       return () => {
         window.clearTimeout(debounce);
+        window.clearTimeout(settle);
         if (frame) cancelAnimationFrame(frame);
         mutations.disconnect();
-        window.removeEventListener('scroll', schedule);
-        window.removeEventListener('resize', schedule);
-        window.removeEventListener('load', schedule);
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onSettled);
+        window.removeEventListener('load', onSettled);
         pending.clear();
       };
     });

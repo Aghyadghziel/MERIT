@@ -15,6 +15,27 @@ export type OutfitItem = Outfit & { product: Product };
 
 const DUR = 0.65;
 const EASE = 'power3.inOut';
+/** Putting a jacket on / taking it off, in seconds. */
+const PUT_ON = 0.85;
+const TAKE_OFF = 0.38;
+const SETTLE = 0.28;
+
+const phone = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;
+const src = (file: string) => `/img/outfits/${file}`;
+const loadImage = (file: string) =>
+  new Promise<void>((resolve) => {
+    const im = new Image();
+    im.onload = () => resolve();
+    im.onerror = () => resolve();
+    im.src = src(file);
+  });
+/** Every file a garment needs before its change can start. */
+const filesFor = (it: Outfit) => {
+  const m = phone();
+  const final = m && it.mobile ? it.mobile : it.file;
+  const seq = m && it.framesMobile ? it.framesMobile : (it.frames ?? []);
+  return [final, ...seq];
+};
 const AUTOPLAY_MS = 7000;
 
 /** Signed shortest distance from `from` to `to` around a ring of `n`. */
@@ -47,6 +68,8 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
   const actions = useRef<HTMLDivElement>(null);
   const idle = useRef<number>(0);
   const drag = useRef({ on: false, x: 0, moved: 0 });
+  /** True while a garment is going on or coming off; input is ignored meanwhile. */
+  const busy = useRef(false);
   const wheel = useRef({ acc: 0, lock: 0 });
   const { add } = useStore();
   const { open } = useUi();
@@ -69,7 +92,7 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
       const a = Math.abs(d);
       const sign = Math.sign(d);
       if (a === 0) return { x: 0, scale: 1, opacity: 0, blur: 0 };
-      if (a === 1) return { x: sign * w * (mobile ? 0.95 : 1.05), scale: 1, opacity: 0.9, blur: 0 };
+      if (a === 1) return { x: sign * w * (mobile ? 0.62 : 1.05), scale: mobile ? 0.9 : 1, opacity: 0.9, blur: 0 };
       if (a === 2) return { x: sign * w * 1.75, scale: 0.85, opacity: mobile ? 0 : 0.35, blur: 1.5 };
       return { x: sign * w * 2.2, scale: 0.85, opacity: 0, blur: 1.5 };
     },
@@ -91,7 +114,11 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
     });
   }, [active, stageWidth, n, slot]);
 
-  // The garment change: outgoing settles down and away, incoming wipes in.
+  // The garment change. The model never moves: the base frame stays put and a
+  // jacket layer, masked to the torso and arms, either plays its pre-rendered
+  // put-on sequence or — when no sequence has been supplied — forms around the
+  // body from the shoulders down. Switching jacket to jacket takes the current
+  // one off first. Product information updates only once the cloth has settled.
   useLayoutEffect(() => {
     const st = stage.current;
     if (!st) return;
@@ -99,35 +126,97 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
     prev.current = active;
     if (from === active) return;
     const { gsap } = setupGsap();
-    const out = st.querySelector<HTMLElement>(`[data-jacket="${from}"]`);
-    const inc = st.querySelector<HTMLElement>(`[data-jacket="${active}"]`);
+    const layer = (i: number) => st.querySelector<HTMLElement>(`[data-jacket="${i}"]`);
+    const shadow = st.querySelector<HTMLElement>('[data-shadow]');
+    const out = from === 0 ? null : layer(from);
+    const inc = active === 0 ? null : layer(active);
+    const finish = () => { setShown(active); setSize(null); setSizeError(false); };
 
     if (reduced()) {
-      if (out) gsap.set(out, { opacity: 0 });
-      if (inc) gsap.set(inc, { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)', scale: 1 });
-      setShown(active); setSize(null); setSizeError(false);
-      return;
+      // A quick crossfade, nothing spatial.
+      const tl = gsap.timeline({ onComplete: () => { busy.current = false; } });
+      busy.current = true;
+      if (out) tl.to(out, { opacity: 0, duration: 0.2, ease: 'power1.inOut', overwrite: 'auto' }, 0);
+      if (inc) tl.fromTo(inc, { opacity: 0, clipPath: 'inset(0% 0% 0% 0%)', y: 0, scale: 1 }, { opacity: 1, duration: 0.2, ease: 'power1.inOut', overwrite: 'auto' }, 0);
+      if (shadow) tl.to(shadow, { opacity: inc ? 0.22 : 0, duration: 0.2 }, 0);
+      tl.call(finish);
+      return () => { tl.kill(); };
     }
 
-    const tl = gsap.timeline();
-    if (out) tl.to(out, { opacity: 0, scale: 0.985, duration: 0.5, ease: EASE, overwrite: 'auto' }, 0);
-    if (inc) {
-      tl.fromTo(
-        inc,
-        { opacity: 0, scale: 1.012, clipPath: 'inset(0% 0% 100% 0%)' },
-        { opacity: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)', duration: DUR, ease: EASE, overwrite: 'auto' },
-        0.06,
-      );
-    }
-    // Product information: a short vertical reveal.
-    tl.to(info.current, { opacity: 0, y: -8, duration: 0.2, ease: 'power2.in' }, 0)
-      .call(() => { setShown(active); setSize(null); setSizeError(false); }, undefined, 0.22)
-      .fromTo(info.current, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, 0.24);
-    return () => { tl.kill(); };
-  }, [active]);
+    busy.current = true;
+    let cancelled = false;
+    let tl: gsap.core.Timeline | undefined;
+
+    /** Frames-driven playback (or its reverse) of one jacket layer. */
+    const sequence = (el: HTMLElement, reverse: boolean, duration: number) => {
+      const frames = [...el.querySelectorAll<HTMLElement>('[data-seq]'), el.querySelector<HTMLElement>('[data-final]')!];
+      const last = frames.length - 1;
+      const proxy = { p: reverse ? last : 0 };
+      const paint = () => {
+        // A very light crossfade between neighbouring frames, so nothing flickers.
+        frames.forEach((f, k) => { f.style.opacity = String(Math.max(0, 1 - Math.abs(k - proxy.p))); });
+      };
+      paint();
+      gsap.set(el, { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)', y: 0, scale: 1 });
+      return gsap.to(proxy, { p: reverse ? 0 : last, duration, ease: 'power2.inOut', onUpdate: paint });
+    };
+
+    const takeOff = (t: gsap.core.Timeline, el: HTMLElement, at: number) => {
+      if (el.querySelector('[data-seq]')) {
+        t.add(sequence(el, true, TAKE_OFF), at).to(el, { opacity: 0, duration: 0.12 }, at + TAKE_OFF);
+      } else {
+        // Fallback, reversed: the jacket lifts off the shoulders and thins out.
+        t.to(el, { clipPath: 'inset(22% 0% 78% 0%)', y: -8, scale: 0.99, opacity: 0, duration: TAKE_OFF, ease: 'power2.inOut', overwrite: 'auto' }, at);
+      }
+      if (shadow) t.to(shadow, { opacity: 0, duration: TAKE_OFF, ease: 'power2.inOut' }, at);
+      return at + TAKE_OFF;
+    };
+
+    const putOn = (t: gsap.core.Timeline, el: HTMLElement, at: number) => {
+      const finalFrame = el.querySelector<HTMLElement>('[data-final]');
+      if (el.querySelector('[data-seq]')) {
+        t.add(sequence(el, false, PUT_ON), at);
+      } else {
+        // Fallback: the jacket forms around the model from the shoulders down —
+        // a shoulder-to-torso clip, a small drop, a breath of scale, a crossfade.
+        t.fromTo(el,
+          { clipPath: 'inset(22% 0% 78% 0%)', y: -10, scale: 1.015, opacity: 0 },
+          { clipPath: 'inset(0% 0% 0% 0%)', y: 0, scale: 1, opacity: 1, duration: PUT_ON, ease: 'power2.inOut', overwrite: 'auto' },
+          at);
+      }
+      if (shadow) t.fromTo(shadow, { opacity: 0 }, { opacity: 0.22, duration: PUT_ON, ease: 'power2.inOut' }, at);
+      // Fabric settling: the smallest possible drop and release.
+      const settleTarget = finalFrame ?? el;
+      t.to(settleTarget, { y: 2.5, scale: 1.004, duration: SETTLE / 2, ease: 'power1.out' }, at + PUT_ON)
+        .to(settleTarget, { y: 0, scale: 1, duration: SETTLE / 2, ease: 'power2.out' }, at + PUT_ON + SETTLE / 2);
+      return at + PUT_ON + SETTLE;
+    };
+
+    // Keep the current outfit on screen until the next one has fully loaded.
+    Promise.all(filesFor(items[active]).map(loadImage)).then(() => {
+      if (cancelled) return;
+      tl = gsap.timeline({ onComplete: () => { busy.current = false; } });
+      tl.to(info.current, { opacity: 0, y: -8, duration: 0.2, ease: 'power2.in' }, 0);
+      let at = 0;
+      if (out) at = takeOff(tl, out, at);
+      if (inc) at = putOn(tl, inc, at);
+      tl.call(finish, undefined, at)
+        .fromTo(info.current, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: 'power3.out' }, at + 0.02);
+    });
+
+    return () => { cancelled = true; tl?.kill(); busy.current = false; };
+  }, [active, items]);
+
+  // After the first paint, warm the neighbours so the first change is instant.
+  useEffect(() => {
+    const warm = () => [1, n - 1].forEach((d) => filesFor(items[(active + d) % n]).forEach(loadImage));
+    const id = window.setTimeout(warm, 800);
+    return () => window.clearTimeout(id);
+  }, [active, items, n]);
 
   const go = useCallback(
     (dir: 1 | -1) => {
+      if (busy.current) return; // one change at a time
       setActive((a) => (a + dir + n) % n);
       idle.current = Date.now() + 12000; // pause autoplay after any interaction
     },
@@ -142,7 +231,7 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
     let timer = 0;
     let inView = false;
     const tick = () => {
-      if (inView && Date.now() > idle.current && !root.current?.matches(':hover, :focus-within')) {
+      if (inView && !busy.current && Date.now() > idle.current && !root.current?.matches(':hover, :focus-within')) {
         setActive((a) => (a + 1) % n);
       }
     };
@@ -288,7 +377,7 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
           >
             <div className="aspect-square h-[34%] md:h-[40%]">
               {/* eslint-disable-next-line @next/next/no-img-element -- flat garment preview, sized by the contract */}
-              <img src={`/img/outfits/${it.preview}`} alt="" width={900} height={900} loading="lazy" decoding="async" className="h-full w-full object-contain" />
+              <img src={src(it.preview)} alt="" width={900} height={900} loading="lazy" decoding="async" className="h-full w-full object-contain" />
             </div>
           </div>
         ))}
@@ -299,16 +388,26 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
           className="relative z-10 h-full select-none"
           style={{ aspectRatio: `${FRAME.width} / ${FRAME.height}` }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element -- the contract's base frame */}
-          <img
-            src={`/img/outfits/${items[0].file}`}
-            alt={current.alt}
-            width={FRAME.width}
-            height={FRAME.height}
-            fetchPriority="high"
-            decoding="async"
-            className="h-full w-auto"
-            draggable={false}
+          <picture>
+            {items[0].mobile ? <source media="(max-width: 767px)" srcSet={src(items[0].mobile)} /> : null}
+            {/* eslint-disable-next-line @next/next/no-img-element -- the contract's base frame */}
+            <img
+              src={src(items[0].file)}
+              alt={current.alt}
+              width={FRAME.width}
+              height={FRAME.height}
+              fetchPriority="high"
+              decoding="async"
+              className="h-full w-auto"
+              draggable={false}
+            />
+          </picture>
+          {/* A soft shadow the jacket casts on the tee and arms while it is worn. */}
+          <div
+            data-shadow
+            aria-hidden
+            className="pointer-events-none absolute inset-x-[8%] top-[20%] h-[52%] opacity-0"
+            style={{ background: 'radial-gradient(ellipse 60% 55% at 50% 30%, rgba(16,16,16,0.45), rgba(16,16,16,0) 70%)', ...mask }}
           />
           {items.map((it, i) =>
             i === 0 ? null : (
@@ -319,8 +418,18 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
                 className="absolute inset-0"
                 style={{ ...mask, opacity: i === active ? 1 : 0, transformOrigin: '50% 38%' }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- masked garment layer */}
-                <img src={`/img/outfits/${it.file}`} alt="" width={FRAME.width} height={FRAME.height} loading={i === 1 ? 'eager' : 'lazy'} decoding="async" className="h-full w-auto" draggable={false} />
+                {(it.frames ?? []).map((f, k) => (
+                  <picture key={f} data-seq={k} className="absolute inset-0 block opacity-0">
+                    {it.framesMobile?.[k] ? <source media="(max-width: 767px)" srcSet={src(it.framesMobile[k])} /> : null}
+                    {/* eslint-disable-next-line @next/next/no-img-element -- put-on sequence frame */}
+                    <img src={src(f)} alt="" width={FRAME.width} height={FRAME.height} loading="lazy" decoding="async" className="h-full w-auto" draggable={false} />
+                  </picture>
+                ))}
+                <picture data-final className="absolute inset-0 block">
+                  {it.mobile ? <source media="(max-width: 767px)" srcSet={src(it.mobile)} /> : null}
+                  {/* eslint-disable-next-line @next/next/no-img-element -- the worn frame */}
+                  <img src={src(it.file)} alt="" width={FRAME.width} height={FRAME.height} loading={i === 1 ? 'eager' : 'lazy'} decoding="async" className="h-full w-auto" draggable={false} />
+                </picture>
               </div>
             ),
           )}

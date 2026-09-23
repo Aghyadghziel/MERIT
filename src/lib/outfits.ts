@@ -39,6 +39,18 @@ export type Outfit = {
   slug: string;
   /** File under /img/outfits/, with extension. */
   file: string;
+  /** Phone-sized version of `file` (800×1200), served under 768px. Optional. */
+  mobile?: string;
+  /**
+   * The put-on sequence: 6–8 intermediate frames, in order, from "jacket
+   * entering behind the shoulders" to "folds settling", NOT including the base
+   * or the final worn frame. Same contract as `file`. When absent the carousel
+   * uses its fallback: the final frame forms around the model through a
+   * shoulder-to-torso clip, a small drop, a breath of scale and a soft shadow.
+   */
+  frames?: string[];
+  /** Phone-sized versions of `frames`, same order. Optional. */
+  framesMobile?: string[];
   /** File under /img/outfits/ for the flat garment shown beside the model. */
   preview: string;
   /** The colour depicted, which is the colour "Add to bag" adds. */
@@ -51,6 +63,7 @@ export const outfits: Outfit[] = [
   {
     slug: 'baseline-tee',
     file: 'base.webp',
+    mobile: 'base-m.webp',
     preview: 'preview-tee.webp',
     colour: 'Ink',
     alt: 'The model in the Baseline Tee in ink and washed grey Column jeans, standing square to the camera, arms at the sides.',
@@ -58,6 +71,7 @@ export const outfits: Outfit[] = [
   {
     slug: 'plane-technical-jacket',
     file: 'jacket-01.webp',
+    mobile: 'jacket-01-m.webp',
     preview: 'preview-technical.webp',
     colour: 'Sand',
     alt: 'The same model and pose, wearing the Plane Technical Jacket in sand, zipped open over the tee.',
@@ -65,6 +79,7 @@ export const outfits: Outfit[] = [
   {
     slug: 'axis-leather-jacket',
     file: 'jacket-02.webp',
+    mobile: 'jacket-02-m.webp',
     preview: 'preview-leather.webp',
     colour: 'Ink',
     alt: 'The same model and pose, wearing the Axis Leather Jacket in ink, open over the tee.',

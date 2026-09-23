@@ -13,9 +13,11 @@
  *
  *   <clip>.webm        VP9 + alpha   Chrome, Edge, Firefox
  *   <clip>.hevc.mp4    HEVC + alpha  Safari (macOS, iOS)
- *   <clip>-m.*         480 × 720     phones
+ *   <clip>-m.*         480 × 720     phones at 1x, or saving data
  *
- * Frame: 2:3. Stills are RGBA WebP of the clip's own last frame.
+ * A phone with a dense screen gets the 720 × 1080 encodes: the 480 ones would
+ * be drawn at nearly three device pixels each and read soft beside the vector
+ * logotype. Frame: 2:3. Stills are RGBA WebP of the clip's own last frame.
  * Pipeline and scripts: merit-video-kit/ (outside the repo).
  */
 export const FRAME = { width: 1200, height: 1800 } as const;
@@ -103,3 +105,76 @@ export const outfits: Outfit[] = [
     },
   },
 ];
+
+/**
+ * What each clip's own frames need from the page, measured from its alpha.
+ *
+ * The clips were stabilised by scaling and shifting every frame of the source
+ * film, so the film's own left and right edges sit inside the 2:3 canvas and
+ * move a little from frame to frame. Wherever he reaches past them — for the
+ * jacket on its hook, or hanging it back — his hand or the sleeve would stop
+ * dead on a straight vertical line in mid-air. `l` and `r` are those two
+ * edges, in thousandths of the frame's width, sampled evenly from the first
+ * frame to the last (read between samples linearly: within a pixel at full
+ * size). The page feathers the clip just inside them, so a limb fades into
+ * the light instead of being cut.
+ *
+ * `handoff` is the frame at which the jacket crosses into the frame (an
+ * on-clip: he has taken it off the rail) or out of it again (an off-clip: it
+ * is back on the rail). The rail follows the film at exactly that moment.
+ *
+ * `hide` clears what the cut-out left behind: soft rectangles, keyed by frame
+ * as [frame, x0, x1, y0, y1, strength], all in thousandths of the frame and
+ * read between keys linearly. In undress-01 the matte kept a pale ghost of the
+ * jacket by his feet after it has left, a fragment of it after that, and a
+ * little floor glow beside his right shoe. Nothing of him is inside them.
+ *
+ * Measured by merit-video-kit/ (outside the repo). Re-measure after any
+ * re-export of the clips.
+ */
+export type ClipTrack = {
+  frames: number;
+  handoff: number;
+  l: readonly number[];
+  r: readonly number[];
+  hide?: readonly (readonly [frame: number, x0: number, x1: number, y0: number, y1: number, strength: number])[];
+};
+
+export const CLIPS: Readonly<Record<string, ClipTrack>> = {
+  'dress-01': {
+    frames: 226,
+    handoff: 24,
+    l: [82, 81, 80, 79, 78, 78, 77, 77, 77, 77, 77, 76, 76, 76, 75, 75, 74, 74, 73, 72, 70, 69, 67, 66, 63, 61, 58, 55, 52, 49, 45, 41, 36, 31, 26, 20, 14, 7, 0],
+    r: [924, 925, 925, 926, 926, 927, 927, 927, 927, 927, 928, 928, 928, 929, 929, 930, 930, 931, 932, 933, 935, 936, 938, 940, 943, 945, 948, 951, 955, 959, 963, 968, 972, 978, 983, 989, 996, 1000, 1000],
+  },
+  'undress-01': {
+    frames: 203,
+    handoff: 121,
+    l: [60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 60, 59, 59, 59, 59, 59, 59, 59, 59, 59, 59, 58, 58, 58, 58, 58, 57, 57, 57, 57, 56, 56, 55, 55],
+    r: [968, 968, 967, 967, 967, 967, 967, 967, 967, 967, 967, 967, 967, 967, 968, 968, 968, 968, 968, 968, 968, 969, 969, 969, 968, 968, 968, 968, 968, 967, 967, 966, 965, 965, 964],
+    hide: [
+      [96, 735, 975, 870, 990, 0],
+      [99, 735, 975, 870, 990, 1],
+      [107, 735, 975, 870, 990, 1],
+      [110, 735, 975, 870, 990, 0],
+      [116, 35, 356, 470, 955, 0],
+      [120, 35, 356, 470, 955, 1],
+      [139, 35, 356, 470, 955, 1],
+      [141, 35, 356, 620, 955, 1],
+      [146, 35, 356, 620, 955, 1],
+      [150, 35, 356, 620, 955, 0],
+    ],
+  },
+  'dress-02': {
+    frames: 239,
+    handoff: 44,
+    l: [79, 77, 76, 74, 73, 71, 70, 68, 67, 66, 64, 63, 61, 60, 59, 57, 56, 54, 53, 52, 50, 48, 47, 45, 43, 42, 40, 38, 36, 34, 32, 29, 27, 25, 22, 20, 17, 14, 11, 8, 5],
+    r: [923, 925, 927, 929, 930, 932, 934, 936, 937, 939, 941, 942, 944, 946, 948, 949, 951, 953, 955, 957, 958, 960, 962, 964, 966, 969, 971, 973, 975, 978, 980, 982, 985, 987, 990, 993, 996, 998, 1000, 1000, 1000],
+  },
+  'undress-02': {
+    frames: 193,
+    handoff: 135,
+    l: [35, 35, 34, 34, 33, 32, 32, 31, 30, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 15, 14, 13, 12, 10, 9, 8, 6, 5, 4],
+    r: [979, 980, 980, 981, 982, 982, 983, 984, 985, 985, 986, 987, 987, 988, 989, 990, 991, 991, 992, 993, 994, 995, 996, 997, 997, 998, 999, 1000, 1000, 1000, 1000, 1000, 1000],
+  },
+};

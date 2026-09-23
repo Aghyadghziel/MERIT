@@ -67,7 +67,8 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
     image: `${BRAND.domain}/img/${story.cover}.webp`,
     author: { '@type': 'Organization', name: BRAND.name },
     publisher: { '@type': 'Organization', name: BRAND.name },
-    datePublished: `${story.year}-09-01`,
+    // No datePublished: the catalogue gives a year, not a day, and a day
+    // made up to fill the field would be a claim.
   };
 
   return (
@@ -85,7 +86,15 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
         >
           <div data-zoom="1.08" className="absolute inset-0">
             <div data-reveal-img className="h-full w-full">
-              <ArtImage wide={opener} tall={story.cover} alt={alt(opener)} priority />
+              <ArtImage
+                wide={opener}
+                tall={story.cover}
+                alt={alt(opener)}
+                // Drawn at whichever of width or height the crop fills first.
+                sizes={isWide(opener) ? 'max(100vw, 178svh)' : 'max(100vw, 80svh)'}
+                tallSizes={isWide(story.cover) ? 'max(100vw, 178svh)' : 'max(100vw, 80svh)'}
+                priority
+              />
             </div>
           </div>
           <div aria-hidden data-dim className="absolute inset-0 bg-black opacity-0" />

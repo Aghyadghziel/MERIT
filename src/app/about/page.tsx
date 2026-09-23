@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Drift, LogoWindow, Strike, Unfold } from '@/components/layout/TextPage';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
-import { SectionHead } from '@/components/ui/SectionHead';
+import { LINE_ROOM, SectionHead } from '@/components/ui/SectionHead';
 import { Wordmark } from '@/components/ui/Wordmark';
 import { BRAND } from '@/lib/brand';
 import { collections } from '@/lib/catalog';
@@ -38,7 +38,7 @@ const MAKERS = [
     img: 'material-wool', alt: 'Grey-green wool cloth, close up',
   },
   {
-    place: 'Portugal', country: 'The north', what: 'Outerwear and shirting',
+    place: 'Portugal', country: 'Portugal', what: 'Outerwear and shirting',
     detail: 'Made in the north of the country.',
     img: 'material-linen', alt: 'Undyed linen cloth, close up',
   },
@@ -67,18 +67,20 @@ export default function AboutPage() {
             <p className="label nums" data-reveal>{BRAND.city} — since {BRAND.founded}</p>
           </div>
 
+          {/* A runway frame, graded to the house greys: the dark crowd fills
+              the letters with ink, and the model walks through the E and R. */}
           <LogoWindow
-            src="/img/campaign-foundation-wide.webp"
+            src="/img/runway-01.webp"
             width={2560}
             height={1440}
-            position="50% 38%"
+            position="50% 4%"
             priority
-            className="mt-[clamp(1.25rem,0.75rem+2vw,2.75rem)]"
+            className="mt-[clamp(1.25rem,0.75rem+2vw,2.75rem)] [filter:grayscale(1)_contrast(1.12)_brightness(1.04)]"
           />
 
           <h1
             id="about-title"
-            className="mt-[clamp(1.75rem,1rem+3vw,4rem)] text-[clamp(2.75rem,0.9rem+7.4vw,9rem)] font-semibold leading-[0.88] tracking-[-0.055em]"
+            className={`mt-[clamp(1.75rem,1rem+3vw,4rem)] text-[clamp(2.75rem,0.9rem+7.4vw,9rem)] font-semibold leading-[0.88] tracking-[-0.055em] ${LINE_ROOM}`}
           >
             <span className="block"><Lines text="Quiet structure," /></span>
             <Drift from={12} to={0} start="top 80%" end="bottom 10%" className="md:whitespace-nowrap">
@@ -143,7 +145,7 @@ export default function AboutPage() {
       <section className="page section-y" aria-labelledby="ch-idea">
         <SectionHead index={1} title="The idea" id="ch-idea" tone="ink" note={`Set up in ${BRAND.founded}`} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-12">
-          <p className="display-lg col-span-4 max-w-[19ch] md:col-span-6 lg:col-span-10">
+          <p className={`display-lg col-span-4 max-w-[19ch] md:col-span-6 lg:col-span-10 ${LINE_ROOM}`}>
             <Lines text="Cut a small number of shapes properly, and re-issue them rather than replace them." />
           </p>
 
@@ -157,8 +159,7 @@ export default function AboutPage() {
             <p className="body-lg">
               MERIT was set up in {BRAND.founded} by a pattern cutter and a buyer who had spent a decade
               watching good cloth turned into clothes that lasted one season. The label exists to do the
-              opposite: cut a small number of shapes properly, on our own blocks, and re-issue them rather
-              than replace them.
+              opposite, working from blocks of its own.
             </p>
             <p className="body-lg">
               The house line is quiet structure, expressive movement. The structure is the part you do not
@@ -181,7 +182,7 @@ export default function AboutPage() {
           </figure>
 
           <div className="col-span-4 md:col-span-3 lg:col-span-6 lg:col-start-7 lg:pt-4">
-            <p className="display-lg max-w-[14ch]">
+            <p className={`display-lg max-w-[14ch] ${LINE_ROOM}`}>
               <Lines text="Everything is proportioned against one garment." />
             </p>
             <p className="body-lg mt-6 max-w-[46ch] text-ink-3" data-reveal>
@@ -226,7 +227,7 @@ export default function AboutPage() {
       <section className="page pb-(--section)" aria-labelledby="ch-made">
         <SectionHead index={3} title="Where things are made" id="ch-made" tone="ink" note="Three countries" />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-8">
-          <p className="display-lg col-span-4 max-w-[13ch] md:col-span-4 lg:col-span-7">
+          <p className={`display-lg col-span-4 max-w-[13ch] md:col-span-4 lg:col-span-7 ${LINE_ROOM}`}>
             <Lines text="The making is not a secret." />
           </p>
           <p className="body-lg col-span-4 max-w-[40ch] self-end text-ink-3 md:col-span-4 lg:col-span-4 lg:col-start-9" data-reveal>
@@ -248,7 +249,9 @@ export default function AboutPage() {
               <div className="w-full pl-[calc(1.5rem+var(--gutter))] max-md:order-last md:w-[clamp(14rem,20vw,20rem)] md:shrink-0 md:pl-0">
                 <p className="label">{m.what}</p>
                 <p className="mt-2 text-sm leading-relaxed text-mute">
-                  <span className="text-ink">{m.country}.</span> {m.detail}
+                  {/* The country leads unless the place already is one. */}
+                  {m.country !== m.place ? <><span className="text-ink">{m.country}.</span>{' '}</> : null}
+                  {m.detail}
                 </p>
               </div>
               <div className="w-14 shrink-0 md:w-[clamp(6.5rem,10vw,11rem)]">
@@ -264,7 +267,7 @@ export default function AboutPage() {
           <p className="body-lg col-span-4 max-w-[34ch] text-ink-3 md:col-span-3 lg:col-span-4" data-reveal>
             Counts are small — most pieces are cut in the low hundreds, runway pieces in the dozens.
           </p>
-          <p className="display-lg col-span-4 md:col-span-6 lg:col-span-8 lg:col-start-5">
+          <p className={`display-lg col-span-4 md:col-span-6 lg:col-span-8 lg:col-start-5 ${LINE_ROOM}`}>
             <Lines text="When a count is finished it is finished." />
           </p>
         </div>

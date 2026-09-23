@@ -9,6 +9,7 @@ import { Breadcrumb } from './_parts/Breadcrumb';
 import { CollectionBand } from './_parts/CollectionBand';
 import { CompleteTheLook } from './_parts/CompleteTheLook';
 import { Details } from './_parts/Details';
+import { imageKind } from './_parts/media';
 import { alsoConsider, completeLook } from './_parts/pairing';
 import { Rail } from './_parts/Rail';
 
@@ -19,6 +20,13 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
   const { slug } = await params;
   const product = getProduct(slug);
   if (!product) return {};
+  // The graded photographs are all 1400 × 1750. The Fitting Room cut-outs
+  // (outfits/*) come in their own sizes, so for a piece that has only those
+  // the size is left for the crawler to read rather than stated wrongly.
+  const photo = product.images.find((i) => imageKind(i) === 'photo');
+  const og = photo
+    ? { url: `/img/${photo}.webp`, width: 1400, height: 1750, alt: product.name }
+    : { url: `/img/${product.images[0]}.webp`, alt: product.name };
   return {
     title: product.name,
     description: `${product.summary} ${product.materials[0]}. ${product.madeIn}.`,
@@ -27,7 +35,7 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
       type: 'website',
       title: `${product.name} — ${BRAND.name}`,
       description: product.summary,
-      images: [{ url: `/img/${product.images[0]}.webp`, width: 1400, height: 1750, alt: product.name }],
+      images: [og],
     },
   };
 }
@@ -101,7 +109,9 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
       <div className="pt-(--nav-h)">
         <div className="lg:grid lg:grid-cols-2">
           <div className="min-w-0">
-            <Gallery images={product.images} name={`${product.name}, ${product.colours[0].name}`} />
+            {/* Named without a colour: the photographs are shared by every
+                colourway, and the one chosen in the panel can change. */}
+            <Gallery images={product.images} name={product.name} />
           </div>
           <div className="relative min-w-0">
             <ProductPanel

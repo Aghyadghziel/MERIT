@@ -147,7 +147,7 @@ export function ContactForm() {
 
 const INPUT =
   'w-full min-h-12 border-0 bg-transparent py-2 text-[clamp(1.125rem,1rem+0.5vw,1.5rem)] font-medium tracking-[-0.02em] ' +
-  'placeholder:text-stone focus-visible:outline-none!';
+  'placeholder:text-hint focus-visible:outline-none!';
 
 function Field({
   n, id, label, error, hint, children,

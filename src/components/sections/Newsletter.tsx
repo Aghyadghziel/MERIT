@@ -1,6 +1,7 @@
 'use client';
 
-import { useId, useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 
 type State = 'idle' | 'error' | 'done';
@@ -19,20 +20,27 @@ export function Newsletter() {
   const id = useId();
   const input = `${id}-email`;
   const hint = `${id}-hint`;
+  const field = useRef<HTMLInputElement>(null);
+  const done = useRef<HTMLDivElement>(null);
+
+  // The form unmounts on success, so focus moves to the message that replaces
+  // it rather than falling back to the page.
+  useEffect(() => {
+    if (state === 'done') done.current?.focus();
+  }, [state]);
+
+  const fail = (message: string) => {
+    setError(message);
+    setState('error');
+    // Straight back to the field that needs the correction.
+    field.current?.focus();
+  };
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const value = email.trim();
-    if (!value) {
-      setError('Enter an email address.');
-      setState('error');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) {
-      setError('That does not look like an email address.');
-      setState('error');
-      return;
-    }
+    if (!value) return fail('Enter an email address.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) return fail('That does not look like an email address.');
     setError('');
     setState('done');
   };
@@ -50,7 +58,7 @@ export function Newsletter() {
 
       <div className="col-span-4 self-end md:col-span-6 lg:col-span-7 lg:col-start-6">
         {state === 'done' ? (
-          <div className="flex items-start gap-4 border-b border-bone pb-5" role="status">
+          <div ref={done} tabIndex={-1} className="flex items-start gap-4 border-b border-bone pb-5 outline-offset-8" role="status">
             <Icon name="check" className="mt-2 h-5 w-5 shrink-0" />
             <p className="display-sm">
               Noted — <span className="break-all text-mute-ink">{email.trim()}</span>.
@@ -62,8 +70,11 @@ export function Newsletter() {
         ) : (
           <form onSubmit={submit} noValidate>
             <label htmlFor={input} className="label-sm text-mute-ink">Email address</label>
-            <div className="group mt-2 flex items-center gap-4 border-b border-line-ink-2 transition-colors focus-within:border-bone">
+            {/* The rule is the field. Focus in the address thickens it to a bone
+                line two pixels deep instead of boxing the display-size type. */}
+            <div className="group mt-2 flex items-center gap-4 border-b border-line-ink-2 transition-[border-color,box-shadow] has-[input:focus-visible]:border-bone has-[input:focus-visible]:shadow-[inset_0_-1px_0_var(--color-bone)]">
               <input
+                ref={field}
                 id={input}
                 type="email"
                 inputMode="email"
@@ -74,7 +85,7 @@ export function Newsletter() {
                 aria-invalid={state === 'error'}
                 aria-describedby={hint}
                 placeholder="you@example.com"
-                className="min-h-16 w-full min-w-0 flex-1 bg-transparent py-3 text-[clamp(1.5rem,1rem+2.2vw,2.75rem)] font-semibold tracking-[-0.035em] text-bone outline-none placeholder:text-mute-ink/70 md:min-h-20"
+                className="min-h-16 w-full min-w-0 flex-1 bg-transparent py-3 text-[clamp(1.5rem,1rem+2.2vw,2.75rem)] font-semibold tracking-[-0.035em] text-bone outline-none! placeholder:text-mute-ink/70 md:min-h-20"
               />
               <button
                 type="submit"
@@ -95,7 +106,12 @@ export function Newsletter() {
                   <span className="text-sm text-bone">{error}</span>
                 </>
               ) : (
-                'Unsubscribe in one click. See the privacy policy.'
+                <span>
+                  Unsubscribe in one click. See the{' '}
+                  <Link href="/privacy" className="text-bone underline decoration-line-ink-2 underline-offset-4 transition-colors hover:decoration-bone">
+                    privacy policy
+                  </Link>.
+                </span>
               )}
             </p>
           </form>

@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { Suspense, useDeferredValue, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { notifyQuery, QueryWatch, useLocationQuery } from '@/components/commerce/Listing';
 import { ProductGrid } from '@/components/commerce/ProductGrid';
 import { ArtImage } from '@/components/editorial/ArtImage';
 import { Icon } from '@/components/ui/Icon';
 import { getProduct, newArrivals } from '@/lib/catalog';
+import { cn } from '@/lib/cn';
 import { pad2, plural } from '@/lib/format';
 import { clearRecent, hrefOf, pushRecent, readRecent, search, SUGGESTED, type Hit } from '@/lib/search';
 
@@ -22,6 +23,13 @@ const recentSnapshot = () => JSON.stringify(readRecent());
 const noRecent = () => '[]';
 
 const KIND: Record<Hit['kind'], string> = { product: 'Piece', collection: 'Collection', story: 'Story' };
+
+/**
+ * A word in a label line that can be pressed: set in the label's own capitals
+ * (buttons do not inherit text-transform), drawn 32px tall, with a 44px target.
+ * link-quiet draws its rule with ::after, so the target is the ::before.
+ */
+const HIT = "link-quiet relative min-h-8 uppercase before:absolute before:-inset-x-1 before:-inset-y-1.5 before:content-['']";
 
 /**
  * The full-page search. The query is typed at poster size and the results
@@ -146,7 +154,7 @@ export function SearchResults() {
           <p className="label flex flex-wrap items-baseline gap-x-4 gap-y-1 text-mute">
             <span>Try</span>
             {SUGGESTED.filter((s) => s.toLowerCase() !== term.toLowerCase()).slice(0, 4).map((s) => (
-              <button key={s} type="button" onClick={() => run(s)} className="link-quiet min-h-8 text-ink">
+              <button key={s} type="button" onClick={() => run(s)} className={cn(HIT, 'text-ink')}>
                 {s}
               </button>
             ))}
@@ -167,9 +175,9 @@ export function SearchResults() {
                 <div className="label flex min-w-0 flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-mute">
                   <span>Recent</span>
                   {recent.slice(0, 4).map((r) => (
-                    <button key={r} type="button" onClick={() => run(r)} className="link-quiet min-h-8 text-ink">{r}</button>
+                    <button key={r} type="button" onClick={() => run(r)} className={cn(HIT, 'text-ink')}>{r}</button>
                   ))}
-                  <button type="button" onClick={() => { clearRecent(); notifyRecent(); }} className="link-quiet min-h-8">Clear</button>
+                  <button type="button" onClick={() => { clearRecent(); notifyRecent(); }} className={HIT}>Clear</button>
                 </div>
               ) : null}
             </div>
@@ -193,7 +201,8 @@ export function SearchResults() {
           </section>
 
           <Block n={2} title="New in the studio" count={fresh.length} className="mt-[clamp(4rem,9vw,8rem)]">
-            <ProductGrid products={fresh} columns={4} label="New in the studio" />
+            {/* On a phone with recent searches, its first row peeks into the first screen. */}
+            <ProductGrid products={fresh} columns={4} priorityCount={2} />
           </Block>
         </>
       ) : found.length === 0 && results.other.length === 0 ? (
@@ -205,14 +214,14 @@ export function SearchResults() {
             </p>
           </div>
           <Block n={1} title="In the studio now" count={Math.min(4, fresh.length)} className="mt-[clamp(4rem,8vw,7rem)]">
-            <ProductGrid products={fresh.slice(0, 4)} columns={4} label="In the studio now" />
+            <ProductGrid products={fresh.slice(0, 4)} columns={4} priorityCount={4} />
           </Block>
         </>
       ) : (
         <>
           {found.length ? (
-            <Block n={1} title="Pieces" count={found.length} className="mt-[clamp(3rem,6vw,5rem)]">
-              <ProductGrid products={found} columns={found.length <= 3 ? 3 : 4} label={`Pieces matching “${term}”`} />
+            <Block n={1} title="Pieces" more={` matching “${term}”`} count={found.length} className="mt-[clamp(3rem,6vw,5rem)]">
+              <ProductGrid products={found} columns={found.length <= 3 ? 3 : 4} priorityCount={4} />
             </Block>
           ) : null}
           {results.other.length ? (
@@ -222,24 +231,41 @@ export function SearchResults() {
               count={results.other.length}
               className="mt-[clamp(4rem,8vw,7rem)]"
             >
-              <ul className="grid gap-x-(--gutter) gap-y-12 md:grid-cols-3">
-                {results.other.map((hit) => (
-                  <li key={`${hit.kind}-${hit.slug}`} data-reveal>
-                    <Link href={hrefOf(hit)} className="group block">
-                      <div className="frame frame-3-2 frame-zoom">
-                        <ArtImage wide={hit.image} alt="" sizes="(min-width:768px) 32vw, 100vw" />
-                      </div>
-                      <p className="label mt-4 text-mute">
-                        {KIND[hit.kind]} <span aria-hidden>·</span> {hit.meta}
-                      </p>
-                      <p className="display-md mt-2">{hit.title}</p>
-                      <span className="label link-arrow mt-4">
-                        {hit.kind === 'story' ? 'Read the story' : 'View the collection'}
-                        <Icon name="arrowR" className="h-3.5 w-3.5" />
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+              <ul
+                className={cn(
+                  'grid gap-x-(--gutter) gap-y-12',
+                  results.other.length === 2 ? 'md:grid-cols-2' : results.other.length > 2 ? 'md:grid-cols-3' : null,
+                )}
+              >
+                {results.other.map((hit) => {
+                  const single = results.other.length === 1;
+                  return (
+                    <li key={`${hit.kind}-${hit.slug}`} data-reveal>
+                      <Link
+                        href={hrefOf(hit)}
+                        className={cn('group block', single && 'md:grid md:grid-cols-12 md:items-end md:gap-x-(--gutter)')}
+                      >
+                        <div className={cn('frame frame-3-2 frame-zoom', single && 'md:col-span-7')}>
+                          <ArtImage
+                            wide={hit.image}
+                            alt=""
+                            sizes={single ? '(min-width:768px) 58vw, 100vw' : results.other.length === 2 ? '(min-width:768px) 48vw, 100vw' : '(min-width:768px) 32vw, 100vw'}
+                          />
+                        </div>
+                        <div className={cn(single && 'md:col-span-5 md:pb-1')}>
+                          <p className="label mt-4 text-mute">
+                            {KIND[hit.kind]} <span aria-hidden>·</span> {hit.meta}
+                          </p>
+                          <p className={cn('mt-2', single ? 'display-lg' : 'display-md')}>{hit.title}</p>
+                          <span className="label link-arrow mt-4 md:mt-6">
+                            {hit.kind === 'story' ? 'Read the story' : 'View the collection'}
+                            <Icon name="arrowR" className="h-3.5 w-3.5" />
+                          </span>
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </Block>
           ) : null}
@@ -249,15 +275,22 @@ export function SearchResults() {
   );
 }
 
+/**
+ * A numbered block of results. Its heading is the only one the block has:
+ * the grid inside is not given a second, hidden one. `more` finishes the
+ * heading for a screen reader, e.g. the term the pieces match.
+ */
 function Block({
-  n, title, count, className, children,
-}: { n: number; title: string; count: number; className?: string; children: React.ReactNode }) {
+  n, title, more, count, className, children,
+}: { n: number; title: string; more?: string; count: number; className?: string; children: React.ReactNode }) {
+  const id = useId();
   return (
-    <section className={className} aria-label={title}>
+    <section className={className} aria-labelledby={id}>
       <div className="mb-[clamp(1.75rem,3.5vw,3rem)] flex items-baseline justify-between gap-6 border-t border-ink pt-4" data-reveal>
-        <h2 className="label">
-          <span className="nums mr-3 text-mute">{pad2(n)}</span>
+        <h2 id={id} className="label">
+          <span className="nums mr-3 text-mute" aria-hidden>{pad2(n)}</span>
           {title}
+          {more ? <span className="sr-only">{more}</span> : null}
         </h2>
         <p className="label nums text-mute">{pad2(count)}</p>
       </div>

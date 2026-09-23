@@ -21,7 +21,7 @@ export default function ShippingPage() {
     <TextPage
       eyebrow="Client care"
       title="Shipping and returns."
-      standfirst="Orders placed before 14:00 AST are packed the same day, Sunday to Thursday."
+      standfirst="Parcels travel in cotton and board, never plastic, and international duties are settled at checkout, so nothing is owed at the door."
       facts={[
         { label: 'Packed the same day', value: '14:00', unit: 'AST', note: 'Order before, Sunday to Thursday.' },
         { label: 'To return', value: '30', unit: 'days', note: 'Collected free inside Saudi Arabia.' },

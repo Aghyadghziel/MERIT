@@ -90,7 +90,7 @@ export function AccountView() {
             {sentTo ? (
               <div>
                 <p ref={status} tabIndex={-1} className="display-sm" style={{ outline: 'none' }}>
-                  Nothing was sent to <span className="[overflow-wrap:anywhere]">{sentTo}</span>.
+                  Nothing was sent to <Address value={sentTo} />.
                 </p>
                 <p className="mt-4 text-sm leading-relaxed text-mute">
                   MERIT is a concept site with no sign-in and no order history. Your bag and wishlist
@@ -153,6 +153,19 @@ export function AccountView() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * An email address that moves to its own line as a unit, breaks after the @
+ * if it still does not fit, and only then anywhere at all.
+ */
+function Address({ value }: { value: string }) {
+  const at = value.lastIndexOf('@');
+  return (
+    <span className="[overflow-wrap:anywhere]">
+      {at > 0 ? <>{value.slice(0, at + 1)}<wbr />{value.slice(at + 1)}</> : value}
+    </span>
   );
 }
 

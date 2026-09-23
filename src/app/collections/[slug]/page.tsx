@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { ListingPage } from '@/components/commerce/ListingPage';
 import { ArtImage } from '@/components/editorial/ArtImage';
 import {
-  alt, collectionIndex, COVER_POSITION, coverWide, looksFor, pad, pic, sentences, storyFor,
+  alt, collectionIndex, collectionSeason, COVER_POSITION, coverWide, isWide, looksFor, pad, pic, sentences, storyFor,
 } from '@/components/editorial/data';
 import { JumpToPieces } from '@/components/editorial/JumpToPieces';
 import { Lookbook } from '@/components/editorial/Lookbook';
@@ -25,11 +25,11 @@ export async function generateMetadata({ params }: PageProps<'/collections/[slug
   const collection = getCollection(slug as never);
   if (!collection) return {};
   return {
-    title: `${collection.name} — ${collection.season} ${collection.year}`,
+    title: `${collection.name} — ${collectionSeason(collection)}`,
     description: collection.note,
     alternates: { canonical: `/collections/${collection.slug}` },
     openGraph: {
-      title: `${collection.name} — ${collection.season} ${collection.year}`,
+      title: `${collection.name} — ${collectionSeason(collection)}`,
       description: collection.note,
       images: [{ url: `/img/${collection.image}.webp` }],
     },
@@ -56,6 +56,10 @@ export default async function CollectionPage({ params }: PageProps<'/collections
   // The note's closing sentence, lifted out as the pull quote.
   const lines = sentences(collection.note);
   const quote = lines.length > 1 ? lines[lines.length - 1] : null;
+  const cover = coverWide(collection);
+  // Frames, not looks: "look" is the house's word for a runway or campaign
+  // look, and Runway 01 had twenty-four of them.
+  const frames = `${pad(looks.length)} ${looks.length === 1 ? 'frame' : 'frames'}`;
 
   return (
     <>
@@ -71,9 +75,12 @@ export default async function CollectionPage({ params }: PageProps<'/collections
         <div data-zoom="1.08" className="absolute inset-0">
           <div data-reveal-img className="h-full w-full">
             <ArtImage
-              wide={coverWide(collection)}
+              wide={cover}
               tall={collection.image}
               alt={alt(collection.image)}
+              // Drawn at whichever of width or height the crop fills first.
+              sizes={fills(cover)}
+              tallSizes={fills(collection.image)}
               priority
               className={COVER_POSITION[collection.slug]}
             />
@@ -90,7 +97,7 @@ export default async function CollectionPage({ params }: PageProps<'/collections
               <span className="nums">{pad(index + 1)}</span>
               <span className="sr-only"> of {collections.length}</span>
             </p>
-            <p className="label">{collection.season} <span className="nums">{collection.year}</span></p>
+            <p className="label nums">{collectionSeason(collection)}</p>
           </div>
 
           <div>
@@ -112,10 +119,8 @@ export default async function CollectionPage({ params }: PageProps<'/collections
       <section aria-label="About the collection" className="page grid-page gap-y-10 pb-(--section-sm) pt-(--section)">
         <dl className="col-span-4 md:col-span-2 lg:col-span-3">
           {[
-            ['Season', collection.season],
-            ['Year', String(collection.year)],
-            ['Pieces', pad(pool.length)],
-            ['Looks', pad(looks.length)],
+            ['Season', collectionSeason(collection)],
+            ['In this lookbook', frames],
           ].map(([k, v]) => (
             <div key={k} className="flex items-baseline justify-between gap-4 border-t border-line py-2.5" data-reveal>
               <dt className="label-sm text-mute">{k}</dt>
@@ -138,8 +143,10 @@ export default async function CollectionPage({ params }: PageProps<'/collections
       {/* ─── The looks ──────────────────────────────────────────────── */}
       <section aria-labelledby="looks-title" className="pb-(--section)">
         <div className="page mb-10 flex items-baseline justify-between gap-6 border-t border-ink pt-4 md:mb-14">
-          <h2 id="looks-title" className="label">The looks</h2>
-          <p className="label nums text-mute">{pad(looks.length)} {looks.length === 1 ? 'look' : 'looks'} · shop each frame</p>
+          <h2 id="looks-title" className="label">The lookbook</h2>
+          <p className="label nums text-mute">
+            {frames} · {looks.length === 1 ? 'shop it' : 'shop each one'}
+          </p>
         </div>
         <Lookbook
           looks={looks}
@@ -168,7 +175,9 @@ export default async function CollectionPage({ params }: PageProps<'/collections
                     alt=""
                     width={pic(story.images[0]).width}
                     height={pic(story.images[0]).height}
-                    sizes="(min-width:1024px) 56vw, 100vw"
+                    // A landscape in this 3:2 frame fills its height and is
+                    // drawn about a fifth wider than the frame.
+                    sizes={isWide(story.images[0]) ? '(min-width:1024px) 67vw, (min-width:768px) 76vw, 110vw' : '(min-width:1024px) 56vw, (min-width:768px) 64vw, 92vw'}
                     className="transition-transform duration-[1400ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.035]"
                   />
                 </div>
@@ -197,7 +206,7 @@ export default async function CollectionPage({ params }: PageProps<'/collections
         position={`${pad(collections.indexOf(next) + 1)} / ${pad(collections.length)}`}
         title={next.name}
         poster
-        meta={`${next.season} ${next.year}`}
+        meta={collectionSeason(next)}
         dek={next.statement}
         cta={`Enter ${next.name}`}
         wide={coverWide(next)}
@@ -207,6 +216,13 @@ export default async function CollectionPage({ params }: PageProps<'/collections
     </>
   );
 }
+
+/**
+ * The width a picture is drawn at when it covers a full screen: a landscape
+ * fills the height and runs past the sides, a portrait fills the width on a
+ * desk and the height in the hand.
+ */
+const fills = (image: string) => (isWide(image) ? 'max(100vw, 178svh)' : 'max(100vw, 80svh)');
 
 /**
  * The break in the run: the collection's cloth at full height beside the
@@ -227,7 +243,9 @@ function Interlude({ quote, detail, name }: { quote: string; detail: string; nam
               src={p.src}
               alt={alt(detail)}
               fill
-              sizes="(min-width:1024px) 42vw, 100vw"
+              // The column is taller than it is wide, so the cloth is drawn
+              // wider than the column: sized for the height it fills.
+              sizes="(min-width:1024px) max(42vw, 58rem), 100vw"
               className="object-cover [filter:saturate(0.9)_contrast(1.03)]"
             />
           </div>

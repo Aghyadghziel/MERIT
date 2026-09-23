@@ -55,7 +55,7 @@ export default function ContactPage() {
             <dt className="label-sm text-mute">Appointments</dt>
             <dd className="mt-2 max-w-[30ch] text-sm leading-relaxed text-mute">
               Fittings at the Jeddah atelier are booked in writing — choose &ldquo;An appointment&rdquo;
-              below. <Link href="/stores#jeddah" className="link-rule text-ink">The atelier</Link>
+              in the form. <Link href="/stores#jeddah" className="link-rule text-ink">The atelier</Link>
             </dd>
           </div>
         </dl>

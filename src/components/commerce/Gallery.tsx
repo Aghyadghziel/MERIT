@@ -80,8 +80,22 @@ export function Gallery({ images, name }: Props) {
     return () => mm.revert();
   }, [n]);
 
-  const goTo = (i: number) =>
-    slides.current[i]?.scrollIntoView({ block: 'start', behavior: reduced() ? 'auto' : 'smooth' });
+  // The header steps away on a deliberate scroll down and comes back on one
+  // up (Header.tsx: 28px down, 10px up, never near the top). Aim for where it
+  // will be when the scroll lands: a photograph reached going down sits flush
+  // with the top of the screen, one reached going up sits under the header.
+  const goTo = (i: number) => {
+    const el = slides.current[i];
+    if (!el) return;
+    const nav = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) * 16 || 80;
+    const y0 = window.scrollY;
+    const flush = el.getBoundingClientRect().top + y0;
+    const under = flush - nav;
+    const hides = flush - y0 > 28 && flush >= nav * 2.5;
+    const shows = under - y0 < -10 || under < nav * 2.5;
+    const y = hides ? flush : shows ? under : document.documentElement.dataset.header === 'hidden' ? flush : under;
+    window.scrollTo({ top: Math.max(0, y), behavior: reduced() ? 'instant' : 'smooth' });
+  };
 
   return (
     <>
@@ -100,7 +114,7 @@ export function Gallery({ images, name }: Props) {
                 key={img}
                 ref={(el) => { slides.current[i] = el; }}
                 data-index={i}
-                className="w-full shrink-0 snap-start overflow-hidden md:w-1/2 md:border-r md:border-bone md:last:border-r-0 lg:w-full lg:-scroll-mt-4 lg:border-r-0"
+                className="w-full shrink-0 snap-start overflow-hidden md:w-1/2 md:border-r md:border-bone md:last:border-r-0 lg:w-full lg:border-r-0"
                 {...(i > 0 ? { 'data-reveal-img': '' } : {})}
               >
                 <button
@@ -151,7 +165,7 @@ export function Gallery({ images, name }: Props) {
             column passes. */}
         <div className="pointer-events-none sticky bottom-0 z-10 hidden h-0 lg:block">
           <div className="pointer-events-auto absolute bottom-5 right-5 flex h-11 items-center bg-bone/92 pl-4 backdrop-blur-sm">
-            <p className="label-sm nums mr-2 w-[4.5em]" aria-hidden>
+            <p className="label-sm nums w-[4.5em]" aria-hidden>
               {pad2(active + 1)}
               <span className="text-mute"> / {pad2(n)}</span>
             </p>
@@ -164,19 +178,19 @@ export function Gallery({ images, name }: Props) {
                     onClick={() => goTo(i)}
                     aria-label={`Photograph ${i + 1} of ${n}`}
                     aria-current={i === active ? 'true' : undefined}
-                    className="group flex h-11 w-6 items-center justify-center"
+                    className="group flex h-11 w-11 items-center justify-center"
                   >
                     <span
                       className={cn(
                         'block h-px transition-[width,background-color] duration-500 ease-[cubic-bezier(.16,1,.3,1)]',
-                        i === active ? 'w-5 bg-ink' : 'w-3 bg-line-2 group-hover:bg-mute',
+                        i === active ? 'w-7 bg-ink' : 'w-4 bg-line-2 group-hover:bg-mute',
                       )}
                     />
                   </button>
                 ))}
               </div>
             ) : null}
-            <span aria-hidden className="ml-2 h-4 w-px bg-line-2" />
+            <span aria-hidden className="h-4 w-px bg-line-2" />
             <button
               type="button"
               onClick={() => setLightbox(active)}
@@ -197,23 +211,89 @@ export function Gallery({ images, name }: Props) {
 }
 
 const ZOOM = 2.4;
-const clamp = (v: number) => Math.max(0, Math.min(100, v));
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+
+/** Where the photograph actually sits inside its full-screen button. */
+type Frame = { W: number; H: number; left: number; top: number; w: number; h: number };
+
+/**
+ * The button is the whole stage, but a portrait photograph under object-contain
+ * fills only a strip of it. Zooming has to be worked out against that strip, or
+ * pointing beside the photograph pushes it off screen.
+ */
+function frameOf(btn: HTMLElement): Frame {
+  const W = btn.clientWidth;
+  const H = btn.clientHeight;
+  const img = btn.querySelector('img');
+  const cs = img ? getComputedStyle(img) : null;
+  const px = (v?: string) => parseFloat(v ?? '') || 0;
+  const pl = px(cs?.paddingLeft);
+  const pt = px(cs?.paddingTop);
+  const cw = W - pl - px(cs?.paddingRight);
+  const ch = H - pt - px(cs?.paddingBottom);
+  const nw = img?.naturalWidth || cw;
+  const nh = img?.naturalHeight || ch;
+  const s = Math.min(cw / nw, ch / nh);
+  const w = nw * s;
+  const h = nh * s;
+  return { W, H, left: pl + (cw - w) / 2, top: pt + (ch - h) / 2, w, h };
+}
+
+/**
+ * The transform-origin (px, in the button) that puts the zoomed photograph
+ * where the pan asks: along an axis where it is bigger than the screen, `f`
+ * runs from its first edge on the screen's edge (0) to its last (1), so it
+ * always covers the screen; where it is smaller, it stays centred.
+ */
+function originFor(fr: Frame, fx: number, fy: number) {
+  const axis = (view: number, start: number, size: number, f: number) => {
+    const big = size * ZOOM;
+    const lands = big > view ? -(big - view) * f : (view - big) / 2;
+    // A point p maps to o + (p - o) * ZOOM; solve for the o that sends the
+    // photograph's first edge to `lands`.
+    return (start * ZOOM - lands) / (ZOOM - 1);
+  };
+  return { x: axis(fr.W, fr.left, fr.w, fx), y: axis(fr.H, fr.top, fr.h, fy) };
+}
+
+/** A pointer's place on the stage as a pan, with a margin so the edges are easy to reach. */
+function panAt(e: React.PointerEvent<HTMLElement> | React.MouseEvent<HTMLElement>) {
+  const r = e.currentTarget.getBoundingClientRect();
+  return {
+    x: clamp01((e.clientX - r.left - r.width * 0.1) / (r.width * 0.8)),
+    y: clamp01((e.clientY - r.top - r.height * 0.1) / (r.height * 0.8)),
+  };
+}
 
 /**
  * Full screen on the native <dialog>, which brings the focus trap, Escape and
  * an inert page for free. Swipe or use the arrows to move; click or tap to
- * zoom. A mouse pans by pointing, a finger pans by dragging.
+ * zoom. A mouse pans by pointing (the whole screen maps onto the whole
+ * photograph), a finger pans by dragging, one to one.
  */
 function Lightbox({
   images, name, start, alt, onClose,
 }: { images: string[]; name: string; start: number; alt: (i: number) => string; onClose: () => void }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const track = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x: number; y: number; ox: number; oy: number; moved: boolean } | null>(null);
+  const drag = useRef<{ x: number; y: number; fx: number; fy: number; moved: boolean } | null>(null);
+  const pan = useRef({ x: 0.5, y: 0.5 });
   const [cur, setCur] = useState(start);
   const [zoom, setZoom] = useState(false);
-  const [origin, setOrigin] = useState({ x: 50, y: 50 });
+  const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const n = images.length;
+
+  const panTo = (btn: HTMLElement, fx: number, fy: number) => {
+    pan.current = { x: fx, y: fy };
+    setOrigin(originFor(frameOf(btn), fx, fy));
+  };
+
+  // The origin is in pixels of the stage, so a new stage size starts over.
+  useEffect(() => {
+    const out = () => setZoom(false);
+    window.addEventListener('resize', out);
+    return () => window.removeEventListener('resize', out);
+  }, []);
 
   useEffect(() => {
     const d = dlg.current;
@@ -243,11 +323,6 @@ function Lightbox({
       setCur(i);
       setZoom(false);
     }
-  };
-
-  const point = (e: React.MouseEvent<HTMLElement>) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    return { x: clamp(((e.clientX - r.left) / r.width) * 100), y: clamp(((e.clientY - r.top) / r.height) * 100) };
   };
 
   return (
@@ -290,25 +365,40 @@ function Lightbox({
                   aria-label={`${alt(i)}. ${on ? 'Zoom out' : 'Zoom in'}`}
                   className={cn('relative block h-full w-full overflow-hidden', on ? 'cursor-zoom-out touch-none' : 'cursor-zoom-in')}
                   onPointerDown={(e) => {
-                    drag.current = { x: e.clientX, y: e.clientY, ox: origin.x, oy: origin.y, moved: false };
+                    drag.current = { x: e.clientX, y: e.clientY, fx: pan.current.x, fy: pan.current.y, moved: false };
                   }}
                   onPointerMove={(e) => {
                     if (!on) return;
-                    if (e.pointerType === 'mouse') { setOrigin(point(e)); return; }
+                    const btn = e.currentTarget;
+                    if (e.pointerType === 'mouse') {
+                      const p = panAt(e);
+                      panTo(btn, p.x, p.y);
+                      return;
+                    }
                     const d = drag.current;
                     if (!d) return;
-                    const r = e.currentTarget.getBoundingClientRect();
                     const dx = e.clientX - d.x;
                     const dy = e.clientY - d.y;
                     if (Math.abs(dx) + Math.abs(dy) > 6) d.moved = true;
-                    setOrigin({ x: clamp(d.ox - (dx / r.width) * 140), y: clamp(d.oy - (dy / r.height) * 140) });
+                    // The photograph follows the finger exactly: a drag of its
+                    // overhang moves the pan from one end to the other.
+                    const fr = frameOf(btn);
+                    const overX = fr.w * ZOOM - fr.W;
+                    const overY = fr.h * ZOOM - fr.H;
+                    panTo(
+                      btn,
+                      overX > 0 ? clamp01(d.fx - dx / overX) : 0.5,
+                      overY > 0 ? clamp01(d.fy - dy / overY) : 0.5,
+                    );
                   }}
                   onClick={(e) => {
                     const moved = drag.current?.moved;
                     drag.current = null;
                     if (moved) return;
                     if (on) { setZoom(false); return; }
-                    setOrigin(e.detail === 0 ? { x: 50, y: 50 } : point(e));
+                    // A keyboard press has no point; it zooms into the middle.
+                    const p = e.detail === 0 ? { x: 0.5, y: 0.5 } : panAt(e);
+                    panTo(e.currentTarget, p.x, p.y);
                     setZoom(true);
                   }}
                 >
@@ -321,7 +411,7 @@ function Lightbox({
                       'object-contain transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
                       imageKind(img) === 'flat' && 'p-[6%]',
                     )}
-                    style={{ transform: on ? `scale(${ZOOM})` : 'scale(1)', transformOrigin: `${origin.x}% ${origin.y}%` }}
+                    style={{ transform: on ? `scale(${ZOOM})` : 'scale(1)', transformOrigin: `${origin.x}px ${origin.y}px` }}
                   />
                 </button>
               </div>

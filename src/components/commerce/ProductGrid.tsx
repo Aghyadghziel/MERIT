@@ -5,7 +5,10 @@ import { cn } from '@/lib/cn';
 
 export type GridDensity = 'compact' | 'large';
 
-/** Anything set into the grid between cards — a campaign picture, a story. */
+/**
+ * Anything set into the grid between cards — a campaign picture, a story.
+ * `at` is the card it goes before; at or past the last card, it closes the grid.
+ */
 export type GridInsert = { at: number; key: string; node: React.ReactNode };
 
 /**
@@ -64,6 +67,7 @@ export function ProductGrid({
             </div>
           </Fragment>
         ))}
+        {inserts?.filter((x) => x.at >= products.length).map((x) => <Fragment key={x.key}>{x.node}</Fragment>)}
       </div>
     </>
   );

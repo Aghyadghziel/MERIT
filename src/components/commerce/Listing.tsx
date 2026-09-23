@@ -11,6 +11,7 @@ import { ArtImage } from '@/components/editorial/ArtImage';
 import { posterSize } from '@/components/editorial/data';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
+import { Wordmark } from '@/components/ui/Wordmark';
 import { DUR, EASE, reduced, setupGsap } from '@/lib/gsap';
 import type { Category, Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
@@ -48,6 +49,12 @@ export type ListingProps = {
   eyebrow?: string;
   /** Campaign and story tiles set into the unfiltered grid. */
   stories?: ListingStory[];
+  /**
+   * Where the reader goes when the range runs out. It closes the grid as its
+   * last cell, sized to whatever the last row has left at each width, so the
+   * listing never ends on a lone card beside empty columns.
+   */
+  next?: { kicker: string; title: string; href: string; count?: number };
   /**
    * `page` opens the page (h1, breadcrumb); `section` sits inside another page,
    * as the pieces of a collection do. Unset, a listing under /collections/ is
@@ -165,7 +172,7 @@ const navHeight = () =>
 
 /** Everything the listing draws, given a query. */
 function ListingView({
-  pool, title, description, campaign, eyebrow, stories, variant, query, onQuery,
+  pool, title, description, campaign, eyebrow, stories, next, variant, query, onQuery,
 }: ViewProps) {
   const pathname = usePathname();
   const mode = variant ?? (pathname.startsWith('/collections/') ? 'section' : 'page');
@@ -180,8 +187,14 @@ function ListingView({
   const anchor = useRef<{ id: string; top: number } | null>(null);
   const densityChanged = useRef(false);
 
-  const { filters, sort } = useMemo(() => fromQuery(new URLSearchParams(query)), [query]);
   const options = useMemo(() => facets(pool), [pool]);
+  const parsed = useMemo(() => fromQuery(new URLSearchParams(query)), [query]);
+  // Only values this pool actually has count as filters: a link to
+  // ?category=Dresses on the men's listing shows the men's listing, not an
+  // empty grid and a chip for a category that is not there.
+  const filters = useMemo(() => within(parsed.filters, options), [parsed.filters, options]);
+  const sort = parsed.sort;
+  const dropped = countActive(parsed.filters) !== countActive(filters);
   const results = useMemo(() => apply(pool, filters, sort), [pool, filters, sort]);
   const active = countActive(filters);
   const selected = chips(filters);
@@ -224,6 +237,12 @@ function ListingView({
   );
   const clearAll = useCallback(() => commit(EMPTY, sort), [commit, sort]);
   const closeDrawer = useCallback(() => setDrawer(false), []);
+
+  // The address bar drops whatever the listing set aside, so a copied link
+  // says exactly what the page shows.
+  useEffect(() => {
+    if (dropped) onQuery(toQuery(filters, sort));
+  }, [dropped, filters, sort, onQuery]);
 
   const pickCategory = (c: Category | null) => {
     const only = filters.category.length === 1 && filters.category[0] === c;
@@ -294,23 +313,46 @@ function ListingView({
     return () => { t.progress(1).kill(); };
   }, [density]);
 
-  // Campaign and story tiles only break up the unfiltered, unsorted grid, and
-  // only where at least a full block of pieces follows them.
+  // Campaign and story tiles only break up the unfiltered, unsorted grid: one
+  // after the first row, then one every two rows further on, on alternate
+  // sides, wherever at least three pieces follow to sit beside it. The end
+  // cell then takes whatever the last row has left, at every width.
   const inserts = useMemo<GridInsert[]>(() => {
-    if (!stories?.length || active > 0 || sort !== 'featured') return [];
+    const n = results.length;
     const out: GridInsert[] = [];
-    stories.forEach((story, k) => {
-      const at = 4 + k * 8;
-      if (results.length >= at + 4) {
+    if (stories?.length && active === 0 && sort === 'featured') {
+      stories.forEach((story, k) => {
+        const at = 4 + k * 8;
+        if (n >= at + 3) {
+          out.push({
+            at,
+            key: `story-${k}`,
+            node: <StoryTile story={story} side={k % 2 ? 'right' : 'left'} density={density} />,
+          });
+        }
+      });
+    }
+    if (next && n > 0) {
+      const spans = endSpans(n, out.length, density);
+      if (spans.base || spans.md || spans.lg) {
         out.push({
-          at,
-          key: `story-${k}`,
-          node: <StoryTile story={story} side={k % 2 ? 'right' : 'left'} density={density} />,
+          at: n,
+          key: 'end',
+          node: (
+            <EndCell
+              spans={spans}
+              next={next}
+              filtered={active > 0}
+              shown={n}
+              total={pool.length}
+              onClear={clearAll}
+            />
+          ),
         });
       }
-    });
+    }
     return out;
-  }, [stories, active, sort, results.length, density]);
+  }, [stories, next, active, sort, results.length, pool.length, density, clearAll]);
 
   const section = mode === 'section';
 
@@ -403,23 +445,27 @@ function ListingView({
           </div>
 
           {selected.length > 0 ? (
-            <div className="page no-bar -mt-1 flex items-center gap-2 overflow-x-auto pb-3 pt-0.5">
+            // Each chip is drawn 32px tall inside a 44px target; the row's
+            // negative margin keeps the bar the height it was.
+            <div className="page no-bar -mt-2 flex items-center gap-2 overflow-x-auto pb-1.5">
               {selected.map((chip) => (
                 <button
                   key={`${chip.group}-${chip.value}`}
                   type="button"
                   onClick={() => onToggle(chip.group, chip.value)}
                   aria-label={`Remove filter: ${chip.label}`}
-                  className="label-sm inline-flex h-8 shrink-0 items-center gap-2 border border-line-2 bg-bone pl-3 pr-2.5 transition-colors duration-200 hover:border-ink"
+                  className="group/chip inline-flex h-11 shrink-0 items-center focus-visible:-outline-offset-2"
                 >
-                  {chip.label}
-                  <Icon name="close" className="h-3 w-3" />
+                  <span className="label-sm inline-flex h-8 items-center gap-2 border border-line-2 bg-bone pl-3 pr-2.5 transition-colors duration-200 group-hover/chip:border-ink">
+                    {chip.label}
+                    <Icon name="close" className="h-3 w-3" />
+                  </span>
                 </button>
               ))}
               <button
                 type="button"
                 onClick={clearAll}
-                className="label-sm ml-1 inline-flex min-h-8 shrink-0 items-center px-2 underline decoration-1 underline-offset-4 transition-opacity hover:opacity-60"
+                className="label-sm ml-1 inline-flex h-11 shrink-0 items-center px-2 underline decoration-1 underline-offset-4 transition-opacity hover:opacity-60 focus-visible:-outline-offset-2"
               >
                 Clear all
               </button>
@@ -430,7 +476,7 @@ function ListingView({
         {/* ─── Results ────────────────────────────────────────────────── */}
         <div className="page pb-(--section) pt-[clamp(1.75rem,3.5vw,3rem)]">
           {results.length === 0 ? (
-            <Empty onClear={clearAll} onEdit={() => setDrawer(true)} />
+            <Empty filters={filters} onClear={clearAll} onEdit={() => setDrawer(true)} />
           ) : (
             <>
               <ProductGrid
@@ -445,7 +491,7 @@ function ListingView({
               <div className="mt-[clamp(3.5rem,7vw,6rem)] flex items-center justify-between gap-6 border-t border-ink pt-4">
                 <p className="label nums text-mute">
                   {pad2(results.length)} of {pad2(pool.length)}
-                  <span className="hidden sm:inline"> — {active ? 'filtered' : 'the full range'}</span>
+                  <span className="hidden sm:inline"> — {active ? 'filtered' : 'all shown'}</span>
                 </p>
                 <button
                   type="button"
@@ -795,9 +841,12 @@ function StoryTile({ story, side, density }: { story: ListingStory; side: 'left'
           )}
         </div>
       </div>
-      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-black/20" />
+      {/* Two scrims: the long one under the title, and a short one under the
+          kicker, which has to hold on a pale picture as well as a dark one. */}
+      <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+      <div aria-hidden className="absolute inset-x-0 top-0 h-[38%] bg-gradient-to-b from-black/50 to-transparent" />
       <div className="absolute inset-x-0 top-0 flex items-baseline justify-between gap-4 p-[clamp(1rem,2vw,1.75rem)]">
-        <p className="label text-bone/85">{story.kicker}</p>
+        <p className="label text-bone">{story.kicker}</p>
       </div>
       <div className="absolute inset-x-0 bottom-0 p-[clamp(1rem,2.2vw,2rem)]">
         <h3 className="max-w-[11ch] text-[clamp(2rem,1rem+3.4vw,4.5rem)] font-semibold leading-[0.88] tracking-[-0.05em]">
@@ -815,14 +864,118 @@ function StoryTile({ story, side, density }: { story: ListingStory; side: 'left'
   );
 }
 
-function Empty({ onClear, onEdit }: { onClear: () => void; onEdit: () => void }) {
+/** The filters, less any value the pool does not have. */
+function within(f: Filters, o: FacetOptions): Filters {
+  const allowed: Record<keyof Filters, Set<string>> = {
+    category: new Set(o.category),
+    size: new Set(o.size.flatMap((s) => s.values.map((v) => v.key))),
+    colour: new Set(o.colour.map((c) => c.name)),
+    collection: new Set(o.collection.map((c) => c.slug)),
+    fit: new Set(o.fit),
+    price: new Set(PRICE_BANDS.map((b) => b.key)),
+    availability: new Set(['in-stock', 'sale']),
+  };
+  const out: Filters = { ...EMPTY };
+  (Object.keys(EMPTY) as (keyof Filters)[]).forEach((g) => {
+    out[g] = [...new Set(f[g])].filter((v) => allowed[g].has(v));
+  });
+  return out;
+}
+
+type Spans = { base: number; md: number; lg: number };
+
+/**
+ * How many cells the last row has left at each width, given the pieces and
+ * the tiles set among them. In the four-up grid a tile covers four cells from
+ * a tablet up and a full row of two on a phone; in the large view it covers
+ * the full row everywhere.
+ */
+function endSpans(n: number, tiles: number, density: GridDensity): Spans {
+  const left = (cells: number, cols: number) => (cols - (cells % cols)) % cols;
+  if (density === 'large') {
+    const two = left(n + 2 * tiles, 2);
+    return { base: 0, md: two, lg: two };
+  }
+  return { base: left(n + 2 * tiles, 2), md: left(n + 4 * tiles, 3), lg: left(n + 4 * tiles, 4) };
+}
+
+// Whole class names, so Tailwind can find them.
+const SPAN_BASE = ['hidden', 'flex col-span-1'];
+const SPAN_MD = ['md:hidden', 'md:flex md:col-span-1', 'md:flex md:col-span-2'];
+const SPAN_LG = ['lg:hidden', 'lg:flex lg:col-span-1', 'lg:flex lg:col-span-2', 'lg:flex lg:col-span-3'];
+
+/**
+ * The last cell of the grid: the house mark in stone on an image well, and
+ * the way on — the next listing, or, when filters are on, the full range.
+ * It stretches to the height of the row it closes, like the story tiles.
+ */
+function EndCell({
+  spans, next, filtered, shown, total, onClear,
+}: {
+  spans: Spans;
+  next: NonNullable<ListingProps['next']>;
+  filtered: boolean;
+  shown: number;
+  total: number;
+  onClear: () => void;
+}) {
+  const cls = cn(
+    'group/end @container relative isolate min-h-[13rem] flex-col justify-between overflow-hidden bg-bone-2 p-[clamp(0.875rem,0.6rem+0.9vw,1.75rem)] text-left',
+    SPAN_BASE[spans.base], SPAN_MD[spans.md], SPAN_LG[spans.lg],
+  );
+  const body = (
+    <>
+      <Wordmark
+        symbol
+        className="pointer-events-none absolute -bottom-[6%] -right-[4%] -z-10 h-[72%] w-auto max-w-none text-stone-brand transition-transform duration-[1400ms] ease-expo group-hover/end:-translate-y-2"
+      />
+      <span className="label-sm flex items-baseline justify-between gap-3 text-mute">
+        {filtered ? 'End of the selection' : 'End of the range'}
+        {filtered ? <span className="nums">{pad2(shown)} / {pad2(total)}</span> : null}
+      </span>
+      <span className="mt-10 block">
+        <span className="label-sm block text-mute">{filtered ? 'Filters on' : next.kicker}</span>
+        <span className="mt-2.5 flex items-start gap-1.5 text-[clamp(1.75rem,13cqi,6.5rem)] font-semibold leading-[0.84] tracking-[-0.055em]">
+          <span className="border-b-2 border-transparent pb-[0.04em] transition-colors duration-500 group-hover/end:border-ink">
+            {filtered ? `See all ${total}` : next.title}
+          </span>
+          {!filtered && next.count !== undefined ? (
+            <span className="label-sm nums pt-1 tracking-[0.12em] text-mute">
+              {pad2(next.count)}
+              <span className="sr-only"> pieces</span>
+            </span>
+          ) : null}
+        </span>
+        <span aria-hidden className="mt-4 flex h-10 w-10 items-center justify-center bg-ink text-bone transition-transform duration-500 ease-expo group-hover/end:translate-x-1 @min-[20rem]:mt-5 @min-[20rem]:h-12 @min-[20rem]:w-12">
+          <Icon name="arrowR" className="h-4 w-4" />
+        </span>
+      </span>
+    </>
+  );
+  return filtered ? (
+    <button type="button" onClick={onClear} className={cls} data-reveal>
+      {body}
+    </button>
+  ) : (
+    <Link href={next.href} className={cls} data-reveal>
+      {body}
+    </Link>
+  );
+}
+
+function Empty({ filters, onClear, onEdit }: { filters: Filters; onClear: () => void; onEdit: () => void }) {
+  // The reason given depends on what is set: sizes and colours are where a
+  // selection runs out, since most pieces come in a few of each.
+  const narrow = filters.size.length > 0 || filters.colour.length > 0;
   return (
     <div className="grid-page py-[clamp(2.5rem,7vw,6rem)]">
       <div className="col-span-4 md:col-span-6 lg:col-span-8">
         <p className="label text-mute">No pieces</p>
         <p className="display-lg mt-5 max-w-[14ch]">Nothing in that combination.</p>
         <p className="body-lg mt-6 max-w-[34rem] text-mute">
-          Most pieces come in a few colours and five sizes, so a narrow selection empties quickly.
+          {narrow
+            ? 'Most pieces are made in a few colours and five sizes, so a size or a colour narrows the range quickly. '
+            : 'No piece matches all of these filters at once. '}
           Take a filter off, or start again.
         </p>
         <div className="mt-9 flex flex-wrap gap-3">

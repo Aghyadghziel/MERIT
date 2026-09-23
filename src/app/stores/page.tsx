@@ -3,7 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
-import { SectionHead } from '@/components/ui/SectionHead';
+import { LINE_ROOM, SectionHead } from '@/components/ui/SectionHead';
 import { cn } from '@/lib/cn';
 
 export const metadata: Metadata = {
@@ -35,7 +35,7 @@ const ROOMS: Room[] = [
     address: ['Al Urubah Road', 'Al Olaya, Riyadh 12244'],
     hours: [['Saturday to Thursday', '10:00 — 22:00'], ['Friday', '16:00 — 22:00']],
     room: ['The full range', 'Alterations while you wait', 'The archive rail at the back', 'Repairs at cost, for any MERIT piece'],
-    image: { src: 'manifesto-rail', width: 2560, height: 1440, alt: 'White hangers on a steel rail, waiting to be filled', position: '68% 50%', sizes: '(min-width:1024px) 100vw, 215vw' },
+    image: { src: 'campaign-studio', width: 1400, height: 1750, alt: 'A model in a pale suit seated on a steel chair in a white studio, in black and white', position: '50% 30%', sizes: '(min-width:1024px) 46vw, 100vw' },
     cta: { label: 'Write to the flagship', href: '/contact' },
   },
   {
@@ -47,7 +47,7 @@ const ROOMS: Room[] = [
     address: ['Al Rawdah District', 'Jeddah 23434'],
     hours: [['Sunday to Thursday', 'By appointment']],
     room: ['Fittings', 'Made-to-measure tailoring', 'An hour at a time, booked in writing'],
-    image: { src: 'atelier-basting', width: 1400, height: 1750, alt: 'A navy jacket basted in white thread on a tailor’s stand', position: '50% 40%', sizes: '(min-width:1024px) 46vw, 100vw' },
+    image: { src: 'cat-tailoring', width: 1400, height: 1750, alt: 'A model in a white tailored suit against a grey wall, in black and white', position: '50% 30%', sizes: '(min-width:1024px) 46vw, 100vw' },
     cta: { label: 'Write to book an hour', href: '/contact' },
   },
 ];
@@ -65,7 +65,7 @@ export default function StoresPage() {
           <p className="label" data-reveal>Stores</p>
           <p className="label-sm nums text-mute" data-reveal>02 rooms</p>
         </div>
-        <h1 id="stores-title" className="mt-[clamp(1.5rem,0.75rem+3vw,4rem)] text-[clamp(3.5rem,0.75rem+11.5vw,13.5rem)] font-semibold leading-[0.84] tracking-[-0.06em]">
+        <h1 id="stores-title" className={cn('mt-[clamp(1.5rem,0.75rem+3vw,4rem)] text-[clamp(3.5rem,0.75rem+11.5vw,13.5rem)] font-semibold leading-[0.84] tracking-[-0.06em]', LINE_ROOM)}>
           <Lines text="Two rooms." />
         </h1>
         <div className="grid-page mt-[clamp(2rem,1rem+3.5vw,4.5rem)]">
@@ -113,7 +113,7 @@ export default function StoresPage() {
               <p className={cn('label-sm', r.dark ? 'text-mute-ink' : 'text-mute')}>{r.when}</p>
             </div>
 
-            <h2 id={`${r.id}-title`} className="mt-[clamp(1.25rem,0.75rem+2vw,2.5rem)] text-[clamp(4rem,1rem+11.5vw,11.5rem)] font-semibold leading-[0.82] tracking-[-0.065em] lg:text-[clamp(4.5rem,0.5rem+8.4vw,11.5rem)]">
+            <h2 id={`${r.id}-title`} className={cn('mt-[clamp(1.25rem,0.75rem+2vw,2.5rem)] text-[clamp(4rem,1rem+11.5vw,11.5rem)] font-semibold leading-[0.82] tracking-[-0.065em] lg:text-[clamp(4.5rem,0.5rem+8.4vw,11.5rem)]', LINE_ROOM)}>
               <Lines text={r.city} />
             </h2>
 
@@ -177,7 +177,7 @@ export default function StoresPage() {
       <section className="page section-y" aria-labelledby="stockists-title">
         <SectionHead index={3} title="Stockists" id="stockists-title" tone="ink" note="Index range only" />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-8">
-          <p className="display-lg col-span-4 max-w-[15ch] md:col-span-6 lg:col-span-7">
+          <p className={cn('display-lg col-span-4 max-w-[15ch] md:col-span-6 lg:col-span-7', LINE_ROOM)}>
             <Lines text="Not sold through department stores." />
           </p>
           <div className="col-span-4 self-end md:col-span-4 lg:col-span-4 lg:col-start-9" data-reveal>

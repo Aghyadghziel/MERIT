@@ -8,7 +8,14 @@ type Props = {
   /** The portrait crop for phones. Omit to use `wide` everywhere. */
   tall?: string;
   alt: string;
+  /**
+   * The width the picture is drawn at, not the width of its box: a landscape
+   * filling a tall box is drawn far wider than the box, and a `sizes` that
+   * names the box sends a file several times too small.
+   */
   sizes?: string;
+  /** The same for the portrait crop, where it differs. Defaults to `sizes`. */
+  tallSizes?: string;
   /** Above the fold: fetch first, never lazily. */
   priority?: boolean;
   className?: string;
@@ -22,7 +29,9 @@ type Props = {
  * The browser picks the source before it downloads anything, so a phone never
  * fetches the 2560px master.
  */
-export function ArtImage({ wide, tall, alt, sizes = '100vw', priority = false, className, from = '(min-width: 768px)' }: Props) {
+export function ArtImage({
+  wide, tall, alt, sizes = '100vw', tallSizes = sizes, priority = false, className, from = '(min-width: 768px)',
+}: Props) {
   const load = priority ? ({ fetchPriority: 'high', loading: 'eager' } as const) : ({ loading: 'lazy' } as const);
   const img = cn('block h-full w-full object-cover [filter:saturate(0.9)_contrast(1.03)]', className);
 
@@ -33,11 +42,11 @@ export function ArtImage({ wide, tall, alt, sizes = '100vw', priority = false, c
   }
 
   const { props: { srcSet: desktop } } = getImageProps({ ...pic(wide), alt, sizes });
-  const { props: { srcSet: mobile, ...rest } } = getImageProps({ ...pic(tall), alt, sizes, ...load });
+  const { props: { srcSet: mobile, ...rest } } = getImageProps({ ...pic(tall), alt, sizes: tallSizes, ...load });
   return (
     <picture className="block h-full w-full">
       <source media={from} srcSet={desktop} sizes={sizes} />
-      <source srcSet={mobile} sizes={sizes} />
+      <source srcSet={mobile} sizes={tallSizes} />
       {/* alt arrives in the spread, from getImageProps. */}
       {/* eslint-disable-next-line jsx-a11y/alt-text */}
       <img {...rest} srcSet={mobile} className={img} />

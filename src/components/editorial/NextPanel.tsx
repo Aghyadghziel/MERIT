@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
 import { ArtImage } from '@/components/editorial/ArtImage';
+import { isWide } from '@/components/editorial/data';
 import { Poster } from '@/components/editorial/Poster';
 import { Stage } from '@/components/editorial/Stage';
 
@@ -36,7 +37,16 @@ export function NextPanel({ href, eyebrow, position, title, poster, meta, dek, c
     >
       <div data-drift="16" className="absolute inset-x-0 -top-[8%] h-[116%]">
         <div className="h-full w-full transition-transform duration-[1600ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.04]">
-          <ArtImage wide={wide} tall={tall} alt={alt} sizes="100vw" className="opacity-80" />
+          {/* The layer is 92svh plus its drift, so a crop is drawn at whichever
+              of that height or the full width it fills first. */}
+          <ArtImage
+            wide={wide}
+            tall={tall}
+            alt={alt}
+            sizes={isWide(wide) ? 'max(100vw, 190svh)' : 'max(100vw, 86svh)'}
+            tallSizes={tall && !isWide(tall) ? 'max(100vw, 86svh)' : 'max(100vw, 190svh)'}
+            className="opacity-80"
+          />
         </div>
       </div>
       <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/45" />

@@ -54,9 +54,14 @@ export function alsoConsider(p: Product, exclude: Product[], count = 8): Product
 /**
  * The campaign picture behind each collection band: a wide frame for desktop,
  * a tall one for phones, and where the subject sits in each.
+ *
+ * Foundation's wide frame is cropped to the torso: across a full-bleed band it
+ * reads as a field of corduroy with no one in it. The tall frame has the whole
+ * figure, so desktop uses it too, held near the top so the head and the open
+ * collar sit above the poster type.
  */
 export const BAND: Record<CollectionSlug, { wide: string; tall: string; posWide: string; posTall: string }> = {
-  foundation: { wide: 'campaign-foundation-wide', tall: 'campaign-foundation', posWide: '50% 40%', posTall: '50% 30%' },
+  foundation: { wide: 'campaign-foundation', tall: 'campaign-foundation', posWide: '50% 4%', posTall: '50% 30%' },
   atrium: { wide: 'campaign-atrium-wide', tall: 'campaign-atrium', posWide: '50% 45%', posTall: '50% 40%' },
   index: { wide: 'cat-essentials', tall: 'cat-essentials', posWide: '50% 28%', posTall: '50% 30%' },
   'runway-01': { wide: 'runway-01', tall: 'runway-01', posWide: '50% 30%', posTall: '80% 40%' },

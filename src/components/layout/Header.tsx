@@ -13,6 +13,13 @@ import { reduced, setupGsap } from '@/lib/gsap';
 import { NAV, type NavItem } from '@/lib/nav';
 
 type Tone = 'none' | 'light' | 'dark';
+
+/**
+ * A 44px square tap target around an 18–20px glyph, with no negative margin.
+ * No display class: cn() is a plain join, so each use sets its own.
+ */
+const TAP =
+  'h-11 w-11 shrink-0 items-center justify-center transition-opacity duration-(--dur-fast) ease-(--ease-out) hover:opacity-55';
 type MenuState = { current: string | null; previous: string | null; path: string };
 
 const slug = (label: string) => `menu-${label.toLowerCase()}`;
@@ -162,7 +169,10 @@ export function Header() {
         ref={header}
         data-state={tucked ? 'hidden' : clear ? 'clear' : 'solid'}
         className={cn(
-          'fixed inset-x-0 top-0 z-50 border-b transition-[transform,background-color,color,border-color,backdrop-filter] duration-[560ms] ease-(--ease-expo)',
+          // `translate`, not `transform`: Tailwind v4's translate utilities
+          // write the separate translate property, and a transition that
+          // does not name it turns the tuck into a jump cut.
+          'fixed inset-x-0 top-0 z-50 border-b transition-[translate,background-color,color,border-color,backdrop-filter] duration-[560ms] ease-(--ease-expo)',
           tucked && '-translate-y-full',
           dark && 'on-ink border-transparent text-bone',
           clear && !dark && 'border-transparent text-ink',
@@ -190,16 +200,26 @@ export function Header() {
           )}
         />
 
-        <div className="page grid h-(--nav-h) grid-cols-[1fr_auto_1fr] items-center gap-6">
-          <button
-            type="button"
-            className="icon-btn col-start-1 row-start-1 justify-self-start lg:hidden"
-            onClick={() => open('menu')}
-            aria-label="Open menu"
-            aria-haspopup="dialog"
-          >
-            <Icon name="menu" className="h-5 w-5" />
-          </button>
+        <div className="page grid h-(--nav-h) grid-cols-[1fr_auto_1fr] items-center gap-4 md:gap-6">
+          {/* Phones and tablets: the menu and search on the left, the wishlist
+              and bag on the right, two a side. Every target is a full 44px
+              square and none overlaps its neighbour; the row is pulled out
+              by the glyph's inset so the menu glyph sits on the margin. */}
+          <div className="col-start-1 row-start-1 -ml-3 flex items-center justify-self-start lg:hidden">
+            <button
+              type="button"
+              data-opener="menu"
+              className={cn(TAP, 'inline-flex')}
+              onClick={() => open('menu')}
+              aria-label="Open menu"
+              aria-haspopup="dialog"
+            >
+              <Icon name="menu" className="h-5 w-5" />
+            </button>
+            <button type="button" data-opener="search" className={cn(TAP, 'inline-flex')} onClick={() => open('search')} aria-label="Search" aria-haspopup="dialog">
+              <Icon name="search" />
+            </button>
+          </div>
 
           <nav aria-label="Primary" className="col-start-1 row-start-1 hidden self-stretch lg:block">
             <ul className="flex h-full items-stretch gap-5 xl:gap-7">
@@ -242,11 +262,19 @@ export function Header() {
                       </Link>
 
                       {item.menu ? (
-                        /* The keyboard way in: takes no room, invisible until focused. */
+                        /* The keyboard way in: takes no room and no clicks, and is
+                           invisible until focused. Focus shows as a solid block
+                           with the chevron knocked out of it rather than a ring,
+                           which would have to overlap the label or the next item
+                           in a 20px gap. */
                         <button
                           type="button"
                           data-toggle={item.label}
-                          className="absolute -right-[1.125rem] top-1/2 flex h-6 w-4 -translate-y-1/2 items-center justify-center opacity-0 focus-visible:opacity-100 focus-visible:outline-offset-0"
+                          className={cn(
+                            'pointer-events-none absolute -right-[1.125rem] top-1/2 flex h-6 w-3.5 -translate-y-1/2 items-center justify-center opacity-0',
+                            'focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-none!',
+                            dark ? 'focus-visible:bg-bone focus-visible:text-ink' : 'focus-visible:bg-ink focus-visible:text-bone',
+                          )}
                           aria-expanded={isOpen}
                           aria-controls={slug(item.label)}
                           aria-label={`${item.label} menu`}
@@ -286,29 +314,30 @@ export function Header() {
           </Link>
 
           <div
-            className="col-start-3 row-start-1 flex items-center justify-end gap-1 sm:gap-2 lg:gap-3"
+            className="col-start-3 row-start-1 flex items-center justify-end lg:gap-1"
             onMouseEnter={() => { if (menu.current) scheduleClose(); }}
           >
             <button
               type="button"
-              className="label group/nav hidden min-h-11 items-center px-2 lg:flex"
+              data-opener="search"
+              className="label group/nav mr-1 hidden min-h-11 items-center px-2 lg:flex"
               onClick={() => open('search')}
               aria-haspopup="dialog"
             >
               <Roll text="Search" />
             </button>
-            <button type="button" className="icon-btn lg:hidden" onClick={() => open('search')} aria-label="Search" aria-haspopup="dialog">
-              <Icon name="search" />
-            </button>
-            <Link href="/account" className="icon-btn hidden sm:inline-flex" aria-label="Account">
+            <Link href="/account" className={cn(TAP, 'hidden sm:inline-flex')} aria-label="Account">
               <Icon name="account" />
             </Link>
-            <Link href="/wishlist" className="icon-btn relative" aria-label={`Wishlist, ${ready ? wishlist.length : 0} saved`}>
+            {/* Under 360px there is no room for four targets; the wishlist is
+                one tap away in the menu, with its count. */}
+            <Link href="/wishlist" className={cn(TAP, 'inline-flex max-[359px]:hidden')} aria-label={`Wishlist, ${ready ? wishlist.length : 0} saved`}>
               <Icon name="heart" filled={ready && wishlist.length > 0} />
             </Link>
             <button
               type="button"
-              className="label group/nav nums flex min-h-11 items-center gap-2 pl-2"
+              data-opener="cart"
+              className="label group/nav nums flex min-h-11 shrink-0 items-center gap-2 pl-2"
               onClick={() => open('cart')}
               aria-haspopup="dialog"
               aria-label={`Shopping bag, ${ready ? count : 0} ${count === 1 ? 'item' : 'items'}`}

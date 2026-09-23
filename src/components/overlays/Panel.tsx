@@ -16,7 +16,14 @@ type Props = {
    */
   from: 'right' | 'top' | 'full';
   children: React.ReactNode;
+  /** Classes for the sheet. */
   className?: string;
+  /**
+   * Classes for the fixed root. A panel that only exists at some widths
+   * (the phone menu) must hide its root too, not just the sheet, or the
+   * empty root goes on covering the page at the other widths.
+   */
+  rootClassName?: string;
   /** Called once the exit animation has finished. */
   onClosed?: () => void;
   /** What takes focus on open. Defaults to the first focusable element. */
@@ -39,7 +46,7 @@ const OPEN = 'inset(0% 0% 0% 0%)';
  *   data-panel-line   slides up out of its parent's mask (give the parent
  *                     overflow-hidden), for type set at display size
  */
-export function Panel({ open, onClose, label, from, children, className, onClosed, initialFocus }: Props) {
+export function Panel({ open, onClose, label, from, children, className, rootClassName, onClosed, initialFocus }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const scrim = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
@@ -97,7 +104,8 @@ export function Panel({ open, onClose, label, from, children, className, onClose
       } else {
         t.to(sheet, { clipPath: SHUT, duration: from === 'full' ? 0.55 : 0.42, ease: 'power3.inOut' }, 0);
       }
-      t.to(scrim.current, { opacity: 0, duration: 0.36, ease: EASE.ui }, 0);
+      // The full-screen panel has no scrim to fade.
+      if (scrim.current) t.to(scrim.current, { opacity: 0, duration: 0.36, ease: EASE.ui }, 0);
       tl.current = t;
     }
     return () => { tl.current?.kill(); };
@@ -136,7 +144,7 @@ export function Panel({ open, onClose, label, from, children, className, onClose
   return (
     <div
       ref={root}
-      className="fixed inset-0 z-[70] invisible opacity-0"
+      className={cn('fixed inset-0 z-[70] invisible opacity-0', rootClassName)}
       aria-hidden={!open}
       inert={!open}
     >

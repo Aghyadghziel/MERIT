@@ -155,6 +155,22 @@ html[data-header="hidden"] { --header-offset: 0px; }
   outline-offset: 3px;
 }
 .on-ink :focus-visible { outline-color: var(--color-bone); }
+
+/* The one exception, and it has to live here: a layered rule (inside
+   @utility field) can never beat the unlayered one above. A field's keyboard
+   focus doubles its rule in ink, drawn as an inset line under the border so
+   the text does not move a pixel. Oxide stays for the error state. */
+.field:focus-visible {
+  outline: none;
+  border-color: var(--color-ink);
+  box-shadow: inset 0 -1px 0 0 var(--color-ink);
+}
+.on-ink .field:focus-visible { border-color: var(--color-bone); box-shadow: inset 0 -1px 0 0 var(--color-bone); }
+.field[aria-invalid="true"]:focus-visible,
+.on-ink .field[aria-invalid="true"]:focus-visible {
+  border-color: var(--color-oxide);
+  box-shadow: inset 0 -1px 0 0 var(--color-oxide);
+}
 .on-ink ::selection { background: var(--color-bone); color: var(--color-ink); }
 
 /* ─── Layout utilities ──────────────────────────────────────────────────── */
@@ -382,6 +398,9 @@ html[data-header="hidden"] { --header-offset: 0px; }
   width: 2.75rem;
   height: 2.75rem;
   margin: -0.5rem;
+  /* The global min-width: 0 would otherwise let a flex row squeeze the
+     target below 44px. */
+  flex-shrink: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
   &:hover { opacity: 0.55; }
 }
@@ -397,15 +416,11 @@ html[data-header="hidden"] { --header-offset: 0px; }
   transition: border-color var(--dur-ui) var(--ease-out);
   &::placeholder { color: var(--color-mute); }
   &:focus { outline: none; border-color: var(--color-ink); }
-  /* Keyboard focus doubles the rule in ink. Drawn as an inset line under the
-     border rather than a thicker border, so the text does not move a pixel.
-     Oxide stays reserved for the error state below. */
-  &:focus-visible { outline: none; border-color: var(--color-ink); box-shadow: inset 0 -1px 0 0 var(--color-ink); }
+  /* Keyboard focus (the doubled rule) is set unlayered, next to the global
+     focus rule, so it can win over it. */
   &[aria-invalid="true"] { border-color: var(--color-oxide); }
-  &[aria-invalid="true"]:focus-visible { box-shadow: inset 0 -1px 0 0 var(--color-oxide); }
 }
-.on-ink .field:focus, .on-ink .field:focus-visible { border-color: var(--color-bone); }
-.on-ink .field:focus-visible { box-shadow: inset 0 -1px 0 0 var(--color-bone); }
+.on-ink .field:focus { border-color: var(--color-bone); }
 
 /* A native select dressed as a label: no OS chrome, a drawn chevron in the
    current colour, and still the real control underneath for keyboards,

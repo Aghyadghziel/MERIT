@@ -11,9 +11,10 @@ import { LOGO } from '@/lib/brand';
 import type { Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
-import { FIGURE, FRAME, type Outfit } from '@/lib/outfits';
+import { CLIPS, FIGURE, FRAME, type ClipTrack, type Outfit } from '@/lib/outfits';
 
 export type OutfitItem = Outfit & { product: Product };
+type Jacket = NonNullable<Outfit['jacket']>;
 
 /** Where the media is in its life. Input is refused until it rests again. */
 type Media = 'base' | 'dressing' | 'dressed' | 'removing';
@@ -23,6 +24,20 @@ const phone = () => typeof window !== 'undefined' && window.matchMedia('(max-wid
 const url = (file: string) => `/img/outfits/${file}`;
 const pad = (n: number) => String(n).padStart(2, '0');
 const n4 = (n: number) => Number(n.toFixed(4));
+
+/**
+ * The 480 × 720 encodes are for phones whose screens would not show the
+ * difference, or whose owners asked to save data. A dense phone screen draws
+ * him at two or three device pixels per CSS pixel, where they read soft beside
+ * the vector logotype, so it gets the 720 × 1080 ones. The <picture> sources
+ * make the same choice with density descriptors.
+ */
+const small = () => {
+  if (!phone()) return false;
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+  return saveData || window.devicePixelRatio < 1.5;
+};
+const stillOf = (j: Jacket) => (small() ? j.dressedMobile : j.dressed);
 
 /**
  * VP9 carries alpha in Chrome, Edge and Firefox; Safari (and every iOS browser,
@@ -35,7 +50,7 @@ const alphaExt = () => {
   const ios = /iPhone|iPad|iPod/.test(ua);
   return webkitOnly || ios ? '.hevc.mp4' : '.webm';
 };
-const clipUrl = (name: string) => url(`${name}${phone() ? '-m' : ''}${alphaExt()}`);
+const clipUrl = (name: string) => url(`${name}${small() ? '-m' : ''}${alphaExt()}`);
 
 const decodeImage = (file: string) =>
   new Promise<void>((resolve) => {
@@ -44,6 +59,14 @@ const decodeImage = (file: string) =>
     im.onerror = () => resolve();
     im.src = url(file);
   });
+
+const prefetch = (href: string) => {
+  if (document.head.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.href = href;
+  document.head.appendChild(link);
+};
 
 /** Whether this browser has already taken a jacket down; if so, no hint. */
 const SEEN_KEY = 'merit:fitting-room';
@@ -54,6 +77,72 @@ const markSeen = () => {
   try { window.localStorage.setItem(SEEN_KEY, '1'); } catch { /* private mode: hint again next time */ }
 };
 
+// ─── The clip's masks ──────────────────────────────────────────────────────
+/**
+ * Where the source film ends inside the frame (see CLIPS in lib/outfits), the
+ * clip is feathered: fully clear a hair inside the edge, fully there a twentieth
+ * of the frame further in, on an eased ramp. A hand reaching for the hook
+ * fades into the light instead of stopping on a straight line. The figure at
+ * rest never comes near these columns, so the hand-off to a still, which
+ * carries no mask, is still a cut nobody sees.
+ */
+const FEATHER = 0.05;
+const SAFE = 0.004;
+const RAMP: readonly (readonly [number, number])[] = [[0, 0], [0.35, 0.18], [0.65, 0.62], [1, 1]];
+/** The clean-up rectangles: a hard edge across, a soft one down. */
+const HIDE_FX = 0.01;
+const HIDE_FY = 0.025;
+
+const pct = (v: number) => `${(v * 100).toFixed(2)}%`;
+const black = (a: number) => `rgb(0 0 0 / ${Number(a.toFixed(3))})`;
+
+/** A per-frame series, read between its evenly spaced samples. */
+const along = (xs: readonly number[], frames: number, f: number) => {
+  const j = Math.min(xs.length - 1, Math.max(0, (f * (xs.length - 1)) / Math.max(1, frames - 1)));
+  const i = Math.floor(j);
+  const b = xs[Math.min(xs.length - 1, i + 1)];
+  return (xs[i] + (b - xs[i]) * (j - i)) / 1000;
+};
+
+const edgeMask = (l: number, r: number) => {
+  const a = l + SAFE;
+  const b = r - SAFE;
+  const lead = RAMP.map(([u, o]) => `${black(o)} ${pct(a + u * FEATHER)}`);
+  const tail = [...RAMP].reverse().map(([u, o]) => `${black(o)} ${pct(b - u * FEATHER)}`);
+  return `linear-gradient(90deg, ${[...lead, ...tail].join(', ')})`;
+};
+
+/**
+ * One soft rectangle cut out of the clip: a band across (fading in with the
+ * strength) laid over a band down, composited by the default `add`, so the
+ * clip stays whole outside either band and clears only where they cross.
+ */
+const hideMask = (hide: NonNullable<ClipTrack['hide']>, f: number) => {
+  if (f <= hide[0][0] || f >= hide[hide.length - 1][0]) return null;
+  let k = 0;
+  while (k < hide.length - 2 && f > hide[k + 1][0]) k += 1;
+  const a = hide[k];
+  const b = hide[k + 1];
+  const t = (f - a[0]) / Math.max(1, b[0] - a[0]);
+  const [x0, x1, y0, y1, s] = [1, 2, 3, 4, 5].map((n) => (a[n] + (b[n] - a[n]) * t) / (n === 5 ? 1 : 1000));
+  if (s <= 0.001) return null;
+  const inner = black(1 - s);
+  return [
+    `linear-gradient(90deg, #000 ${pct(x0)}, ${inner} ${pct(x0 + HIDE_FX)}, ${inner} ${pct(x1 - HIDE_FX)}, #000 ${pct(x1)})`,
+    `linear-gradient(180deg, #000 ${pct(y0)}, transparent ${pct(y0 + HIDE_FY)}, transparent ${pct(y1 - HIDE_FY)}, #000 ${pct(y1)})`,
+  ].join(', ');
+};
+
+const masks = new WeakMap<HTMLElement, string>();
+const setMask = (el: HTMLElement, value: string | null) => {
+  const v = value ?? '';
+  if (masks.get(el) === v) return;
+  masks.set(el, v);
+  el.style.setProperty('-webkit-mask-image', v);
+  el.style.setProperty('mask-image', v);
+};
+
+// ─── The stage ─────────────────────────────────────────────────────────────
 /**
  * The counter (the enclosed hole) of the R in the logotype, from its outline
  * in src/lib/brand.ts: x 180.65–221.29, y 19.79–56.26 in the 386.6 × 100 box.
@@ -75,29 +164,58 @@ const COUNTER = { x: n4(200.97 / 386.6), y: 0.3803, crown: 0.598 };
  * warm-white sliver, which is what happened when the logotype was sized from
  * the viewport width and the model from its height.
  *
- * Landscape: the logotype runs behind his chest, as wide as that allows.
+ * Landscape: the logotype runs behind his chest, as wide as that allows, and
+ * dead centre: the counter sits a little right of the word's middle, so he
+ * stands that little right of the page's, and the word, not the figure, holds
+ * the centre line under the header. His crown keeps the header's height of
+ * air above it on a tall screen; on a short laptop window that air closes to
+ * a hair, the head rising into the clear header band (whose own logotype waits
+ * while the masthead is on screen), rather than the whole figure, and with it
+ * the logotype, shrinking.
+ *
  * Portrait (phones, tablets upright): it becomes a masthead across the top,
  * full width, and he is sized so his crown sits just under the counter —
  * the head overlapping the name, as on a magazine cover.
+ *
+ * The first screen ends on a whole line of the strip below the room: on a
+ * wide screen the whole strip, one row; on a phone or an upright tablet its
+ * first row only (what he is wearing and its price), with the sizes starting
+ * just past the fold. Too short for that, the room takes the screen alone.
  *
  * Container units: the stage is a size container, so cqw/cqh are the stage.
  * The custom properties are resolved where they are used (its children).
  */
 const LIFT = n4(1 - FIGURE.crown);
 const GEOMETRY = `
+.fr-room { --strip-h: 4.5rem; }
+@media (min-width: 768px) { .fr-room { --strip-h: 4.75rem; } }
+@media (min-width: 1024px) { .fr-room { --strip-h: min(clamp(6.5rem, 4rem + 6vw, 7.5rem), max(5rem, 20svh - 3.5rem)); } }
 .fr-stage {
   container-type: size;
-  --fr-h: min(92cqh, (100cqh - var(--nav-h) - 1rem) / ${LIFT});
+  height: calc(100svh - var(--strip-h));
+  min-height: 20rem;
+  --fr-air: clamp(0.75rem, 100cqh - 40rem, 12.5cqh);
+  --fr-h: calc((100cqh - var(--fr-air)) / ${LIFT});
   --fr-w: calc(var(--fr-h) * ${n4(FRAME.width / FRAME.height)});
   --fr-top: calc(100cqh - var(--fr-h));
   --fr-logo-w: min(${FIGURE.logoMax} * var(--fr-h), 100cqw - 2 * var(--gutter));
   --fr-logo-h: calc(var(--fr-logo-w) / ${LOGO.ratio});
-  --fr-logo-x: calc(50cqw + ${n4(FIGURE.chest.x - 0.5)} * var(--fr-w) - ${COUNTER.x} * var(--fr-logo-w));
+  --fr-shift: calc(${n4(COUNTER.x - 0.5)} * var(--fr-logo-w) - ${n4(FIGURE.chest.x - 0.5)} * var(--fr-w));
+  --fr-logo-x: calc(50cqw + var(--fr-shift) + ${n4(FIGURE.chest.x - 0.5)} * var(--fr-w) - ${COUNTER.x} * var(--fr-logo-w));
   --fr-logo-y: calc(var(--fr-top) + ${FIGURE.chest.y} * var(--fr-h) - ${COUNTER.y} * var(--fr-logo-h));
-  --fr-rail-w: clamp(8.5rem, 0.19 * var(--fr-logo-w), 15.5rem);
+  --fr-rail-w: clamp(11rem, 0.19 * var(--fr-logo-w), 26rem);
   --fr-rail-y: calc(var(--fr-logo-y) + 0.36 * var(--fr-logo-h));
   --fr-rail-l: max(var(--gutter), var(--fr-logo-x) + 0.035 * var(--fr-logo-w));
   --fr-rail-r: max(var(--gutter), 100cqw - var(--fr-logo-x) - 0.965 * var(--fr-logo-w));
+  --fr-edge: max(var(--gutter), (100cqw - var(--page)) / 2);
+}
+@media (max-height: 39rem) { .fr-stage { height: 100svh; } }
+@media (min-aspect-ratio: 1001/1000) and (max-height: 32rem) {
+  /* A phone on its side: the jackets hang smaller and the tags keep only the
+     name and the action, so rail, tag and corner lines all fit. */
+  .fr-stage { --fr-rail-w: clamp(5.5rem, 0.19 * var(--fr-logo-w), 8rem); }
+  .fr-extra { display: none; }
+  .fr-extra + .fr-name { margin-top: 0; }
 }
 @media (max-aspect-ratio: 1/1) {
   .fr-stage {
@@ -105,19 +223,25 @@ const GEOMETRY = `
     --fr-logo-x: var(--gutter);
     --fr-logo-y: calc(var(--nav-h) + clamp(0.25rem, 1.4cqh, 1.25rem));
     --fr-h: min(92cqh, (100cqh - var(--fr-logo-y) - ${COUNTER.crown} * var(--fr-logo-h)) / ${LIFT});
+    --fr-shift: 0px;
     --fr-rail-w: min(27cqw, 12rem);
     --fr-rail-l: var(--gutter);
     --fr-rail-r: var(--gutter);
   }
 }
 .fr-logo { position: absolute; left: var(--fr-logo-x); top: var(--fr-logo-y); width: var(--fr-logo-w); }
-.fr-model { position: absolute; bottom: 0; left: calc(50% - var(--fr-w) / 2); width: var(--fr-w); height: var(--fr-h); }
+.fr-model { position: absolute; bottom: 0; left: calc(50% - var(--fr-w) / 2 + var(--fr-shift)); width: var(--fr-w); height: var(--fr-h); }
 .fr-rail { position: absolute; top: var(--fr-rail-y); width: var(--fr-rail-w); }
 .fr-rail[data-side="l"] { left: var(--fr-rail-l); }
 .fr-rail[data-side="r"] { right: var(--fr-rail-r); }
 .fr-meta { position: absolute; bottom: clamp(1.25rem, 3.6cqh, 2.25rem); }
-.fr-meta[data-side="l"] { left: var(--gutter); }
-.fr-meta[data-side="r"] { right: var(--gutter); }
+.fr-meta[data-side="l"] { left: var(--fr-edge); }
+.fr-meta[data-side="r"] { right: var(--fr-edge); }
+@media (min-aspect-ratio: 1001/1000) and (min-height: 32.01rem) {
+  /* The rail is never narrower than the longer name, so both tags keep one
+     line each and their rows line up across the room. */
+  .fr-name { white-space: nowrap; }
+}
 @media (max-aspect-ratio: 1/1) {
   /* Upright, the jackets stand in the lower corners beside his legs, where
      the room is widest, and the corner lines move up under the masthead. */
@@ -143,18 +267,21 @@ const NO_SCRIPT = '.fr-stage [data-fr]{opacity:1!important;clip-path:none!import
  * logotype set huge behind him in stone, a jacket hanging either side. Pick
  * one and he reaches for it and puts it on; pick the other and he takes the
  * first off and puts that one on; pick the one he is wearing and it comes off.
- * Keys 1 and 2 do the same, and 0 or Escape takes it off. Under the stage, a
- * strip sells whatever he has on.
+ * With focus in the room, keys 1 and 2 do the same, and 0 or Escape takes it
+ * off. Under the stage, a strip sells whatever he has on.
  */
 export function FittingRoom({ items }: { items: OutfitItem[] }) {
   const [active, setActive] = useState(0);
   const [shown, setShown] = useState(0);
+  // Which jacket is off the rail right now, by the film: it leaves the hook
+  // the moment he takes it and is back the moment he hangs it up, so the rail
+  // never shows the same jacket on him and on its hook at once.
+  const [worn, setWorn] = useState(0);
   const [media, setMedia] = useState<Media>('base');
   const [hover, setHover] = useState<number | null>(null);
   const [size, setSize] = useState<string | null>(null);
   const [sizeError, setSizeError] = useState(false);
   const [announce, setAnnounce] = useState('');
-  const [barVisible, setBarVisible] = useState(false);
 
   const prev = useRef(0);
   const busy = useRef(false);
@@ -164,6 +291,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
   const sway = useRef<gsap.core.Tween | null>(null);
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
+  const clipBox = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const progress = useRef<HTMLSpanElement>(null);
   const strip = useRef<HTMLDivElement>(null);
@@ -226,7 +354,8 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
   useLayoutEffect(() => {
     const st = stage.current;
     const vid = video.current;
-    if (!st || !vid) return;
+    const box = clipBox.current;
+    if (!st || !vid || !box) return;
     const from = prev.current;
     prev.current = active;
     current.current = active;
@@ -249,17 +378,37 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
     const paint = (t: number) => {
       if (bar) bar.style.transform = `scaleX(${Math.min(1, (step + t) / steps)})`;
     };
-    const tick = () => {
-      if (vid.duration) paint(vid.currentTime / vid.duration);
-      frame = requestAnimationFrame(tick);
-    };
     paint(0);
 
-    /** Play one clip to its end, revealing it only once it is really moving. */
-    const play = (name: string, reveal: () => void) =>
+    /**
+     * Play one clip to its end, revealing it only once it is really moving.
+     * Every frame the masks follow the clip's own edges, and at its hand-off
+     * frame the rail is told the jacket has left it or is back on it.
+     */
+    const play = (name: string, reveal: () => void, handoff: () => void) =>
       new Promise<void>((resolve, reject) => {
+        const track = CLIPS[name];
+        let handed = false;
+        const follow = (f: number) => {
+          if (!track) return;
+          setMask(box, edgeMask(along(track.l, track.frames, f), along(track.r, track.frames, f)));
+          setMask(vid, track.hide ? hideMask(track.hide, f) : null);
+          if (!handed && f >= track.handoff) {
+            handed = true;
+            handoff();
+          }
+        };
+        const tick = () => {
+          if (vid.duration) {
+            const t = vid.currentTime / vid.duration;
+            paint(t);
+            if (track) follow(Math.min(track.frames - 1, t * track.frames));
+          }
+          frame = requestAnimationFrame(tick);
+        };
         vid.pause();
         vid.src = clipUrl(name);
+        follow(0);
         const cleanup = () => {
           vid.removeEventListener('ended', done);
           vid.removeEventListener('error', fail);
@@ -267,7 +416,12 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
           cancelAnimationFrame(frame);
           detach = null;
         };
-        const done = () => { cleanup(); paint(1); resolve(); };
+        const done = () => {
+          cleanup();
+          paint(1);
+          if (!handed) { handed = true; handoff(); }
+          resolve();
+        };
         const fail = () => { cleanup(); reject(new Error('clip failed')); };
         const moving = () => {
           if (cancelled) return;
@@ -296,33 +450,36 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
       } else {
         try {
           // The off-clip opens on the dressed still that is already showing.
-          await play(it.off, () => swap(vid, [still(i)]));
+          await play(it.off, () => swap(vid, [still(i)]), () => setWorn(0));
           if (cancelled) return;
           swap(base, [vid]);
         } catch {
           if (!cancelled) swap(base, [still(i), vid]);
         }
       }
+      setWorn(0);
       step += 1;
     };
 
     const dress = async (i: number) => {
       setMedia('dressing');
       const it = looks[i].jacket!;
-      await decodeImage(phone() ? it.dressedMobile : it.dressed);
+      await decodeImage(stillOf(it));
       if (cancelled) return;
       if (reduced()) {
         swap(still(i), [base]);
+        setWorn(i);
         return;
       }
       try {
-        await play(it.on, () => swap(vid, [base]));
+        await play(it.on, () => swap(vid, [base]), () => setWorn(i));
         if (cancelled) return;
         // The still is the clip's own last frame: this is a cut nobody sees.
         swap(still(i), [vid]);
       } catch {
         if (!cancelled) swap(still(i), [base, vid]);
       }
+      setWorn(i);
     };
 
     const run = async () => {
@@ -331,6 +488,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
       if (cancelled) return;
       if (active !== 0) await dress(active);
       if (cancelled) return;
+      setWorn(active);
       setMedia(active === 0 ? 'base' : 'dressed');
       setShown(active);
       setSize(null);
@@ -368,18 +526,18 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  // Once the page is idle, warm the jackets he is not wearing.
+  // Once the page is idle, warm what the next choice will need: the jackets
+  // he is not wearing, and the clip that takes off the one he is.
   useEffect(() => {
     const warm = () => {
       items.forEach((it, i) => {
-        if (i === active || !it.jacket) return;
-        void decodeImage(phone() ? it.jacket.dressedMobile : it.jacket.dressed);
-        const href = clipUrl(it.jacket.on);
-        if (document.head.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
-        link.href = href;
-        document.head.appendChild(link);
+        if (!it.jacket) return;
+        if (i === active) {
+          prefetch(clipUrl(it.jacket.off));
+          return;
+        }
+        void decodeImage(stillOf(it.jacket));
+        prefetch(clipUrl(it.jacket.on));
       });
     };
     const w = window as unknown as {
@@ -394,26 +552,13 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
     return () => window.clearTimeout(id);
   }, [active, items]);
 
-  // Keys work only while the room is actually on screen.
+  // Escape works only while the room is actually on screen.
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
     const io = new IntersectionObserver(([e]) => { inView.current = e.intersectionRatio >= 0.4; }, { threshold: [0, 0.4, 1] });
     io.observe(el);
     return () => io.disconnect();
-  }, []);
-
-  // The phone's sticky buy bar appears once the strip has scrolled away.
-  useEffect(() => {
-    const el = strip.current;
-    const sec = root.current;
-    if (!el || !sec) return;
-    let away = false; let inSection = false;
-    const update = () => setBarVisible(inSection && away);
-    const a = new IntersectionObserver(([e]) => { away = !e.isIntersecting; update(); });
-    const b = new IntersectionObserver(([e]) => { inSection = e.isIntersecting; update(); }, { rootMargin: '-30% 0px -20% 0px' });
-    a.observe(el); b.observe(sec);
-    return () => { a.disconnect(); b.disconnect(); };
   }, []);
 
   /** The hint has done its job the moment anyone reaches for a jacket. */
@@ -433,18 +578,26 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
     setActive((a) => (a === i ? 0 : i));
   }, [stopHint]);
 
-  // 1, 2 … put a jacket on (or take it off if he is wearing it); 0 or
-  // Escape takes it off. Never while typing, with a modifier held, or with
-  // the bag, search or menu open over the page.
+  // With focus in the room: 1, 2 … put a jacket on (or take it off if he is
+  // wearing it), and 0 takes it off. Single keys never act from anywhere
+  // else on the page, so a stray key or a spoken word elsewhere cannot set
+  // him dressing (WCAG 2.1.4). Escape also works from the page itself while
+  // the room is on screen. Never with a modifier held, or with the bag,
+  // search or menu open over the page.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (overlay || !inView.current) return;
+      if (e.defaultPrevented || e.repeat || e.metaKey || e.ctrlKey || e.altKey || overlay) return;
       const t = e.target instanceof HTMLElement ? e.target : null;
       if (t?.closest('input, textarea, select, [contenteditable="true"]')) return;
-      if (e.key === 'Escape' || e.key === '0') {
-        // Escape belongs to whatever has focus, unless that is the room itself.
-        if (e.key === 'Escape' && t && t !== document.body && !stage.current?.contains(t)) return;
+      const inRoom = Boolean(t && stage.current?.contains(t));
+      if (e.key === 'Escape') {
+        if (!inView.current || (t && t !== document.body && !inRoom)) return;
+        if (current.current !== 0) choose(current.current);
+        return;
+      }
+      if (!inRoom) return;
+      if (e.key === '0') {
+        e.preventDefault();
         if (current.current !== 0) choose(current.current);
         return;
       }
@@ -481,12 +634,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
             : { label: '', line: '', phone: '', prompt: true };
 
   return (
-    <section
-      ref={root}
-      aria-labelledby="fr-title"
-      className="relative bg-bone"
-      style={{ '--strip-h': 'clamp(6.5rem, 4rem + 6vw, 7.5rem)' } as React.CSSProperties}
-    >
+    <section ref={root} aria-labelledby="fr-title" className="fr-room relative bg-bone">
       <style href="merit-fitting-room" precedence="medium">{GEOMETRY}</style>
       <noscript><style dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} /></noscript>
       <h1 id="fr-title" className="sr-only">MERIT, Autumn Winter 2026. The Fitting Room: choose a jacket and see it worn.</h1>
@@ -496,12 +644,15 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
         role="group"
         aria-label="The Fitting Room. Choose a jacket to put on. Keys 1 and 2 put one on, 0 takes it off."
         aria-busy={working}
-        className="fr-stage relative h-[calc(100svh-var(--strip-h))] min-h-[34rem] overflow-hidden border-b border-line"
+        className="fr-stage group/room relative overflow-hidden border-b border-line"
       >
         {/* The header is clear only over this band at the top of the room, so
             it turns solid as soon as the page moves, before its own logotype
-            can slide over his black tee. */}
-        <span aria-hidden data-header-over="light" className="pointer-events-none absolute inset-x-0 top-0 h-[calc(var(--nav-h)+2.5rem)]" />
+            can slide over his black tee. It is also a masthead: the header's
+            logotype waits while the stone one is on screen, so the name is
+            never said twice at once. */}
+        <span aria-hidden data-header-over="light" data-header-masthead
+          className="pointer-events-none absolute inset-x-0 top-0 h-[calc(var(--nav-h)+2.5rem)]" />
 
         {/* The masthead: the logotype, in stone, behind him. */}
         <div aria-hidden data-fr="logo" className="fr-logo pointer-events-none text-stone-brand will-change-transform">
@@ -524,7 +675,10 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
 
           <div data-base className="absolute inset-0">
             <picture>
-              {items[0].still?.mobile ? <source media="(max-width: 767px)" srcSet={url(items[0].still.mobile)} /> : null}
+              {items[0].still?.mobile ? (
+                <source media="(max-width: 767px)"
+                  srcSet={`${url(items[0].still.mobile)} 1x, ${url(items[0].still.file)} 1.5x`} />
+              ) : null}
               <img src={url(items[0].still!.file)} alt={items[0].alt} width={FRAME.width} height={FRAME.height}
                 fetchPriority="high" decoding="async" className="h-full w-full object-contain" draggable={false} />
             </picture>
@@ -532,20 +686,25 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
           {items.map((it, i) => (it.jacket ? (
             <div key={it.slug} data-still={i} aria-hidden className="absolute inset-0 opacity-0">
               <picture>
-                <source media="(max-width: 767px)" srcSet={url(it.jacket.dressedMobile)} />
+                <source media="(max-width: 767px)"
+                  srcSet={`${url(it.jacket.dressedMobile)} 1x, ${url(it.jacket.dressed)} 1.5x`} />
                 <img src={url(it.jacket.dressed)} alt="" width={720} height={1080} loading="lazy" decoding="async"
                   className="h-full w-full object-contain" draggable={false} />
               </picture>
             </div>
           ) : null))}
-          <video ref={video} aria-hidden tabIndex={-1} muted playsInline preload="none" disablePictureInPicture
-            className="pointer-events-none absolute inset-0 h-full w-full object-contain opacity-0" width={720} height={1080} />
+          {/* The clip, in a box that carries its edge feather; the video itself
+              carries the clean-up of the few frames that need one. */}
+          <div ref={clipBox} aria-hidden className="pointer-events-none absolute inset-0">
+            <video ref={video} tabIndex={-1} muted playsInline preload="none" disablePictureInPicture
+              className="absolute inset-0 h-full w-full object-contain opacity-0" width={720} height={1080} />
+          </div>
         </div>
 
         {/* The rail: sand on the left, leather on the right. */}
         {items.map((it, i) => {
           if (!it.jacket) return null;
-          const worn = active === i;
+          const on = worn === i;
           const left = i === 1;
           const name = it.product.name;
           return (
@@ -559,10 +718,10 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               onPointerLeave={() => setHover((h) => (h === i ? null : h))}
               onFocus={(e) => { if (e.currentTarget.matches(':focus-visible')) setHover(i); }}
               onBlur={() => setHover((h) => (h === i ? null : h))}
-              aria-pressed={worn}
+              aria-pressed={on}
               aria-disabled={working || undefined}
               aria-keyshortcuts={String(i)}
-              aria-label={worn ? `Take off the ${name}` : `Put on the ${name}`}
+              aria-label={name}
               className={cn(
                 'fr-rail group z-20 flex flex-col',
                 left ? 'items-start text-left' : 'items-end text-right',
@@ -572,14 +731,14 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               <span data-fr="hang" className="relative block aspect-square w-full">
                 <span className={cn(
                   'block h-full w-full transition-[translate,scale,opacity] duration-700 ease-[cubic-bezier(.22,1,.36,1)]',
-                  worn ? 'scale-[0.94] opacity-[0.14]' : !working && 'group-hover:-translate-y-2 group-focus-visible:-translate-y-2',
+                  on ? 'scale-[0.94] opacity-[0.14]' : !working && 'group-hover:-translate-y-2 group-focus-visible:-translate-y-2',
                 )}>
                   {/* eslint-disable-next-line @next/next/no-img-element -- flat jacket on the rail, alpha */}
                   <img src={url(it.jacket.preview)} alt="" width={900} height={900} decoding="async" draggable={false}
                     className={cn(
                       'h-full w-full object-contain transition-[filter] duration-700 ease-[cubic-bezier(.22,1,.36,1)]',
                       'drop-shadow-[0_14px_16px_rgb(0_0_0/0.11)]',
-                      !worn && !working && 'group-hover:drop-shadow-[0_26px_24px_rgb(0_0_0/0.16)]',
+                      !on && !working && 'group-hover:drop-shadow-[0_26px_24px_rgb(0_0_0/0.16)]',
                     )} />
                 </span>
               </span>
@@ -587,31 +746,32 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               {/* Set in from the image box to the garment's own edge: the flat
                   shots carry about a tenth of their width in clear margin. */}
               <span data-fr="tag" className={cn('mt-3 block w-full md:mt-4', left ? 'pl-[9%]' : 'pr-[9%]')}>
-                <span className="label-sm nums block text-mute">
-                  {worn ? 'On the model' : `${pad(i)} / ${pad(jackets)}`}
+                <span className="fr-extra label-sm nums block text-mute">
+                  {on ? 'On the model' : `${pad(i)} / ${pad(jackets)}`}
                 </span>
-                <span className="mt-1.5 block text-[0.8125rem] font-semibold leading-[1.15] tracking-[-0.015em] sm:text-[0.95rem]">
+                <span className="fr-name mt-1.5 block text-[0.8125rem] font-semibold leading-[1.15] tracking-[-0.015em] sm:text-[0.95rem]">
                   {name}
                 </span>
-                <Price amount={it.product.price} compareAt={it.product.compareAt} size="xs" className="mt-1 text-mute max-sm:hidden" />
+                <Price amount={it.product.price} compareAt={it.product.compareAt} size="xs" className="fr-extra mt-1 text-mute max-sm:hidden" />
                 <span className={cn('label mt-3 flex items-center gap-2', !left && 'flex-row-reverse')}>
                   <span className="flex items-center gap-2">
                     <span className="relative whitespace-nowrap pb-1">
-                      {worn ? 'Take off' : 'Wear it'}
+                      {on ? 'Take off' : 'Wear it'}
                       <span aria-hidden className={cn(
                         'absolute inset-x-0 bottom-0 h-px origin-left bg-current transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
-                        worn ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100 group-focus-visible:scale-x-100',
+                        on ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100 group-focus-visible:scale-x-100',
                       )} />
                     </span>
-                    <Icon name={worn ? 'close' : 'arrowR'} className={cn(
+                    <Icon name={on ? 'close' : 'arrowR'} className={cn(
                       'mb-1 h-3 w-3 transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
-                      !worn && 'group-hover:translate-x-1',
+                      !on && 'group-hover:translate-x-1',
                     )} />
                   </span>
-                  {/* Where there is a keyboard, the key that does the same. */}
+                  {/* The key that does the same, shown once focus is in the
+                      room, which is where the keys work. */}
                   <kbd aria-hidden className={cn(
-                    'label-sm mx-1.5 mb-1 hidden h-[1.125rem] min-w-[1.125rem] items-center justify-center border px-1 font-sans text-mute transition-colors duration-300 sm:pointer-fine:inline-flex',
-                    worn ? 'border-ink text-ink' : 'border-line-2 group-hover:border-ink group-hover:text-ink',
+                    'label-sm mx-1.5 mb-1 hidden h-[1.125rem] min-w-[1.125rem] items-center justify-center border px-1 font-sans text-mute transition-colors duration-300 group-has-[:focus-visible]/room:inline-flex',
+                    on ? 'border-ink text-ink' : 'border-line-2 group-hover:border-ink group-hover:text-ink',
                   )}>
                     {i}
                   </kbd>
@@ -646,7 +806,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
             ) : (
               <>
                 <span className="max-sm:hidden">{status.line}</span>
-                <span className={cn('sm:hidden', status.phone === null && 'invisible')}>{status.phone || '\u00a0'}</span>
+                <span className={cn('sm:hidden', status.phone === null && 'invisible')}>{status.phone || ' '}</span>
               </>
             )}
           </p>
@@ -711,21 +871,6 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
             <Link href={`/products/${look.product.slug}`} className="btn btn-ghost flex-1 md:flex-none">Details</Link>
             <button type="button" onClick={addToBag} className="btn btn-solid flex-[2] md:flex-none">Add to bag</button>
           </div>
-        </div>
-      </div>
-
-      {/* Phones: the buy bar follows once the strip has scrolled away. */}
-      <div aria-hidden className={cn(
-        'fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bone/95 px-(--gutter) py-3 backdrop-blur-md transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:hidden',
-        barVisible ? 'translate-y-0' : 'translate-y-full')}>
-        <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1">
-            <span className="label-sm block text-mute">Now wearing</span>
-            <span className="mt-0.5 block truncate text-sm font-semibold tracking-[-0.01em]">{look.product.name}</span>
-          </p>
-          <Price amount={look.product.price} className="shrink-0 text-sm" />
-          <button type="button" tabIndex={-1} onClick={() => strip.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })}
-            className="btn btn-solid h-11 min-h-11 shrink-0 px-5">Select size</button>
         </div>
       </div>
     </section>

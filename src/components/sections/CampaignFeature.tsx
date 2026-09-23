@@ -117,7 +117,7 @@ export function CampaignFeature() {
 
   return (
     <section ref={root} className="relative bg-bone" aria-labelledby="campaign-title">
-      <div data-cf="stage" className="relative h-svh min-h-[36rem] overflow-hidden">
+      <div data-cf="stage" className="relative h-svh min-h-[20rem] overflow-hidden">
         {/* The picture. Clipped to a window at first; the server renders it open. */}
         <div data-cf="clip" className="absolute inset-0 overflow-hidden bg-ink">
           <div data-cf="img" className="absolute inset-0 will-change-transform">
@@ -147,15 +147,18 @@ export function CampaignFeature() {
           </div>
         </div>
 
-        {/* The copy, over the opened picture. */}
-        <div className="on-ink page relative flex h-full flex-col justify-end pb-[clamp(2rem,1rem+4vw,4.5rem)] pt-[calc(var(--nav-h)+2rem)] text-bone">
+        {/* The copy, over the opened picture. It is set in four short lines and
+            capped by the screen's height as well as its width, so on any
+            landscape screen it stays in the empty wall to the left of the
+            model, clear of her face, and on a short one it stays on screen. */}
+        <div className="on-ink page relative flex h-full flex-col justify-end pb-[min(clamp(2rem,1rem+4vw,4.5rem),7svh)] pt-[calc(var(--nav-h)+1rem)] text-bone">
           <p data-cf="meta" className="label text-bone/80">Campaign — The Rule Line</p>
-          <h2 id="campaign-title" className="display-xl mt-5 max-w-[13ch]">
-            {['Quiet structure.', 'Expressive', 'movement.'].map((l) => (
-              <span key={l} className="block overflow-hidden pb-[0.06em]"><span data-cf="line" className="block">{l}</span></span>
+          <h2 id="campaign-title" className="display-xl mt-[min(1.25rem,2.5svh)]" style={{ fontSize: 'min(clamp(3rem, 0.8rem + 9vw, 10rem), 14.5svh, 19svh - 1.5rem)' }}>
+            {['Quiet', 'structure.', 'Expressive', 'movement.'].map((l) => (
+              <span key={l} className="block overflow-hidden pb-[0.06em]"><span data-cf="line" className="block">{l} </span></span>
             ))}
           </h2>
-          <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-5">
+          <div className="mt-[clamp(1rem,4svh,2.25rem)] flex flex-wrap items-center gap-x-8 gap-y-5">
             <Link data-cf="meta" href="/editorial/the-rule-line" className="btn btn-solid">
               View the campaign <Icon name="arrowR" className="h-3.5 w-3.5" />
             </Link>

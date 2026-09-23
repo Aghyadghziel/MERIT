@@ -4,26 +4,56 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { products, type Category } from '@/lib/catalog';
+import { isSoldOut, products, type Category, type Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
 
-const ROWS: { name: Category; img: string }[] = [
-  { name: 'Outerwear', img: 'coat-meridian-1' },
-  { name: 'Tailoring', img: 'cat-tailoring' },
-  { name: 'Knitwear', img: 'knit-margin-1' },
-  { name: 'Shirting', img: 'shirt-quiet-2' },
-  { name: 'Trousers', img: 'trouser-column-3' },
-  { name: 'Accessories', img: 'cat-accessories' },
-];
-
-/** Counted from the catalogue, so the index can never promise what is not there. */
-const countOf = (c: Category) => products.filter((p) => p.category === c).length;
-const pad = (n: number) => String(n).padStart(2, '0');
+/**
+ * The two listings a category can open onto, each with the exact pool that
+ * listing shows, so a row's number is always the number of pieces its link
+ * opens onto. This season mirrors New arrivals (src/app/new/page.tsx):
+ * Foundation and the runway pieces made for sale, nothing marked down or sold
+ * out. The Index is the permanent range, as its collection page lists it.
+ */
+const inSeason = (p: Product) =>
+  (p.collection === 'foundation' || p.collection === 'runway-01') && !p.compareAt && !isSoldOut(p);
+const SOURCES = [
+  { href: '/new', where: 'This season', pool: products.filter(inSeason) },
+  { href: '/collections/index', where: 'Index', pool: products.filter((p) => p.collection === 'index') },
+] as const;
+const SEASON = SOURCES[0];
 
 /**
- * The shop as an index: six rows of type at poster size, each counted from the
- * catalogue. On a pointer, a picture follows the cursor with a little weight,
+ * One picture per category, each a piece the row's link actually shows, and
+ * none of them a picture the home page has already used in the rooms above.
+ */
+const CATEGORIES: { name: Category; img: string }[] = [
+  { name: 'Outerwear', img: 'coat-meridian-1' },
+  { name: 'Tailoring', img: 'blazer-archive-1' },
+  { name: 'Knitwear', img: 'knit-margin-1' },
+  { name: 'Shirting', img: 'shirt-quiet-2' },
+  { name: 'Trousers', img: 'trouser-pleat-m-1' },
+  { name: 'Accessories', img: 'bag-knot-1' },
+];
+
+type Row = { name: Category; img: string; href: string; count: number; where: string };
+
+/** Each category opens onto whichever listing holds most of it; a category neither holds is left out. */
+const ROWS: Row[] = CATEGORIES.flatMap(({ name, img }) => {
+  const [best] = SOURCES.map((s) => ({ s, count: s.pool.filter((p) => p.category === name).length }))
+    .sort((a, b) => b.count - a.count);
+  if (!best || best.count === 0) return [];
+  return [{ name, img, count: best.count, where: best.s.where, href: `${best.s.href}?category=${encodeURIComponent(name)}` }];
+});
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
+/** Where the picture hangs from the cursor: up and to one side, never over the word. */
+const HANG = { gap: 28, lift: 0.62 };
+
+/**
+ * The shop as an index: a row of type at poster size for each category, each
+ * counted from the listing it opens. On a pointer, a picture follows the cursor with a little weight,
  * leaning into the direction of travel, and wipes upward from one category to
  * the next. On touch, each row carries its picture inline.
  */
@@ -34,14 +64,15 @@ export function CategoryIndex() {
   const float = useRef<HTMLDivElement>(null);
   const follow = useRef<{ x: (v: number) => void; y: (v: number) => void; r: (v: number) => void } | null>(null);
   const lastX = useRef<number | null>(null);
+  /** Each row's word, to keep the picture clear of the one being read. */
+  const words = useRef<(HTMLSpanElement | null)[]>([]);
 
   useLayoutEffect(() => {
     const el = float.current;
     if (!el) return;
     const { gsap } = setupGsap();
     const calm = reduced();
-    gsap.set(el, { xPercent: -50, yPercent: -50 });
-    // Reduced motion: the picture still sits under the cursor, but it is set
+    // Reduced motion: the picture still hangs by the cursor, but it is set
     // there directly, with no glide and no lean.
     if (calm) {
       const x = gsap.quickSetter(el, 'x', 'px') as (v: number) => void;
@@ -60,13 +91,33 @@ export function CategoryIndex() {
     };
   }, []);
 
+  /**
+   * Hang the picture beside a point in the area, lifted above it: to the
+   * right of the word under the point (or of the point, once past the word),
+   * or to the left of the point when there is no room on the right. So the
+   * picture never covers the word being read and never leaves the page.
+   */
+  const hang = (px: number, py: number, row: number | null) => {
+    const f = follow.current;
+    const box = area.current;
+    const pic = float.current;
+    if (!f || !box || !pic) return;
+    const w = pic.offsetWidth;
+    const h = pic.offsetHeight;
+    const word = row === null ? null : words.current[row];
+    // The word's right edge, plus the 1.25rem it slides on hover.
+    const end = word ? word.getBoundingClientRect().right - box.getBoundingClientRect().left + 20 : 0;
+    const from = Math.max(px, end) + HANG.gap;
+    f.x(from + w <= box.clientWidth ? from : px - w - HANG.gap);
+    f.y(Math.max(-h * 0.35, py - h * HANG.lift));
+  };
+
   const move = (e: React.PointerEvent) => {
     const f = follow.current;
     const box = area.current;
     if (!f || !box || e.pointerType !== 'mouse') return;
     const rect = box.getBoundingClientRect();
-    f.x(e.clientX - rect.left);
-    f.y(e.clientY - rect.top);
+    hang(e.clientX - rect.left, e.clientY - rect.top, active);
     const dx = lastX.current === null ? 0 : e.clientX - lastX.current;
     lastX.current = e.clientX;
     f.r(Math.max(-7, Math.min(7, dx * 0.35)));
@@ -80,12 +131,10 @@ export function CategoryIndex() {
   // Keyboard focus has no cursor to follow: hang the picture off the row.
   const focusRow = (row: HTMLElement, i: number) => {
     const box = area.current;
-    const f = follow.current;
-    if (box && f) {
+    if (box) {
       const a = box.getBoundingClientRect();
       const b = row.getBoundingClientRect();
-      f.x(a.width * 0.7);
-      f.y(b.top - a.top + b.height / 2);
+      hang(0, b.top - a.top + b.height / 2, i);
     }
     enter(i);
   };
@@ -96,20 +145,19 @@ export function CategoryIndex() {
     follow.current?.r(0);
   };
 
-  const total = ROWS.reduce((n, r) => n + countOf(r.name), 0);
 
   return (
     <section className="page section-y" aria-labelledby="index-title">
       <div className="grid-page items-end gap-y-6">
         <div className="col-span-4 md:col-span-4 lg:col-span-8">
           <p className="label text-mute" data-reveal>
-            The index <span className="nums">— {pad(ROWS.length)} categories, {pad(total)} pieces</span>
+            The shop <span className="nums">— {pad(ROWS.length)} categories</span>, this season and the Index
           </p>
           <h2 id="index-title" className="display-lg mt-4" data-reveal>Shop by category</h2>
         </div>
         <div className="col-span-4 md:col-span-2 lg:col-span-4 md:justify-self-end">
-          <Link href="/collections/index" className="label group inline-flex min-h-11 items-center gap-3 border-b border-ink" data-reveal>
-            Everything in the index
+          <Link href={SEASON.href} className="label group inline-flex min-h-11 items-center gap-3 border-b border-ink" data-reveal>
+            <span>Shop this season <span className="nums">— {pad(SEASON.pool.length)} pieces</span></span>
             <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
           </Link>
         </div>
@@ -122,7 +170,7 @@ export function CategoryIndex() {
             return (
               <li key={r.name} className="border-t border-ink last:border-b">
                 <Link
-                  href={`/collections/index?category=${encodeURIComponent(r.name)}`}
+                  href={r.href}
                   onPointerEnter={(e) => e.pointerType === 'mouse' && enter(i)}
                   onFocus={(e) => focusRow(e.currentTarget, i)}
                   onBlur={leave}
@@ -134,13 +182,14 @@ export function CategoryIndex() {
                     className={cn(
                       'min-w-0 flex-1 whitespace-nowrap text-[clamp(2.1rem,0.5rem+7.4vw,9rem)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]',
                       'transition-[color,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)] md:group-hover:translate-x-5',
-                      dim ? 'text-stone-brand' : 'text-ink',
+                      dim ? 'text-stone' : 'text-ink',
                     )}
                   >
-                    <span className="pr-[0.12em]"><span>{r.name}</span></span>
+                    <span className="pr-[0.12em]"><span ref={(n) => { words.current[i] = n; }}>{r.name}</span></span>
                   </span>
-                  <span aria-hidden className="label-sm nums hidden shrink-0 text-mute md:inline">
-                    {pad(countOf(r.name))} pieces
+                  <span aria-hidden className="label-sm nums hidden shrink-0 text-right text-mute md:block">
+                    {pad(r.count)} pieces
+                    <span className="mt-1.5 block">{r.where}</span>
                   </span>
                   <span className="hidden h-10 w-10 shrink-0 items-center justify-center border border-ink opacity-0 transition-[opacity,background-color,color] duration-300 group-hover:bg-ink group-hover:text-bone group-hover:opacity-100 group-focus-visible:opacity-100 md:inline-flex" aria-hidden>
                     <Icon name="arrowR" className="h-4 w-4" />
@@ -148,7 +197,7 @@ export function CategoryIndex() {
                   <span className="relative block aspect-[4/5] w-14 shrink-0 overflow-hidden bg-bone-2 md:hidden">
                     <Image src={`/img/${r.img}.webp`} alt="" fill sizes="56px" className="object-cover" />
                   </span>
-                  <span className="sr-only">, {countOf(r.name)} pieces</span>
+                  <span className="sr-only">, {r.count} {r.count === 1 ? 'piece' : 'pieces'}, {r.where === 'Index' ? 'in the Index' : 'this season'}</span>
                 </Link>
               </li>
             );
@@ -180,7 +229,7 @@ export function CategoryIndex() {
           </div>
           <p className="label-sm nums mt-2 flex justify-between text-ink">
             <span>{active !== null ? ROWS[active].name : ''}</span>
-            <span className="text-mute">{active !== null ? `${pad(countOf(ROWS[active].name))} pieces` : ''}</span>
+            <span className="text-mute">{active !== null ? `${pad(ROWS[active].count)} pieces` : ''}</span>
           </p>
         </div>
       </div>

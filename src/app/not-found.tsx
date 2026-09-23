@@ -6,6 +6,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useUi } from '@/components/providers/Ui';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
+import { LINE_ROOM } from '@/components/ui/SectionHead';
 import { reduced, setupGsap } from '@/lib/gsap';
 
 const ROUTES = [
@@ -73,7 +74,7 @@ export default function NotFound() {
           >
             {['4', '0', '4'].map((d, i) => <span key={i} data-nf="digit" className="block">{d}</span>)}
           </p>
-          <h1 id="nf-title" className="display-lg mt-6 max-w-[13ch] md:mt-0">
+          <h1 id="nf-title" className={`display-lg mt-6 max-w-[13ch] md:mt-0 ${LINE_ROOM}`}>
             <Lines text="This page has been taken down." />
           </h1>
           <p className="body-lg mt-6 max-w-[40ch] text-ink-3">

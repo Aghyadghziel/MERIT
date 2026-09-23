@@ -104,7 +104,7 @@ export default function SizeGuidePage() {
     >
       <Table id="women" title="Women" caption="Ready to wear, sizes XS to XL." chart={WOMEN} />
       <Table id="men" title="Men" caption="Tailoring and outerwear, sizes 44 to 52." chart={MEN} />
-      <Table id="trousers" title="Trousers" caption="Sized by the finished waistband, in inches. Inside leg is before any alteration." chart={TROUSERS} />
+      <Table id="trousers" title="Trousers" caption="Waist sizes are in inches, taken from the finished waistband. Inside leg is before any alteration." chart={TROUSERS} />
 
       <Section id="footwear" title="Footwear">
         <p>
@@ -139,7 +139,7 @@ function Table({ id, title, caption, chart }: { id: string; title: string; capti
   return (
     <Section id={id} title={title} plain>
       <p className="-mt-4 mb-6 max-w-[56ch] text-sm leading-relaxed text-mute">
-        {caption} Measurements in <span className={CM}>centimetres</span><span className={IN}>inches</span>.
+        {caption} The measurements below are in <span className={CM}>centimetres</span><span className={IN}>inches</span>.
       </p>
       <div className="no-bar relative -mx-(--gutter) overflow-x-auto px-(--gutter) md:mx-0 md:px-0">
         <table className="w-full min-w-[34rem] border-collapse text-left">

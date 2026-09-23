@@ -10,14 +10,18 @@ export const metadata: Metadata = {
   alternates: { canonical: '/women' },
 };
 
-/** A story from the catalogue, as a tile in the grid. Every word is the story's own. */
+/**
+ * A story from the catalogue, as a tile in the grid. Every word is the
+ * story's own; the season is left out where it only repeats the kicker.
+ */
 function tile(slug: string, image: string, wide: string): ListingStory {
   const story = getStory(slug)!;
+  const when = story.season === story.kicker ? `${story.year}` : `${story.season} ${story.year}`;
   return {
     image,
     wide,
     alt: alt(image),
-    kicker: `${story.kicker} — ${story.season} ${story.year}`,
+    kicker: `${story.kicker} — ${when}`,
     title: story.title,
     text: story.standfirst,
     href: `/editorial/${story.slug}`,
@@ -36,6 +40,7 @@ export default function WomenPage() {
         tile('the-rule-line', 'campaign-rule-line', 'campaign-rule-line-wide'),
         tile('atrium-twelve-rooms', 'campaign-atrium', 'campaign-atrium-wide'),
       ]}
+      next={{ kicker: "Men's ready to wear", title: 'Men', href: '/men', count: byGender('men').length }}
     />
   );
 }

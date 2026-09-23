@@ -13,12 +13,17 @@ export const metadata: Metadata = {
 const foundation = getCollection('foundation')!;
 const basted = getStory('on-making-the-basted-jacket')!;
 
-/** Tiles in the grid, worded from the catalogue's own collection and story. */
+/**
+ * Tiles in the grid, worded from the catalogue's own collection and story.
+ * The Foundation tile uses the cloth detail from the Foundation campaign
+ * rather than the collection's cover, which is also the Ledger Field Jacket's
+ * product photograph and would sit two cards away from it.
+ */
 const stories: ListingStory[] = [
   {
-    image: 'campaign-foundation',
-    wide: 'campaign-foundation-wide',
-    alt: alt('campaign-foundation'),
+    image: 'statement-detail',
+    wide: 'statement-detail',
+    alt: alt('statement-detail'),
     kicker: `Collection — ${foundation.season} ${foundation.year}`,
     title: foundation.name,
     text: foundation.statement,
@@ -45,6 +50,7 @@ export default function MenPage() {
       title="Men"
       description="Soft shoulders, half canvas and a wide leg. The men's range shares its cloth with the women's and is cut on the same blocks."
       stories={stories}
+      next={{ kicker: "Women's ready to wear", title: 'Women', href: '/women', count: byGender('women').length }}
     />
   );
 }

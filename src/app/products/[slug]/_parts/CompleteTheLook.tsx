@@ -4,8 +4,9 @@ import { Price } from '@/components/commerce/Price';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
 import type { Product } from '@/lib/catalog';
+import { getCollection } from '@/lib/catalog';
 import { pad2 } from '@/lib/format';
-import { DEEP_MASK } from './mask';
+import { MASK_ROOM } from './mask';
 import { fitClass, imageSrc } from './media';
 
 const ITEM = 'relative w-[68%] shrink-0 snap-start md:w-[calc((100%-2*var(--gutter))/2.6)] lg:w-auto';
@@ -18,6 +19,10 @@ const SIZES = '(min-width:1024px) 23vw, (min-width:768px) 36vw, 66vw';
  */
 export function CompleteTheLook({ product, look }: { product: Product; look: Product[] }) {
   const img = product.images[0];
+  // The pairing reaches into other collections when its own runs short, so
+  // the line names the collection only when every piece really is from it.
+  const collection = getCollection(product.collection);
+  const from = collection && look.every((p) => p.collection === product.collection) ? collection.name : null;
   return (
     <section aria-labelledby="look-title" className="pb-(--section-sm) pt-(--section)">
       <div className="page grid-page items-end gap-y-6">
@@ -25,7 +30,7 @@ export function CompleteTheLook({ product, look }: { product: Product; look: Pro
           <p className="label text-mute" data-reveal>
             Complete the look — {pad2(look.length + 1)} pieces
           </p>
-          <h2 id="look-title" className={`display-xl mt-4 ${DEEP_MASK}`}>
+          <h2 id="look-title" className={`display-xl mt-4 ${MASK_ROOM}`}>
             <Lines text="Worn together." />
           </h2>
         </div>
@@ -33,7 +38,8 @@ export function CompleteTheLook({ product, look }: { product: Product; look: Pro
           className="col-span-4 max-w-sm text-sm leading-relaxed text-mute md:col-span-2 lg:col-span-4 lg:justify-self-end"
           data-reveal
         >
-          Chosen from the collection to wear with the {product.name}. Each piece is sold on its own.
+          {from ? `Chosen from the ${from} collection to wear` : 'Chosen to wear'} with the {product.name}. Each
+          piece is sold on its own.
         </p>
       </div>
 

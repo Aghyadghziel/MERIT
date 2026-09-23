@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { DEEP_MASK } from '@/app/products/[slug]/_parts/mask';
+import { MASK_ROOM } from '@/app/products/[slug]/_parts/mask';
 import { fitClass, imageSrc } from '@/app/products/[slug]/_parts/media';
 import { Price } from '@/components/commerce/Price';
 import { StatusTag } from '@/components/commerce/StatusTag';
@@ -18,6 +18,7 @@ import { reduced, setupGsap } from '@/lib/gsap';
 
 const genderLabel = (p: Product) =>
   p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? "Women's" : "Men's";
+
 /**
  * The buying panel. On a desktop it is the right-hand page of the spread and
  * stays in view while the photographs pass; its top edge follows the header,
@@ -66,7 +67,12 @@ export function ProductPanel({
   const blocked = sold || colourSold;
   const system = sizeSystemOf(product);
 
-  useEffect(() => { markViewed(product.slug); }, [product.slug, markViewed]);
+  // Only once the saved state has been read back: the store's hydrate would
+  // otherwise land after this and overwrite the list, so a page opened by a
+  // direct link, a refresh or a new tab was never recorded.
+  useEffect(() => {
+    if (ready) markViewed(product.slug);
+  }, [ready, product.slug, markViewed]);
 
   useEffect(() => {
     if (!added) return;
@@ -129,8 +135,13 @@ export function ProductPanel({
       const { gsap } = setupGsap();
       gsap.fromTo(d, { yPercent: 100 }, { yPercent: 0, duration: 0.55, ease: 'expo.out' });
     }
+    // The first size that can be chosen; with none left in this colour, the
+    // first other colour.
     requestAnimationFrame(() => {
-      sheetSizes.current?.querySelector<HTMLButtonElement>('button:not(:disabled)')?.focus();
+      const first =
+        sheetSizes.current?.querySelector<HTMLButtonElement>('button:not(:disabled)') ??
+        d.querySelector<HTMLButtonElement>('[role="group"] button[aria-pressed="false"]');
+      first?.focus();
     });
   };
 
@@ -163,6 +174,12 @@ export function ProductPanel({
     else open('cart');
   };
 
+  // The small oxide mark on a size cell, said in words for everyone.
+  const lowSizes = single || blocked ? [] : product.sizes.filter((s) => !unavailable(s) && low(s));
+  const lowNote = lowSizes.length > 0 && !(size && low(size))
+    ? `Three or fewer left in ${listOf(lowSizes)}.`
+    : null;
+
   const availability = sold
     ? 'Every size is sold out.'
     : colourSold
@@ -172,6 +189,10 @@ export function ProductPanel({
         : single
           ? low(product.sizes[0]) ? `Three or fewer left in ${colour}.` : `In stock in ${colour}.`
           : `${inStock} of ${product.sizes.length} sizes available in ${colour}.`;
+
+  // A finished piece has nothing to offer from a bar, so it never shows; a
+  // colour that has sold out opens the sheet, where another can be chosen.
+  const bar = showBar && !sold;
 
   const ctaLabel = sold ? 'Sold out' : colourSold ? `Sold out in ${colour}` : added ? 'Added to bag' : 'Add to bag';
 
@@ -183,7 +204,7 @@ export function ProductPanel({
         style={{ top: 'min(var(--header-offset, var(--nav-h)), calc(100svh - var(--panel-h, 0px)))' }}
       >
         <div className="px-(--gutter) pb-14 pt-7 md:pb-20 md:pt-10 lg:flex lg:min-h-[calc(100svh-var(--nav-h))] lg:flex-col lg:justify-center lg:py-[clamp(1.5rem,4vh,3rem)]">
-          <div className="mx-auto w-full max-w-[36rem] lg:max-w-[28rem] xl:max-w-[29.5rem]">
+          <div className="w-full max-w-[36rem] lg:mx-auto lg:max-w-[28rem] xl:max-w-[29.5rem]">
             {lead}
 
             <div className="flex items-center justify-between gap-4" data-reveal>
@@ -193,7 +214,7 @@ export function ProductPanel({
               <StatusTag product={product} className="shrink-0" />
             </div>
 
-            <h1 className={cn('mt-4 lg:mt-[clamp(0.75rem,2vh,1.25rem)] text-[clamp(2.5rem,1.1rem+3.3vw,4.75rem)] font-semibold leading-[0.88] tracking-[-0.055em] text-balance', DEEP_MASK)}>
+            <h1 className={cn('mt-4 lg:mt-[clamp(0.75rem,2vh,1.25rem)] text-[clamp(2.5rem,1.1rem+3.3vw,4.75rem)] font-semibold leading-[0.88] tracking-[-0.055em] text-balance', MASK_ROOM)}>
               <Lines text={product.name} />
             </h1>
 
@@ -244,7 +265,10 @@ export function ProductPanel({
                   Choose a size to continue.
                 </p>
               ) : (
-                <p className="text-xs text-mute">{availability}</p>
+                <p className="text-xs text-mute">
+                  {availability}
+                  {lowNote ? <LowNote text={lowNote} /> : null}
+                </p>
               )}
             </div>
 
@@ -310,12 +334,12 @@ export function ProductPanel({
 
       {/* ── Phone quick-buy bar ───────────────────────────────────────── */}
       <div
-        inert={!showBar}
+        inert={!bar}
         role="region"
         aria-label="Quick add to bag"
         className={cn(
           'fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bone/95 backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] lg:hidden',
-          showBar ? 'translate-y-0' : 'translate-y-full',
+          bar ? 'translate-y-0' : 'translate-y-full',
         )}
       >
         <div className="flex items-center gap-3 px-(--gutter) pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5">
@@ -332,14 +356,10 @@ export function ProductPanel({
           </div>
           <button
             type="button"
-            onClick={() => (size ? commit('panel') : openSheet())}
-            disabled={blocked}
-            className={cn(
-              'btn h-12 min-h-12 shrink-0 px-5',
-              blocked ? 'border-line bg-bone-2 text-mute opacity-100!' : 'btn-solid',
-            )}
+            onClick={() => (size && !colourSold ? commit('panel') : openSheet())}
+            className={cn('btn h-12 min-h-12 shrink-0 px-5', colourSold ? 'btn-ghost' : 'btn-solid')}
           >
-            {blocked ? 'Sold out' : !size ? 'Select size' : added ? 'Added' : 'Add to bag'}
+            {colourSold ? 'Choose colour' : !size ? 'Select size' : added ? 'Added' : 'Add to bag'}
           </button>
         </div>
       </div>
@@ -388,6 +408,7 @@ export function ProductPanel({
 
           <p className={cn('mt-3 min-h-5 text-xs', error ? 'text-oxide' : 'text-mute')} aria-live="polite">
             {error ? 'Choose a size to continue.' : availability}
+            {!error && lowNote ? <LowNote text={lowNote} /> : null}
           </p>
 
           <button
@@ -512,5 +533,19 @@ function Sizes({
         })}
       </div>
     </div>
+  );
+}
+
+/** "XL", "S and XL", "S, M and XL". */
+const listOf = (xs: string[]) =>
+  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+
+/** The legend for the low-stock mark on the size grid, drawn in the same oxide square. */
+function LowNote({ text }: { text: string }) {
+  return (
+    <span className="ml-2 inline-flex items-baseline gap-1.5 whitespace-nowrap">
+      <span aria-hidden className="block h-1 w-1 shrink-0 -translate-y-px self-center bg-oxide" />
+      {text}
+    </span>
   );
 }

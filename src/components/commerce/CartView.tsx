@@ -362,7 +362,7 @@ export function CartView() {
                     {/* No destination is known here, so the figure is never
                         presented as a final, delivered price. */}
                     <p className="label text-mute-ink">Total before delivery</p>
-                    <p className="mt-3 text-[clamp(2rem,14.5cqi,3.75rem)] font-semibold leading-[0.9] tracking-[-0.05em]">
+                    <p className="mt-3 text-[clamp(2rem,15.5cqi,3.75rem)] font-semibold leading-[0.9] tracking-[-0.05em]">
                       <RollingAmount value={subtotal} />
                     </p>
                     {code !== 'SAR' ? (

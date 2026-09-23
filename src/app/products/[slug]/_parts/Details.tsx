@@ -61,9 +61,9 @@ export function Details({ product }: { product: Product }) {
       body: (
         <>
           <ul className="space-y-1.5">
-            <li>Riyadh and Jeddah — two working days.</li>
-            <li>Gulf — three to five working days, free over 1,500 SAR.</li>
-            <li>International — five to eight working days, duties paid at checkout.</li>
+            <li>Riyadh and Jeddah — two working days; the rest of Saudi Arabia, two to three.</li>
+            <li>Gulf — three to five working days. Free over 1,500 SAR in Saudi Arabia and the Gulf.</li>
+            <li>Europe and UK — five to eight working days; elsewhere five to ten, duties paid at checkout.</li>
             <li>Returns accepted within 30 days, unworn and with the tag attached.</li>
           </ul>
           <Link href="/shipping-returns" className="link-rule mt-4 inline-block text-mute">

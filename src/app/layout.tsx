@@ -76,7 +76,7 @@ const ORGANISATION = {
     addressLocality: BRAND.city,
     addressCountry: 'SA',
   },
-  sameAs: [`https://instagram.com/${BRAND.instagram}`],
+  // No sameAs: a concept brand owns no social accounts to point at.
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

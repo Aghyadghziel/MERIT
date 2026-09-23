@@ -20,18 +20,22 @@ export const metadata: Metadata = {
 const FEATURED = ['atrium-wool-coat', 'rule-single-breasted-blazer', 'column-wide-trouser', 'axis-structured-bag'];
 
 /**
- * The home page is a walk through rooms that alternate light and dark:
+ * The home page is a walk through rooms, never two dark ones side by side:
  *
  *   Fitting Room      warm white   the opening, owned by FittingRoom
  *   Marquee           black band   moves only with the scroll
  *   Anatomy           stone        both jackets, read point by point, with a loupe
+ *   Campaign          white→photo  a window between two words, pushed open;
+ *                                  the house line at poster size
  *   Selected pieces   warm white   price list in the margin, a drifting rail
- *   Campaign          white→photo  a window between two words, pushed open
- *   The house         warm white   the sentence, read into ink, pictures set in it
  *   The making        graphite     the scroll turns sideways through six stages
+ *   The house         warm white   the sentence, read into ink, pictures set in it
  *   Liquid mark       black        the logotype, poured, live in WebGL
- *   The index         warm white   the shop at poster size
+ *   The shop          warm white   every category at poster size
  *   Footer            black        (layout)
+ *
+ * The campaign headline and the liquid mark's line are the same sentence, so
+ * three rooms stand between them.
  */
 export default function HomePage() {
   const items = outfits.map<OutfitItem>((o) => ({ ...o, product: getProduct(o.slug)! }));
@@ -43,10 +47,10 @@ export default function HomePage() {
       <FittingRoom items={items} />
       <Marquee />
       <JacketAnatomy products={anatomy} />
-      <SelectedPieces products={featured} />
       <CampaignFeature />
-      <BrandStatement />
+      <SelectedPieces products={featured} />
       <Making />
+      <BrandStatement />
       <LiquidMark />
       <CategoryIndex />
     </>

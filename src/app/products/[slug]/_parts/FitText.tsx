@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { Lines } from '@/components/ui/Lines';
 import { cn } from '@/lib/cn';
+import { MASK_ROOM } from './mask';
 
 /**
  * One line of poster type, sized so it runs exactly the width of its box —
@@ -19,11 +20,6 @@ export function FitText({
     const el = ref.current;
     const box = el?.parentElement;
     if (!el || !box) return;
-    // The measurement below sets a size and reads it straight back. Under
-    // reduced motion the global rule turns every property change into a
-    // (0.01ms) transition, and a transitioning font-size still reads at its
-    // old value, so the fit would come out wrong. Nothing here should animate.
-    el.style.transition = 'none';
     let last = -1;
     const fit = (force = false) => {
       const target = box.clientWidth;
@@ -46,7 +42,17 @@ export function FitText({
   }, [text, max]);
 
   return (
-    <h2 ref={ref} id={id} className={cn('w-max max-w-none whitespace-nowrap', className)}>
+    // The fit sets a size and reads the width straight back. Under reduced
+    // motion the global rule turns every property change into a 0.01ms
+    // transition, on this heading and on the word masks that inherit its
+    // size, and a transitioning font-size still measures at its old value.
+    // Nothing in here animates by CSS, so transitions are off for all of it,
+    // and the word masks get room for the whole of every letter.
+    <h2
+      ref={ref}
+      id={id}
+      className={cn('w-max max-w-none whitespace-nowrap transition-none [&_*]:transition-none', MASK_ROOM, className)}
+    >
       <Lines text={text} />
     </h2>
   );

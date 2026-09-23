@@ -71,7 +71,14 @@ export default function EditorialPage() {
         <div data-zoom="1.12" className="absolute inset-0">
           <div data-reveal-img className="h-full w-full">
             <div className="h-full w-full transition-transform duration-[1600ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.03]">
-              <ArtImage wide={lead.images[0]} tall={lead.cover} alt={alt(lead.images[0])} />
+              <ArtImage
+                wide={lead.images[0]}
+                tall={lead.cover}
+                alt={alt(lead.images[0])}
+                // Drawn at whichever of width or height the crop fills first.
+                sizes={isWide(lead.images[0]) ? 'max(100vw, 168svh)' : 'max(100vw, 76svh)'}
+                tallSizes={isWide(lead.cover) ? 'max(100vw, 168svh)' : 'max(100vw, 76svh)'}
+              />
             </div>
           </div>
         </div>
@@ -124,9 +131,11 @@ export default function EditorialPage() {
 }
 
 /**
- * One story as a spread. Three layouts rotate so no two neighbours match:
- * a tall picture with the text beside it, a landscape with the text leading,
- * and the tall picture mirrored.
+ * One story as a spread. Three layouts rotate so no two neighbours match and
+ * the picture changes sides every time: a tall picture on the left with the
+ * text low beside it, a landscape on the right with the text leading, and a
+ * narrower tall picture back on the left, set in from the edge, with the text
+ * high against it.
  */
 function Spread({ story, n, variant, first }: { story: Story; n: number; variant: number; first: boolean }) {
   const href = `/editorial/${story.slug}`;
@@ -142,7 +151,7 @@ function Spread({ story, n, variant, first }: { story: Story; n: number; variant
           alt={alt(image)}
           width={p.width}
           height={p.height}
-          sizes={landscape ? '(min-width:1024px) 64vw, 100vw' : '(min-width:1024px) 50vw, 100vw'}
+          sizes={landscape ? '(min-width:1024px) 64vw, 100vw' : '(min-width:1024px) 48vw, (min-width:768px) 64vw, 92vw'}
           className="transition-transform duration-[1400ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.035]"
         />
       </div>
@@ -185,8 +194,8 @@ function Spread({ story, n, variant, first }: { story: Story; n: number; variant
         </>
       ) : (
         <>
-          <div className="col-span-4 md:col-span-4 md:col-start-3 lg:order-2 lg:col-span-5 lg:col-start-8">{picture}</div>
-          <div className="col-span-4 md:col-span-4 md:col-start-1 lg:order-1 lg:col-span-5 lg:col-start-1 lg:row-start-1 lg:self-end">{text}</div>
+          <div className="col-span-4 md:col-span-4 md:col-start-3 lg:col-span-5 lg:col-start-2">{picture}</div>
+          <div className="col-span-4 md:col-span-4 md:col-start-1 lg:col-span-4 lg:col-start-8 lg:row-start-1 lg:self-start lg:pt-[clamp(3rem,8vw,8rem)]">{text}</div>
         </>
       )}
     </article>

@@ -4,7 +4,11 @@ import { useLayoutEffect, useRef } from 'react';
 import { Wordmark } from '@/components/ui/Wordmark';
 import { reduced, setupGsap } from '@/lib/gsap';
 
-const WORDS = ['Foundation', 'Autumn Winter 2026', 'Cut in Riyadh', 'Made in small counts', 'Re-issued, not replaced'];
+/**
+ * Only what the site says elsewhere: the patterns are drawn in Riyadh (the
+ * house works from blocks of its own); the cloth is cut and sewn by the makers.
+ */
+const WORDS = ['Foundation', 'Autumn Winter 2026', 'Drawn in Riyadh', 'Made in small counts', 'Re-issued, not replaced'];
 
 /**
  * The black band between the fitting room and the rail. It has no motor of its
@@ -14,7 +18,7 @@ const WORDS = ['Foundation', 'Autumn Winter 2026', 'Cut in Riyadh', 'Made in sma
  * animation laid on top of it. Screen readers get the line once.
  */
 export function Marquee() {
-  const root = useRef<HTMLElement>(null);
+  const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
@@ -66,11 +70,13 @@ export function Marquee() {
   );
 
   return (
-    <section ref={root} aria-label="Foundation, Autumn Winter 2026. Cut in Riyadh, made in small counts, re-issued, not replaced." className="on-ink overflow-hidden bg-ink py-[clamp(1.4rem,1rem+1.6vw,2.5rem)] text-bone">
+    <div ref={root} className="on-ink overflow-hidden bg-ink py-[clamp(1.4rem,1rem+1.6vw,2.5rem)] text-bone">
+      {/* The band is decoration; its line is read once, as plain text, with no landmark around it. */}
+      <p className="sr-only">Foundation, Autumn Winter 2026. Drawn in Riyadh, made in small counts, re-issued, not replaced.</p>
       <div ref={track} className="flex w-max will-change-transform" aria-hidden>
         {run(false)}
         {run(true)}
       </div>
-    </section>
+    </div>
   );
 }

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 import { ArtImage } from '@/components/editorial/ArtImage';
 import { ChapterStack } from '@/components/editorial/ChapterStack';
-import { looksFor, pad, pic } from '@/components/editorial/data';
+import { collectionSeason, isWide, looksFor, pad, pic } from '@/components/editorial/data';
 import { Poster } from '@/components/editorial/Poster';
 import { Price } from '@/components/commerce/Price';
 import { Icon } from '@/components/ui/Icon';
@@ -64,7 +64,7 @@ export default function CollectionsPage() {
                       {c.name}
                     </span>
                     <span className="label-sm nums hidden shrink-0 text-mute sm:inline">
-                      {c.season === 'Permanent' || c.season === 'Runway' ? c.season : `${c.season} ${c.year}`} · {count(c)}
+                      {collectionSeason(c)} · {count(c)}
                     </span>
                     <Icon name="arrowR" className="h-3.5 w-3.5 shrink-0 rotate-90 transition-transform duration-300 group-hover:translate-y-0.5" />
                   </a>
@@ -104,6 +104,16 @@ export default function CollectionsPage() {
 
 const count = (c: Collection) => plural(products.filter((p) => p.collection === c.slug).length, 'piece');
 
+/**
+ * The width a chapter's picture is drawn at. A portrait fills its half of the
+ * screen; a landscape (Runway 01 has no portrait) fills the height and runs
+ * far past the sides, and is drawn — and must be fetched — that wide.
+ */
+const chapterSizes = (image: string) =>
+  isWide(image)
+    ? '(min-width:1024px) max(50vw, 178svh), (min-width:768px) 119vw, 223vw'
+    : '(min-width:1024px) max(50vw, 80svh), 100vw';
+
 function Chapter({ collection: c, n, flip }: { collection: Collection; n: number; flip: boolean }) {
   const room = ROOM[c.slug] ?? { bg: 'bg-bone-2', dark: false };
   const href = `/collections/${c.slug}`;
@@ -140,7 +150,7 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
         >
           <div data-reveal-img className="absolute inset-0">
             <div className="h-full w-full transition-transform duration-[1600ms] ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.04]">
-              <ArtImage wide={c.image} alt="" sizes="(min-width:1024px) 50vw, 100vw" priority={n === 0} />
+              <ArtImage wide={c.image} alt="" sizes={chapterSizes(c.image)} priority={n === 0} />
             </div>
           </div>
           <span className="label absolute left-(--gutter) top-5 text-bone mix-blend-difference lg:hidden">{pad(n + 1)}</span>
@@ -156,12 +166,12 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
         >
           <div className={cn('flex items-baseline justify-between gap-6 border-t pt-4', room.dark ? 'border-bone/25' : 'border-ink/25')}>
             <p className="label nums">{pad(n + 1)} <span className="opacity-50">/ {pad(collections.length)}</span></p>
-            <p className="label">{c.season} <span className="nums">{c.year}</span></p>
+            <p className="label nums">{collectionSeason(c)}</p>
           </div>
 
           <div>
             <Poster as="h2" id={`chapter-${c.slug}`} text={c.name} cap="clamp(3rem,20svh,12rem)" />
-            <p className="display-sm mt-6 max-w-[22ch] lg:mt-8" data-reveal>{c.statement}</p>
+            <p className="display-sm mt-6 max-w-[22ch] [text-wrap:balance] lg:mt-8" data-reveal>{c.statement}</p>
             <p className={cn('mt-4 max-w-md text-sm leading-relaxed', room.dark ? 'text-bone/70' : 'text-mute')} data-reveal>{c.note}</p>
           </div>
 
@@ -191,11 +201,10 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
               </ul>
             ) : null}
 
-            <div className="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-4">
+            <div className="mt-8">
               <Link href={href} className="btn btn-solid">
                 Enter {c.name} <Icon name="arrowR" className="h-3.5 w-3.5" />
               </Link>
-              <p className={cn('label nums', room.dark ? 'text-bone/70' : 'text-mute')}>{count(c)}</p>
             </div>
           </div>
         </div>

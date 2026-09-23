@@ -7,6 +7,18 @@ export const metadata: Metadata = {
   alternates: { canonical: '/privacy' },
 };
 
+/**
+ * Every key this site writes to local storage, and what is in it. Check this
+ * list against the code (`grep -rn "'merit:" src`) whenever a feature starts
+ * remembering something: the count at the top of the page is taken from it.
+ */
+const KEYS = [
+  { key: 'merit:v1', holds: 'Your bag, your wishlist, the last eight pieces you opened, and your chosen currency.' },
+  { key: 'merit:searches', holds: 'Your last six searches.' },
+  { key: 'merit:grid', holds: 'Whether you chose the large or the compact grid on a listing. Written only once you change it.' },
+  { key: 'merit:fitting-room', holds: 'That you have taken a jacket down in the fitting room on the home page, so the jackets stop swaying to show you how.' },
+];
+
 export default function PrivacyPage() {
   return (
     <TextPage
@@ -16,7 +28,7 @@ export default function PrivacyPage() {
       facts={[
         { label: 'Cookies', value: '0', note: 'None set, by us or anyone else.' },
         { label: 'Tracking scripts', value: '0', note: 'No analytics, no advertising pixels.' },
-        { label: 'Kept in your browser', value: '2', unit: 'keys', note: 'Local storage only. Never sent.' },
+        { label: 'Kept in your browser', value: String(KEYS.length), unit: 'keys', note: 'Local storage only. Never sent.' },
         { label: 'Forms that send', value: '0', note: 'Nothing typed here leaves the page.' },
       ]}
       toc={[
@@ -29,11 +41,17 @@ export default function PrivacyPage() {
     >
       <Section id="keeps" title="What this site keeps">
         <p>
-          Your bag, your wishlist and your chosen currency are written to your own browser&rsquo;s
-          local storage under the key <code>merit:v1</code>, and your recent searches under{' '}
-          <code>merit:searches</code>. They never leave the device, and clearing your browser data
-          removes them for good.
+          A few things are written to your own browser&rsquo;s local storage, under the keys below.
+          They never leave the device, and clearing your browser data removes them for good.
         </p>
+        <dl className="border-t border-line">
+          {KEYS.map((k) => (
+            <div key={k.key} className="grid gap-x-6 gap-y-1.5 border-b border-line py-4 last:border-b-0 last:pb-0 sm:grid-cols-[11.5rem_minmax(0,1fr)]">
+              <dt><code>{k.key}</code></dt>
+              <dd>{k.holds}</dd>
+            </div>
+          ))}
+        </dl>
       </Section>
 
       <Section id="cookies" title="Cookies">

@@ -32,6 +32,7 @@ const CATEGORY_IMAGE: Record<'women' | 'men', Partial<Record<Category, string>>>
     Trousers: 'trouser-column-1',
     Dresses: 'dress-plane-1',
     Footwear: 'shoe-pivot-1',
+    Accessories: 'bag-axis-1',
   },
   men: {
     Outerwear: 'coat-overcoat-2',
@@ -40,6 +41,7 @@ const CATEGORY_IMAGE: Record<'women' | 'men', Partial<Record<Category, string>>>
     Shirting: 'shirt-oxford-m-1',
     Trousers: 'trouser-pleat-m-1',
     Footwear: 'shoe-derby-1',
+    Accessories: 'bag-knot-1',
   },
 };
 
@@ -51,8 +53,12 @@ function imageFor(gender: 'women' | 'men', category: Category) {
   );
 }
 
-/** One entry in a menu. `image` is what the preview well shows on hover. */
-export type MenuLink = { label: string; href: string; image?: string; meta?: string };
+/**
+ * One entry in a menu. `image` is what the preview well shows on hover;
+ * `meta` is a short fact set beside the label (a count, a season); `note` is
+ * a line of real copy set under it, used by the story list.
+ */
+export type MenuLink = { label: string; href: string; image?: string; meta?: string; note?: string };
 
 export type MenuColumn = { title: string; links: MenuLink[] };
 
@@ -77,10 +83,13 @@ export type Menu = {
 
 export type NavItem = { label: string; href: string; menu?: Menu };
 
+/** AW 26, SS 26, Show 26, Permanent: never the collection's own name again. */
 const seasonShort = (season: string, year: number) =>
-  season === 'Permanent' || season === 'Runway'
+  season === 'Permanent'
     ? season
-    : `${season.split(' ').map((w) => w[0]).join('')} ${String(year).slice(2)}`;
+    : season === 'Runway'
+      ? `Show ${String(year).slice(2)}`
+      : `${season.split(' ').map((w) => w[0]).join('')} ${String(year).slice(2)}`;
 
 const collectionLinks = (): MenuLink[] =>
   collections.map((c) => ({
@@ -90,32 +99,32 @@ const collectionLinks = (): MenuLink[] =>
     meta: seasonShort(c.season, c.year),
   }));
 
+/**
+ * The accessories, by name. The catalogue has no bag, scarf or jewellery
+ * filter, so the menu does not pretend to: each piece links to itself.
+ */
+const accessoryLinks = (gender: Gender): MenuLink[] =>
+  poolFor(gender)
+    .filter((p) => p.category === 'Accessories')
+    .map((p) => ({ label: p.name, href: `/products/${p.slug}`, image: p.images[0] }));
+
 const shopMenu = (gender: 'women' | 'men', base: string): Menu => {
   const women = gender === 'women';
-  const footwear = women ? 'shoe-pivot-1' : 'shoe-derby-1';
   const pieces = poolFor(gender).length;
   return {
     primary: {
-      title: 'Ready to wear',
-      links: categoriesFor(gender)
-        .filter((c) => c !== 'Accessories' && c !== 'Footwear')
-        .map((c) => ({
-          label: c,
-          href: `${base}?category=${encodeURIComponent(c)}`,
-          image: imageFor(gender, c),
-          meta: pad2(countFor(gender, c)),
-        })),
+      // Every category that exists for this gender, shoes and accessories
+      // included, each one a real filter with a real count.
+      title: 'Shop by category',
+      links: categoriesFor(gender).map((c) => ({
+        label: c,
+        href: `${base}?category=${encodeURIComponent(c)}`,
+        image: imageFor(gender, c),
+        meta: pad2(countFor(gender, c)),
+      })),
     },
     columns: [
-      {
-        title: 'Accessories',
-        links: [
-          { label: 'Bags', href: `${base}?category=Accessories`, image: 'bag-axis-1' },
-          { label: 'Footwear', href: `${base}?category=Footwear`, image: footwear },
-          { label: 'Jewellery', href: `${base}?category=Accessories&colour=Brass`, image: 'chain-hairline-1' },
-          { label: 'Scarves', href: `${base}?category=Accessories&collection=foundation`, image: 'scarf-signal-1' },
-        ],
-      },
+      { title: 'Accessories, by piece', links: accessoryLinks(gender) },
       { title: 'Collections', links: collectionLinks() },
     ],
     feature: {
@@ -161,12 +170,12 @@ export const NAV: NavItem[] = [
           })),
         },
         {
-          title: 'Archive',
-          links: [
-            { label: 'Runway 01', href: '/collections/runway-01', image: 'runway-01' },
-            { label: 'Runway 01, the story', href: '/editorial/runway-01-riyadh', image: 'blazer-archive-1' },
-            { label: 'All collections', href: '/collections', image: 'campaign-studio' },
-          ],
+          // The stories written about a collection, so the list above has
+          // somewhere to go deeper without repeating itself.
+          title: 'The stories behind them',
+          links: stories
+            .filter((s) => s.kicker !== 'Atelier')
+            .map((s) => ({ label: s.title, href: `/editorial/${s.slug}`, image: s.cover })),
         },
       ],
       feature: {
@@ -192,6 +201,7 @@ export const NAV: NavItem[] = [
           href: `/editorial/${s.slug}`,
           image: s.cover,
           meta: s.kicker,
+          note: s.standfirst,
         })),
       },
       columns: [

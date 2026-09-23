@@ -33,10 +33,10 @@ function RiyadhClock() {
   );
 }
 
+
 /**
- * The footer ends on the signature: the logotype, poured in liquid chrome and
- * running edge to edge, cropped by the bottom of the page (LiquidFooterMark,
- * WebGL, with the drawn logotype as its fallback).
+ * The footer ends on the signature: the logotype poured in liquid chrome on
+ * every page (LiquidFooterMark, WebGL, with the drawn logotype as its fallback).
  */
 export function Footer() {
   const toTop = () => {
@@ -88,18 +88,8 @@ export function Footer() {
       <div className="page border-t border-line-ink">
         <div className="flex flex-col gap-6 py-8 lg:flex-row lg:items-center lg:justify-between">
           <ul className="flex flex-wrap items-center gap-x-8 gap-y-2 text-[0.9375rem]">
-            <li>
-              <a
-                href={`https://instagram.com/${BRAND.instagram}`}
-                className="link-quiet inline-flex min-h-11 items-center gap-1.5"
-                rel="noreferrer noopener"
-                target="_blank"
-              >
-                Instagram
-                <Icon name="diagonal" className="h-3.5 w-3.5" />
-                <span className="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
+            {/* No social link: MERIT is a concept and owns no account, so a
+                handle here would send people to whoever does. */}
             <li>
               <a href={`mailto:${BRAND.email}`} className="link-quiet inline-flex min-h-11 items-center">{BRAND.email}</a>
             </li>

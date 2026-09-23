@@ -1,6 +1,6 @@
-import { Lines } from '@/components/ui/Lines';
+import { Fragment } from 'react';
 import { cn } from '@/lib/cn';
-import { posterSize } from '@/components/editorial/data';
+import { posterFit } from '@/components/editorial/data';
 
 type Props = {
   text: string;
@@ -15,18 +15,42 @@ type Props = {
 
 /**
  * A word set in capitals from edge to edge of its column, the way the
- * logotype spans the footer. The element is its own size container, so the
- * type fits whatever column it is dropped into, at any width, without a script.
+ * logotype spans the footer: the first stroke on the left edge, the last on
+ * the right. The element is its own size container, so the type fits whatever
+ * column it is dropped into, at any width, without a script.
  */
 export function Poster({ text, as: Tag = 'p', cap, className, id, reveal = true }: Props) {
+  const { fontSize, marginLeft } = posterFit(text, cap);
   return (
     <Tag id={id} className={cn('@container block w-full', className)}>
       <span
         className="block whitespace-nowrap font-semibold uppercase leading-[0.8] tracking-[-0.055em]"
-        style={{ fontSize: posterSize(text, cap) }}
+        style={{ fontSize, marginLeft }}
       >
-        {reveal ? <Lines text={text} /> : text}
+        {reveal ? <Mask text={text} /> : text}
       </span>
     </Tag>
+  );
+}
+
+/**
+ * The house word mask (the same markup <Lines> writes, so the one reveal
+ * system drives it), with room at the sides: at this size a letter's ink can
+ * reach past its own box — the legs of an X, the trailing tracking — and a
+ * mask cut flush to the box would shave it off.
+ */
+function Mask({ text }: { text: string }) {
+  const words = text.split(' ');
+  return (
+    <span data-reveal-line>
+      {words.map((word, i) => (
+        <Fragment key={`${word}-${i}`}>
+          <span className="-mx-[0.12em] px-[0.12em]">
+            <span>{word}</span>
+          </span>
+          {i < words.length - 1 ? ' ' : null}
+        </Fragment>
+      ))}
+    </span>
   );
 }

@@ -19,7 +19,8 @@ export function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
           ) : (
             <li key={c.href} className="flex items-center">
               {i > 0 ? <span aria-hidden className="mx-2.5 text-line-2">/</span> : null}
-              <Link href={c.href} className="inline-flex min-h-6 items-center transition-colors hover:text-ink">
+              {/* A 44px target that takes up the room of the type alone. */}
+              <Link href={c.href} className="-mx-2 -my-2.5 inline-flex min-h-11 items-center px-2 transition-colors hover:text-ink">
                 {c.name}
               </Link>
             </li>

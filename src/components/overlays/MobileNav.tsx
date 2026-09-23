@@ -37,6 +37,31 @@ export function MobileNav() {
   // Back to the top level once the menu has finished closing.
   const reset = useCallback(() => { setLayer(null); opener.current = null; }, []);
 
+  // The menu only exists below 1024px. A tablet turned to landscape (or a
+  // window widened) while it is open must not leave an invisible, page-wide
+  // layer holding the pointer and the scroll lock: close it as the width
+  // crosses over.
+  useEffect(() => {
+    if (!isOpen) return;
+    const mq = window.matchMedia('(min-width: 1024px)');
+    if (mq.matches) { close(); return; }
+    const onChange = (e: MediaQueryListEvent) => { if (e.matches) close(); };
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, [isOpen, close]);
+
+  // Search and the bag replace the menu. Focus is first handed to the
+  // header's own control for that overlay, so that is what the overlay
+  // records as its opener and returns to when it closes; the menu's copy is
+  // gone by then, and focus would otherwise fall to the top of the page.
+  const handOff = (to: 'search' | 'cart') => {
+    const target = [...document.querySelectorAll<HTMLElement>(`header [data-opener="${to}"]`)].find(
+      (el) => el.getClientRects().length > 0,
+    );
+    target?.focus({ preventScroll: true });
+    open(to);
+  };
+
   useEffect(() => {
     const el = sub.current;
     if (!el) return;
@@ -75,31 +100,36 @@ export function MobileNav() {
   const inBag = ready ? count : 0;
 
   return (
-    <Panel open={isOpen} onClose={close} onClosed={reset} label="Menu" from="full" className="lg:hidden">
-      {/* The top bar: the header, again, with the glyph turned to a cross. */}
-      <div className="page grid h-(--nav-h) shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-6 border-b border-line">
-        <button
-          type="button"
-          className="icon-btn justify-self-start"
-          onClick={close}
-          aria-label="Close menu"
-        >
-          <Burger crossed={isOpen} />
-        </button>
-        <Link href="/" onClick={close} aria-label="MERIT, home" className="flex h-11 items-center">
-          <Wordmark className="h-[22px] w-auto" />
-        </Link>
-        <div className="flex items-center justify-end gap-1">
-          <button type="button" className="icon-btn" onClick={() => open('search')} aria-label="Search">
+    <Panel open={isOpen} onClose={close} onClosed={reset} label="Menu" from="full" className="lg:hidden" rootClassName="lg:hidden">
+      {/* The top bar: the header, again, with the glyph turned to a cross.
+          Same four places as the header's, so nothing jumps as it opens. */}
+      <div className="page grid h-(--nav-h) shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-4 border-b border-line md:gap-6">
+        <div className="-ml-3 flex items-center justify-self-start">
+          <button type="button" className={cn(TAP, 'inline-flex')} onClick={close} aria-label="Close menu">
+            <Burger crossed={isOpen} />
+          </button>
+          <button type="button" className={cn(TAP, 'inline-flex')} onClick={() => handOff('search')} aria-label="Search">
             <Icon name="search" />
           </button>
+        </div>
+        <Link href="/" onClick={close} aria-label="MERIT, home" className="flex h-11 items-center">
+          <Wordmark className="h-[22px] w-auto md:h-7" />
+        </Link>
+        <div className="flex items-center justify-end">
+          <Link href="/account" onClick={close} className={cn(TAP, 'hidden sm:inline-flex')} aria-label="Account">
+            <Icon name="account" />
+          </Link>
+          <Link href="/wishlist" onClick={close} className={cn(TAP, 'inline-flex max-[359px]:hidden')} aria-label={`Wishlist, ${saved} saved`}>
+            <Icon name="heart" filled={saved > 0} />
+          </Link>
           <button
             type="button"
-            className="label nums flex min-h-11 items-center gap-2 pl-2"
-            onClick={() => open('cart')}
+            className="label nums flex min-h-11 shrink-0 items-center gap-2 pl-2"
+            onClick={() => handOff('cart')}
             aria-label={`Shopping bag, ${inBag} ${inBag === 1 ? 'item' : 'items'}`}
           >
-            <Icon name="bag" className="h-[18px] w-[18px]" />
+            <span className="hidden sm:inline">Bag</span>
+            <Icon name="bag" className="h-[18px] w-[18px] sm:hidden" />
             <span className={cn('inline-flex h-5 min-w-5 items-center justify-center px-1 text-[0.625rem] leading-none', inBag > 0 ? 'bg-ink text-bone' : 'border border-current/35')}>
               {inBag}
             </span>
@@ -223,6 +253,9 @@ export function MobileNav() {
         >
           {item?.menu ? (
             <div data-sub-scroll className="no-bar h-full overflow-y-auto pb-10">
+              {/* Back stays pinned while the layer scrolls: the way out is
+                  never more than one tap away. */}
+              <div className="sticky top-0 z-10 bg-bone">
               <div className="page flex items-center justify-between border-b border-line">
                 <button
                   type="button"
@@ -236,6 +269,7 @@ export function MobileNav() {
                   All {item.label.toLowerCase()}
                   <Icon name="arrowR" className="h-3.5 w-3.5" />
                 </Link>
+              </div>
               </div>
 
               <div className="page pt-6">
@@ -310,6 +344,10 @@ export function MobileNav() {
     </Panel>
   );
 }
+
+/** The header's 44px tap target (display set per use), repeated so the two bars line up exactly. */
+const TAP =
+  'h-11 w-11 shrink-0 items-center justify-center transition-opacity duration-(--dur-fast) ease-(--ease-out) hover:opacity-55';
 
 /**
  * The header's two-line menu glyph, drawn so its lines can meet in a cross.

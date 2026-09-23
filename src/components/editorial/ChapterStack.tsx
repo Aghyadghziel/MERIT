@@ -1,7 +1,10 @@
 'use client';
 
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { reduced, setupGsap } from '@/lib/gsap';
+
+/** Where the chapters pin. The same condition as the CSS that makes them sticky. */
+const PINNED = '(min-width: 1024px) and (min-height: 640px)';
 
 /**
  * Four collections as four pages of a book. On a desktop each chapter pins
@@ -22,8 +25,7 @@ export function ChapterStack({ children, className }: { children: React.ReactNod
     const { gsap } = setupGsap();
     const mm = gsap.matchMedia();
 
-    // Same condition as the CSS that makes the chapters sticky.
-    mm.add('(min-width: 1024px) and (min-height: 640px)', () => {
+    mm.add(PINNED, () => {
       const pages = gsap.utils.toArray<HTMLElement>('[data-chapter]', el);
       pages.forEach((page, i) => {
         const next = pages[i + 1];
@@ -37,6 +39,50 @@ export function ChapterStack({ children, className }: { children: React.ReactNod
     }, el);
 
     return () => mm.revert();
+  }, []);
+
+  /**
+   * Keyboard focus never lands on a page that is covered. Tabbing back out of
+   * a chapter moves focus into the one underneath it, which is still pinned
+   * under its successor, and the browser sees nothing to scroll. So when focus
+   * enters a chapter that is not lying open — covered by the next, or not yet
+   * risen to the top — the book is turned back (or on) to the point where that
+   * chapter is whole and flat. Applies with reduced motion too: the pinning is
+   * CSS and happens either way.
+   */
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const pinned = window.matchMedia(PINNED);
+
+    const onFocus = (e: FocusEvent) => {
+      if (!pinned.matches) return;
+      const target = e.target as Element | null;
+      // A pointer can only reach what it can see; this is for the keyboard.
+      if (!target?.matches(':focus-visible')) return;
+      const page = target.closest<HTMLElement>('[data-chapter]');
+      if (!page || !el.contains(page)) return;
+      const pages = [...el.querySelectorAll<HTMLElement>('[data-chapter]')];
+      const next = pages[pages.indexOf(page) + 1];
+      const top = page.getBoundingClientRect().top;
+      const intruding = next ? next.getBoundingClientRect().top < window.innerHeight - 1 : false;
+      if (Math.abs(top) <= 1 && !intruding) return;
+
+      // The chapter's place in the flow, measured without the sticky offset:
+      // from the first element after it that is not itself pinned, less its
+      // own height; the last chapter, which nothing follows, from the stack.
+      let top0: number;
+      const after = page.nextElementSibling as HTMLElement | null;
+      if (after && !after.hasAttribute('data-chapter')) {
+        top0 = after.getBoundingClientRect().top + window.scrollY - page.offsetHeight;
+      } else {
+        top0 = el.getBoundingClientRect().bottom + window.scrollY - page.offsetHeight;
+      }
+      window.scrollTo({ top: Math.max(0, Math.round(top0)), behavior: 'instant' });
+    };
+
+    el.addEventListener('focusin', onFocus);
+    return () => el.removeEventListener('focusin', onFocus);
   }, []);
 
   return (

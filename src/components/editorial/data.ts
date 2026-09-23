@@ -60,8 +60,8 @@ export const alt = (name: string) => ALT[name] ?? '';
 /**
  * Advance widths of the display face at weight 600 and -0.055em tracking,
  * measured in the browser (Inter Tight, standing in for Neue Haas Grotesk).
- * They let a poster word fill its container exactly, in CSS alone — no
- * measuring after load, so nothing jumps. Re-measure if the face changes.
+ * They let a poster word fill its container in CSS alone — no measuring after
+ * load, so nothing jumps. Re-measure if the face changes.
  */
 const EM: Record<string, number> = {
   A: 0.631, B: 0.565, C: 0.651, D: 0.632, E: 0.515, F: 0.493, G: 0.662, H: 0.651, I: 0.182,
@@ -74,10 +74,42 @@ const EM: Record<string, number> = {
 /**
  * A font size that sets `text` in capitals across the full width of the
  * nearest `@container`, capped so a short word does not swallow the screen.
+ * Box-based and a little generous, for type that shares its line.
  */
 export function posterSize(text: string, cap = '38svh') {
   const em = [...text.toUpperCase()].reduce((w, c) => w + (EM[c] ?? 0.62), 0) * 1.012;
   return `min(calc(100cqi / ${em.toFixed(3)}), ${cap})`;
+}
+
+/**
+ * The words that stand alone as posters, measured by their ink rather than
+ * their advances: where the first stroke starts and the last one ends, in em,
+ * kerning included (A–T alone takes an eighth of an em out of FOUNDATION).
+ * The trailing tracking falls outside the box, and a letter like X reaches
+ * past it, so advances cannot say where a word visibly ends.
+ */
+const INK: Record<string, [left: number, right: number]> = {
+  COLLECTIONS: [0.034, 6.113],
+  EDITORIAL: [0.052, 4.424],
+  FOUNDATION: [0.052, 5.688],
+  ATRIUM: [0.006, 3.31],
+  INDEX: [0.052, 2.621],
+  'RUNWAY 01': [0.052, 4.93],
+};
+
+/**
+ * Size and optical offset for a poster word: the first stroke on the column's
+ * left edge and the last on its right, with nothing to measure after load.
+ * An unmeasured word falls back to its advances.
+ */
+export function posterFit(text: string, cap = '38svh'): { fontSize: string; marginLeft: string } {
+  const ink = INK[text.toUpperCase()];
+  if (!ink) return { fontSize: posterSize(text, cap), marginLeft: '0' };
+  const [left, right] = ink;
+  return {
+    fontSize: `min(calc(100cqi / ${((right - left) * 1.002).toFixed(4)}), ${cap})`,
+    marginLeft: `-${left}em`,
+  };
 }
 
 // ─── Text ──────────────────────────────────────────────────────────────────
@@ -117,22 +149,23 @@ export const coverWide = (c: Collection) => WIDE_COVER[c.slug] ?? c.image;
 
 /** How a collection's cover sits behind its type, per crop. */
 export const COVER_POSITION: Partial<Record<string, string>> = {
-  index: 'object-[50%_28%]',
+  index: 'object-[50%_6%]',
   'runway-01': 'object-[46%_center]',
 };
 
 export type Look = { product: Product; image: string };
 
 /**
- * The lookbook, frame by frame: the product each look sells and the picture
- * that shows it best, chosen by eye from that product's own photographs.
+ * The lookbook, frame by frame: the product each frame sells and the picture
+ * that shows it best, chosen by eye from that product's own photographs —
+ * none with another house's mark on it, and no two neighbours alike.
  */
 const LOOKS: Record<string, [slug: string, image: string][]> = {
   foundation: [
-    ['atrium-wool-coat', 'coat-atrium-4'],
+    ['atrium-wool-coat', 'coat-atrium-1'],
     ['rule-single-breasted-blazer', 'blazer-rule-1'],
     ['meridian-belted-coat', 'coat-meridian-2'],
-    ['margin-cashmere-crew', 'knit-margin-2'],
+    ['margin-cashmere-crew', 'knit-margin-1'],
     ['meridian-overcoat', 'coat-overcoat-2'],
     ['stone-tailored-vest', 'vest-stone-2'],
   ],
@@ -143,10 +176,10 @@ const LOOKS: Record<string, [slug: string, image: string][]> = {
     ['plinth-derby', 'shoe-derby-1'],
   ],
   index: [
-    ['column-wide-trouser', 'trouser-column-2'],
+    ['quiet-poplin-shirt', 'shirt-quiet-3'],
     ['quiet-oxford-shirt', 'shirt-oxford-m-1'],
     ['column-pleated-trouser', 'trouser-pleat-m-1'],
-    ['quiet-poplin-shirt', 'shirt-quiet-3'],
+    ['column-wide-trouser', 'trouser-column-3'],
     ['axis-structured-bag', 'bag-axis-1'],
     ['hairline-chain', 'chain-hairline-1'],
   ],
@@ -168,21 +201,25 @@ export function looksFor(c: Collection): Look[] {
 }
 
 /**
- * The story that belongs with a collection: one that names it, or failing
- * that, the one that sells the most of its pieces.
+ * The story that belongs with a collection: one that names it. A story that
+ * only sells a few of its pieces is about something else, so it is not shown
+ * as this collection's story.
  */
 export function storyFor(c: Collection): Story | undefined {
-  const named = stories.find((s) => `${s.title} ${s.standfirst}`.includes(c.name));
-  if (named) return named;
-  const score = (s: Story) => s.shop.filter((slug) => getProduct(slug)?.collection === c.slug).length;
-  const best = [...stories].sort((a, b) => score(b) - score(a))[0];
-  return best && score(best) > 0 ? best : undefined;
+  return stories.find((s) => `${s.title} ${s.standfirst}`.includes(c.name));
 }
 
 export const collectionIndex = (slug: string) => collections.findIndex((c) => c.slug === slug);
 export const storyIndex = (slug: string) => stories.findIndex((s) => s.slug === slug);
 
 export const pad = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * A collection's season as every page prints it: "Autumn Winter 2026",
+ * "Runway 2026", and "Permanent" alone, since a permanent range has no year.
+ */
+export const collectionSeason = (c: { season: string; year: number }) =>
+  c.season === 'Permanent' ? c.season : `${c.season} ${c.year}`;
 
 /** "Autumn Winter 2026", or just "2026" where the season repeats the kicker. */
 export const seasonOf = (s: { season: string; year: number; kicker?: string }) =>

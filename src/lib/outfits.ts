@@ -7,17 +7,18 @@
  * other and the hand-off to a still is invisible.
  *
  * The clips were generated, then stabilised frame by frame onto the base
- * still's figure (head at 5.6%, feet at 96.6% of the frame), flattened, and cut
- * out: they carry an alpha channel, so the model stands on whatever is behind
- * him. Two encodes of each, because no single codec does alpha everywhere:
+ * still's figure (head at 5.6%, feet at 96.6% of the frame) and flattened onto
+ * one even studio backdrop, #F4F2EE, with his real floor shadow left in. They
+ * are plain H.264, tagged BT.709, and the page shows them inside a framed room
+ * cut from that backdrop (see ROOM in the Fitting Room), so no alpha channel
+ * is needed and every browser plays the same file:
  *
- *   <clip>.webm        VP9 + alpha   Chrome, Edge, Firefox
- *   <clip>.hevc.mp4    HEVC + alpha  Safari (macOS, iOS)
- *   <clip>-m.*         480 × 720     phones at 1x, or saving data
+ *   <clip>.mp4       720 × 1080
+ *   <clip>-m.mp4     480 × 720     phones at 1x, or saving data
  *
  * A phone with a dense screen gets the 720 × 1080 encodes: the 480 ones would
- * be drawn at nearly three device pixels each and read soft beside the vector
- * logotype. Frame: 2:3. Stills are RGBA WebP of the clip's own last frame.
+ * be drawn at nearly three device pixels each and read soft. Frame: 2:3. Stills
+ * are WebP of the clips' own first and last frames.
  * Pipeline and scripts: merit-video-kit/ (outside the repo).
  */
 export const FRAME = { width: 1200, height: 1800 } as const;

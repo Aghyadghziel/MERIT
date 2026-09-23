@@ -40,17 +40,12 @@ const small = () => {
 const stillOf = (j: Jacket) => (small() ? j.dressedMobile : j.dressed);
 
 /**
- * VP9 carries alpha in Chrome, Edge and Firefox; Safari (and every iOS browser,
- * which is Safari underneath) needs HEVC with alpha instead. Safari reports it
- * can play VP9 too, so the choice is by engine, not by canPlayType.
+ * The clips are plain H.264 with the studio floor in them: the room around him
+ * is the film's own backdrop, so no alpha channel is needed and every browser
+ * (Safari included) plays the same file. Tagged BT.709 so the colours match the
+ * stills, which are the clips' own first and last frames.
  */
-const alphaExt = () => {
-  const ua = navigator.userAgent;
-  const webkitOnly = /AppleWebKit/.test(ua) && !/Chrome|Chromium|Edg|Firefox|FxiOS|CriOS|OPR/.test(ua);
-  const ios = /iPhone|iPad|iPod/.test(ua);
-  return webkitOnly || ios ? '.hevc.mp4' : '.webm';
-};
-const clipUrl = (name: string) => url(`${name}${small() ? '-m' : ''}${alphaExt()}`);
+const clipUrl = (name: string) => url(`${name}${small() ? '-m' : ''}.mp4`);
 
 const decodeImage = (file: string) =>
   new Promise<void>((resolve) => {
@@ -77,40 +72,13 @@ const markSeen = () => {
   try { window.localStorage.setItem(SEEN_KEY, '1'); } catch { /* private mode: hint again next time */ }
 };
 
-// ─── The clip's masks ──────────────────────────────────────────────────────
-/**
- * Where the source film ends inside the frame (see CLIPS in lib/outfits), the
- * clip is feathered: fully clear a hair inside the edge, fully there a twentieth
- * of the frame further in, on an eased ramp. A hand reaching for the hook
- * fades into the light instead of stopping on a straight line. The figure at
- * rest never comes near these columns, so the hand-off to a still, which
- * carries no mask, is still a cut nobody sees.
- */
-const FEATHER = 0.05;
-const SAFE = 0.004;
-const RAMP: readonly (readonly [number, number])[] = [[0, 0], [0.35, 0.18], [0.65, 0.62], [1, 1]];
+// ─── The clip's clean-up masks ────────────────────────────────────────────
 /** The clean-up rectangles: a hard edge across, a soft one down. */
 const HIDE_FX = 0.01;
 const HIDE_FY = 0.025;
 
 const pct = (v: number) => `${(v * 100).toFixed(2)}%`;
 const black = (a: number) => `rgb(0 0 0 / ${Number(a.toFixed(3))})`;
-
-/** A per-frame series, read between its evenly spaced samples. */
-const along = (xs: readonly number[], frames: number, f: number) => {
-  const j = Math.min(xs.length - 1, Math.max(0, (f * (xs.length - 1)) / Math.max(1, frames - 1)));
-  const i = Math.floor(j);
-  const b = xs[Math.min(xs.length - 1, i + 1)];
-  return (xs[i] + (b - xs[i]) * (j - i)) / 1000;
-};
-
-const edgeMask = (l: number, r: number) => {
-  const a = l + SAFE;
-  const b = r - SAFE;
-  const lead = RAMP.map(([u, o]) => `${black(o)} ${pct(a + u * FEATHER)}`);
-  const tail = [...RAMP].reverse().map(([u, o]) => `${black(o)} ${pct(b - u * FEATHER)}`);
-  return `linear-gradient(90deg, ${[...lead, ...tail].join(', ')})`;
-};
 
 /**
  * One soft rectangle cut out of the clip: a band across (fading in with the
@@ -156,26 +124,27 @@ const setMask = (el: HTMLElement, value: string | null) => {
 const COUNTER = { x: n4(200.97 / 386.6), y: 0.3803, crown: 0.598 };
 
 /**
- * The stage geometry. Everything is measured from the model, not from the
- * viewport: his frame height (--fr-h) comes from the stage height, and the
- * logotype is sized from HIM and pinned by the counter of its R to the one
- * patch of his chest that is covered in every frame of every clip. So no
- * screen shape can slide that counter out past his shoulder as a thin
- * warm-white sliver, which is what happened when the logotype was sized from
- * the viewport width and the model from its height.
+ * The room's side walls, as fractions of the frame's width. The stabilised film
+ * covers 8.2% to 92.3% of the frame in every frame of all four clips (CLIPS in
+ * lib/outfits: the largest l, the smallest r), so a room cut just inside that
+ * never shows where a zoomed source frame ended.
+ */
+const ROOM = { l: 0.085, r: 0.08 };
+
+/**
+ * The stage geometry. The model stands in a room: a window on the film's own
+ * studio, framed in black, standing on the page with a shadow under it. His
+ * frame height (--fr-h) comes from the stage height, less a gap under the room
+ * and, above it, the header plus some air, so the room's top edge is never
+ * under the header.
  *
- * Landscape: the logotype runs behind his chest, as wide as that allows, and
- * dead centre: the counter sits a little right of the word's middle, so he
- * stands that little right of the page's, and the word, not the figure, holds
- * the centre line under the header. His crown keeps the header's height of
- * air above it on a tall screen; on a short laptop window that air closes to
- * a hair, the head rising into the clear header band (whose own logotype waits
- * while the masthead is on screen), rather than the whole figure, and with it
- * the logotype, shrinking.
+ * Landscape: the logotype runs the full page width behind the room, centred;
+ * the room stands in front of its middle letters and the jackets hang on the
+ * outer ones.
  *
- * Portrait (phones, tablets upright): it becomes a masthead across the top,
- * full width, and he is sized so his crown sits just under the counter —
- * the head overlapping the name, as on a magazine cover.
+ * Portrait (phones, tablets upright): the logotype becomes a masthead across
+ * the top, the room starts just under it, and the jackets and the corner lines
+ * move inside the room.
  *
  * The first screen ends on a whole line of the strip below the room: on a
  * wide screen the whole strip, one row; on a phone or an upright tablet its
@@ -185,7 +154,6 @@ const COUNTER = { x: n4(200.97 / 386.6), y: 0.3803, crown: 0.598 };
  * Container units: the stage is a size container, so cqw/cqh are the stage.
  * The custom properties are resolved where they are used (its children).
  */
-const LIFT = n4(1 - FIGURE.crown);
 const GEOMETRY = `
 .fr-room { --strip-h: 4.5rem; }
 @media (min-width: 768px) { .fr-room { --strip-h: 4.75rem; } }
@@ -194,14 +162,17 @@ const GEOMETRY = `
   container-type: size;
   height: calc(100svh - var(--strip-h));
   min-height: 20rem;
-  --fr-air: clamp(0.75rem, 100cqh - 40rem, 12.5cqh);
-  --fr-h: calc((100cqh - var(--fr-air)) / ${LIFT});
+  --fr-gap: clamp(1rem, 3.2cqh, 2.25rem);
+  --fr-room-top: calc(var(--nav-h) + clamp(0.5rem, 100cqh - 42rem, 3.5rem));
+  --fr-h: calc(100cqh - var(--fr-gap) - var(--fr-room-top));
   --fr-w: calc(var(--fr-h) * ${n4(FRAME.width / FRAME.height)});
-  --fr-top: calc(100cqh - var(--fr-h));
-  --fr-logo-w: min(${FIGURE.logoMax} * var(--fr-h), 100cqw - 2 * var(--gutter));
+  --fr-top: calc(100cqh - var(--fr-gap) - var(--fr-h));
+  --fr-logo-w: min(100cqw - 2 * var(--gutter), var(--page));
   --fr-logo-h: calc(var(--fr-logo-w) / ${LOGO.ratio});
-  --fr-shift: calc(${n4(COUNTER.x - 0.5)} * var(--fr-logo-w) - ${n4(FIGURE.chest.x - 0.5)} * var(--fr-w));
-  --fr-logo-x: calc(50cqw + var(--fr-shift) + ${n4(FIGURE.chest.x - 0.5)} * var(--fr-w) - ${COUNTER.x} * var(--fr-logo-w));
+  --fr-shift: 0px;
+  --fr-logo-x: calc(50cqw - var(--fr-logo-w) / 2);
+  --fr-room-l: calc(50cqw + var(--fr-shift) - var(--fr-w) * ${n4(0.5 - ROOM.l)});
+  --fr-room-r: calc(50cqw - var(--fr-shift) - var(--fr-w) * ${n4(0.5 - ROOM.r)});
   --fr-logo-y: calc(var(--fr-top) + ${FIGURE.chest.y} * var(--fr-h) - ${COUNTER.y} * var(--fr-logo-h));
   --fr-rail-w: clamp(11rem, 0.19 * var(--fr-logo-w), 26rem);
   --fr-rail-y: calc(var(--fr-logo-y) + 0.36 * var(--fr-logo-h));
@@ -222,15 +193,21 @@ const GEOMETRY = `
     --fr-logo-w: calc(100cqw - 2 * var(--gutter));
     --fr-logo-x: var(--gutter);
     --fr-logo-y: calc(var(--nav-h) + clamp(0.25rem, 1.4cqh, 1.25rem));
-    --fr-h: min(92cqh, (100cqh - var(--fr-logo-y) - ${COUNTER.crown} * var(--fr-logo-h)) / ${LIFT});
-    --fr-shift: 0px;
-    --fr-rail-w: min(27cqw, 12rem);
-    --fr-rail-l: var(--gutter);
-    --fr-rail-r: var(--gutter);
+    --fr-h: min(92cqh - var(--fr-gap), 100cqh - var(--fr-gap) - var(--fr-logo-y) - var(--fr-logo-h) - 0.75rem);
+    --fr-rail-w: min(0.27 * var(--fr-w), 12rem);
+    --fr-rail-l: calc(var(--fr-room-l) + 0.625rem);
+    --fr-rail-r: calc(var(--fr-room-r) + 0.625rem);
   }
 }
 .fr-logo { position: absolute; left: var(--fr-logo-x); top: var(--fr-logo-y); width: var(--fr-logo-w); }
-.fr-model { position: absolute; bottom: 0; left: calc(50% - var(--fr-w) / 2 + var(--fr-shift)); width: var(--fr-w); height: var(--fr-h); }
+.fr-model { position: absolute; bottom: var(--fr-gap); left: calc(50% - var(--fr-w) / 2 + var(--fr-shift)); width: var(--fr-w); height: var(--fr-h); }
+/* The room: a window on the film's own studio, cut inside the columns the
+   film covers in every frame (ROOM), with a thin black frame and the shadow of
+   a box standing on the page. */
+.fr-room-wall, .fr-room-frame { top: 0; bottom: 0; left: ${pct(ROOM.l)}; right: ${pct(ROOM.r)}; }
+.fr-room-wall { background: #f4f2ee; box-shadow: 0 1.75rem 3.5rem -1.25rem rgb(0 0 0 / 0.32), 0 0.5rem 1rem -0.5rem rgb(0 0 0 / 0.18); }
+.fr-room-view { clip-path: inset(0 ${pct(ROOM.r)} 0 ${pct(ROOM.l)}); }
+.fr-room-frame { border: 1.5px solid #000; box-shadow: inset 0 0 3.5rem rgb(0 0 0 / 0.07), inset 0 1.5rem 2.5rem -1.5rem rgb(0 0 0 / 0.1); }
 .fr-rail { position: absolute; top: var(--fr-rail-y); width: var(--fr-rail-w); }
 .fr-rail[data-side="l"] { left: var(--fr-rail-l); }
 .fr-rail[data-side="r"] { right: var(--fr-rail-r); }
@@ -245,8 +222,14 @@ const GEOMETRY = `
 @media (max-aspect-ratio: 1/1) {
   /* Upright, the jackets stand in the lower corners beside his legs, where
      the room is widest, and the corner lines move up under the masthead. */
-  .fr-rail { top: auto; bottom: clamp(1.25rem, 4.5cqh, 2.75rem); }
-  .fr-meta { bottom: auto; top: calc(var(--fr-logo-y) + var(--fr-logo-h) + 0.875rem); }
+  .fr-rail { top: auto; bottom: calc(var(--fr-gap) + clamp(0.75rem, 3cqh, 1.75rem)); }
+  .fr-meta { bottom: auto; top: calc(var(--fr-top) + 0.875rem); }
+  .fr-meta[data-side="l"] { left: calc(var(--fr-room-l) + 0.875rem); }
+  .fr-meta[data-side="r"] { right: calc(var(--fr-room-r) + 0.875rem); }
+  /* Inside the room the jackets stand beside him: while he dresses they step
+     back, so his hands and the jacket in them are what you watch. */
+  .fr-rail { transition: opacity 0.45s var(--ease-out); }
+  .fr-stage[aria-busy="true"] .fr-rail { opacity: 0.28; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .fr-stage [data-fr="logo"] { clip-path: inset(100% 0% 0% 0%); }
@@ -382,7 +365,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
 
     /**
      * Play one clip to its end, revealing it only once it is really moving.
-     * Every frame the masks follow the clip's own edges, and at its hand-off
+     * Every frame the clean-up mask follows the clip, and at its hand-off
      * frame the rail is told the jacket has left it or is back on it.
      */
     const play = (name: string, reveal: () => void, handoff: () => void) =>
@@ -391,7 +374,6 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
         let handed = false;
         const follow = (f: number) => {
           if (!track) return;
-          setMask(box, edgeMask(along(track.l, track.frames, f), along(track.r, track.frames, f)));
           setMask(vid, track.hide ? hideMask(track.hide, f) : null);
           if (!handed && f >= track.handoff) {
             handed = true;
@@ -659,20 +641,13 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
           <Wordmark className="block h-auto w-full" />
         </div>
 
-        {/* The model. Stills and clip share one box, so he never moves. */}
+        {/* The model, in his room. Stills and clip share one box, so he never
+            moves; the room is a window cut into that box, inside the columns
+            the film always covers, so a hand reaching past it simply leaves
+            the room at its border. */}
         <div data-fr="model" className="fr-model z-10 select-none">
-          {/* The cut-out lost its floor: put the shadow back under his feet. */}
-          <span aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[50%]"
-            style={{
-              top: `${FIGURE.floor * 100}%`, width: `${FIGURE.stance * 190}%`, height: '4.2%',
-              background: 'radial-gradient(closest-side, rgb(0 0 0 / 0.13), rgb(0 0 0 / 0.05) 55%, transparent)',
-            }} />
-          <span aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-[50%]"
-            style={{
-              top: `${(FIGURE.floor - 0.002) * 100}%`, width: `${FIGURE.stance * 118}%`, height: '1.5%',
-              background: 'radial-gradient(closest-side, rgb(0 0 0 / 0.26), rgb(0 0 0 / 0.08) 60%, transparent)',
-            }} />
-
+          <span aria-hidden className="fr-room-wall pointer-events-none absolute" />
+          <div className="fr-room-view absolute inset-0">
           <div data-base className="absolute inset-0">
             <picture>
               {items[0].still?.mobile ? (
@@ -693,12 +668,14 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               </picture>
             </div>
           ) : null))}
-          {/* The clip, in a box that carries its edge feather; the video itself
-              carries the clean-up of the few frames that need one. */}
+          {/* The clip; the video itself carries the clean-up of the few frames
+              that need one. */}
           <div ref={clipBox} aria-hidden className="pointer-events-none absolute inset-0">
             <video ref={video} tabIndex={-1} muted playsInline preload="none" disablePictureInPicture
               className="absolute inset-0 h-full w-full object-contain opacity-0" width={720} height={1080} />
           </div>
+          </div>
+          <span aria-hidden className="fr-room-frame pointer-events-none absolute" />
         </div>
 
         {/* The rail: sand on the left, leather on the right. */}

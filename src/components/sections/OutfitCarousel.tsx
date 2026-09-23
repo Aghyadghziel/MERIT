@@ -256,10 +256,15 @@ export function OutfitCarousel({ items }: { items: OutfitItem[] }) {
       className="relative overflow-hidden"
       aria-roledescription="carousel"
       aria-label="The Foundation outerwear, worn"
+      // Height of the phone sticky bar below: 1px rule + py-3 + the h-11 button.
+      style={{ '--bar-h': 'calc(1px + 1.5rem + 2.75rem)' } as React.CSSProperties}
     >
       <div
         ref={stage}
-        className="relative mx-auto flex h-[56svh] min-h-[22rem] items-end justify-center md:h-[64svh] md:min-h-[28rem]"
+        // Phone: the first screen is nav + intro (~18rem) + this stage + the sticky
+        // bar, which is already up at scroll 0. The stage takes what is left so the
+        // figure's feet clear the bar, never below 19rem (very short phones scroll).
+        className="relative mx-auto flex h-[clamp(19rem,100svh_-_var(--nav-h)_-_18rem_-_var(--bar-h),56svh)] items-end justify-center md:h-[64svh] md:min-h-[28rem]"
         role="group"
         tabIndex={0}
         aria-label="Outfits. Use the left and right arrow keys to change the jacket."

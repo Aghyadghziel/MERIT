@@ -1,38 +1,54 @@
 import type { Metadata } from 'next';
-import { ProductGrid } from '@/components/commerce/ProductGrid';
 import { BrandStatement } from '@/components/sections/BrandStatement';
-import { CampaignIntro } from '@/components/sections/CampaignIntro';
-import { OutfitCarousel, type OutfitItem } from '@/components/sections/OutfitCarousel';
-import { SectionHead } from '@/components/ui/SectionHead';
+import { CampaignFeature } from '@/components/sections/CampaignFeature';
+import { CategoryIndex } from '@/components/sections/CategoryIndex';
+import { JacketAnatomy } from '@/components/landing/JacketAnatomy';
+import { LiquidMark } from '@/components/landing/LiquidMark';
+import { FittingRoom, type OutfitItem } from '@/components/sections/FittingRoom';
+import { Making } from '@/components/sections/home/Making';
+import { Marquee } from '@/components/sections/Marquee';
+import { SelectedPieces } from '@/components/sections/SelectedPieces';
 import { getProduct } from '@/lib/catalog';
 import { outfits } from '@/lib/outfits';
 
 export const metadata: Metadata = {
   title: 'MERIT — Contemporary fashion, Riyadh',
-  description: 'Foundation, Autumn Winter 2026. One tee, four jackets — turn the rail and see how each one sits.',
+  description: 'Foundation, Autumn Winter 2026. Step into the fitting room: choose a jacket and watch it worn.',
   alternates: { canonical: '/' },
 };
 
 const FEATURED = ['atrium-wool-coat', 'rule-single-breasted-blazer', 'column-wide-trouser', 'axis-structured-bag'];
 
+/**
+ * The home page is a walk through rooms that alternate light and dark:
+ *
+ *   Fitting Room      warm white   the opening, owned by FittingRoom
+ *   Marquee           black band   moves only with the scroll
+ *   Anatomy           stone        both jackets, read point by point, with a loupe
+ *   Selected pieces   warm white   price list in the margin, a drifting rail
+ *   Campaign          white→photo  a window between two words, pushed open
+ *   The house         warm white   the sentence, read into ink, pictures set in it
+ *   The making        graphite     the scroll turns sideways through six stages
+ *   Liquid mark       black        the logotype, poured, live in WebGL
+ *   The index         warm white   the shop at poster size
+ *   Footer            black        (layout)
+ */
 export default function HomePage() {
   const items = outfits.map<OutfitItem>((o) => ({ ...o, product: getProduct(o.slug)! }));
+  const anatomy = { 'plane-technical-jacket': getProduct('plane-technical-jacket'), 'axis-leather-jacket': getProduct('axis-leather-jacket') };
   const featured = FEATURED.map(getProduct).filter((p): p is NonNullable<typeof p> => Boolean(p));
 
   return (
     <>
-      <CampaignIntro />
-      <OutfitCarousel items={items} />
-
-      <section className="page section-y-sm" aria-labelledby="featured-title">
-        <SectionHead index={1} title="Featured" link={{ label: 'View all new', href: '/new' }} as="p" />
-        <h2 id="featured-title" className="sr-only">Featured pieces</h2>
-        <div className="mt-8 md:mt-10">
-          <ProductGrid products={featured} columns={4} />
-        </div>
-      </section>
-
+      <FittingRoom items={items} />
+      <Marquee />
+      <JacketAnatomy products={anatomy} />
+      <SelectedPieces products={featured} />
+      <CampaignFeature />
       <BrandStatement />
+      <Making />
+      <LiquidMark />
+      <CategoryIndex />
     </>
   );
 }

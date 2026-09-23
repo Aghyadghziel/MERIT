@@ -22,8 +22,12 @@ export const metadata: Metadata = {
   applicationName: BRAND.name,
   alternates: { canonical: '/' },
   icons: {
-    icon: [{ url: '/brand/icon.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/brand/icon.svg' }],
+    icon: [
+      { url: '/brand/icon.svg', type: 'image/svg+xml' },
+      { url: '/brand/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    // iOS ignores SVG touch icons; this is the same mark rendered at 180px.
+    apple: [{ url: '/brand/apple-touch-icon.png', sizes: '180x180' }],
   },
   openGraph: {
     type: 'website',
@@ -45,7 +49,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#f4f2ed',
+  themeColor: '#f8f6ef',
   colorScheme: 'light',
   width: 'device-width',
   initialScale: 1,
@@ -77,7 +81,10 @@ const ORGANISATION = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={fontVariables}>
+    // data-scroll-behavior tells Next to switch the smooth scrolling in
+    // globals.css off while it resets the scroll on a route change; without
+    // it, the reset animates and a new page can land part-way down.
+    <html lang="en" className={fontVariables} data-scroll-behavior="smooth">
       <head>
         <noscript><style dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} /></noscript>
       </head>

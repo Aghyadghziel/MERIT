@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { TextPage } from '@/components/layout/TextPage';
+import { Section, TextPage } from '@/components/layout/TextPage';
 import { Icon } from '@/components/ui/Icon';
 
 export const metadata: Metadata = {
@@ -48,6 +48,21 @@ const GROUPS = [
   },
 ];
 
+/**
+ * A native <details> accordion, so it works before the script arrives and
+ * with no script at all. Where the browser can animate to `auto` it opens on
+ * the house ease; elsewhere it simply opens.
+ */
+const DETAILS = [
+  'group border-b border-line [interpolate-size:allow-keywords]',
+  '[&::details-content]:h-0 [&::details-content]:overflow-hidden',
+  '[&::details-content]:transition-[height,content-visibility] [&::details-content]:duration-500',
+  '[&::details-content]:ease-(--ease-out) [&::details-content]:[transition-behavior:allow-discrete]',
+  'open:[&::details-content]:h-auto',
+].join(' ');
+
+const pad = (n: number) => String(n).padStart(2, '0');
+
 export default function FaqPage() {
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -61,40 +76,54 @@ export default function FaqPage() {
     ),
   };
 
+  const total = GROUPS.reduce((n, g) => n + g.items.length, 0);
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <TextPage
         eyebrow="Client care"
         title="Frequently asked."
+        standfirst={`The ${total} questions we are asked most, in four groups. If yours is not here, write to us.`}
+        toc={GROUPS.map((g) => ({ id: g.id, label: g.title }))}
         aside={
-          <nav aria-label="Sections" className="lg:sticky lg:top-[calc(var(--nav-h)+2rem)]">
-            <ul className="space-y-2.5">
-              {GROUPS.map((g) => (
-                <li key={g.id}>
-                  <a href={`#${g.id}`} className="label-sm link-rule text-mute">{g.title}</a>
-                </li>
-              ))}
-            </ul>
-            <Link href="/contact" className="label link-rule mt-8 inline-block">Ask us directly</Link>
-          </nav>
+          <div className="border-t border-ink pt-5 lg:border-line">
+            <p className="text-[clamp(1.125rem,1rem+0.4vw,1.3125rem)] font-semibold leading-tight tracking-[-0.02em]">
+              Not here?
+            </p>
+            <p className="mt-2 max-w-[28ch] text-sm leading-relaxed text-mute">
+              One person reads everything sent to client care and answers within a working day.
+            </p>
+            <Link href="/contact" className="label group mt-4 inline-flex min-h-11 items-center gap-2">
+              Ask us directly
+              <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+            </Link>
+          </div>
         }
+        asideLast
       >
         {GROUPS.map((g) => (
-          <section key={g.id} id={g.id} className="scroll-mt-32 border-t border-line pt-8 first:border-0 first:pt-0 [&+section]:mt-10">
-            <h2 className="display-sm" data-reveal>{g.title}</h2>
-            <div className="mt-5">
-              {g.items.map(([q, a]) => (
-                <details key={q} className="group border-b border-line">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-4 text-sm [&::-webkit-details-marker]:hidden">
-                    {q}
-                    <Icon name="plus" className="h-4 w-4 shrink-0 transition-transform duration-200 group-open:rotate-45" />
+          <Section key={g.id} id={g.id} title={g.title} plain>
+            <div className="border-t border-ink">
+              {g.items.map(([q, a], i) => (
+                <details key={q} className={DETAILS}>
+                  <summary className="flex min-h-11 cursor-pointer list-none items-start gap-4 py-5 md:gap-6 md:py-6 [&::-webkit-details-marker]:hidden">
+                    <span className="label-sm nums mt-[0.55em] w-6 shrink-0 text-mute">{pad(i + 1)}</span>
+                    <span className="flex-1 text-[clamp(1.0625rem,0.95rem+0.5vw,1.375rem)] font-medium leading-[1.28] tracking-[-0.02em] transition-transform duration-500 ease-(--ease-out) md:group-hover:translate-x-1">
+                      {q}
+                    </span>
+                    <span aria-hidden className="relative mt-[0.4em] size-4 shrink-0">
+                      <span className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-current" />
+                      <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-current transition-transform duration-300 group-open:scale-y-0" />
+                    </span>
                   </summary>
-                  <p className="pb-5 pr-10 text-sm leading-relaxed text-mute">{a}</p>
+                  <p className="max-w-[60ch] pb-7 pl-10 pr-6 text-[clamp(1rem,0.96rem+0.2vw,1.0625rem)] leading-[1.7] text-ink-3 md:pl-12 md:pr-12">
+                    {a}
+                  </p>
                 </details>
               ))}
             </div>
-          </section>
+          </Section>
         ))}
       </TextPage>
     </>

@@ -1,0 +1,189 @@
+import type { Collection, Product, Story } from '@/lib/catalog';
+import { collections, getProduct, products, stories } from '@/lib/catalog';
+
+/**
+ * Presentation data for the storytelling pages: how pictures are cropped,
+ * which frames make a lookbook, which sentence becomes a pull quote. Nothing
+ * here adds a claim — every word shown comes from the catalogue, and every
+ * quote is checked against the text it is drawn from.
+ */
+
+// ─── Pictures ──────────────────────────────────────────────────────────────
+
+/** Landscape masters. Everything else is a 4:5 portrait, bar one square. */
+const WIDE = new Set([
+  'atelier-basting-wide',
+  'campaign-atrium-wide',
+  'campaign-foundation-wide',
+  'campaign-rule-line-wide',
+  'manifesto-rail',
+  'runway-01',
+]);
+
+export type Pic = { src: string; width: number; height: number };
+
+export function pic(name: string): Pic {
+  if (WIDE.has(name)) return { src: `/img/${name}.webp`, width: 2560, height: 1440 };
+  if (name === 'statement-detail') return { src: `/img/${name}.webp`, width: 1400, height: 1400 };
+  return { src: `/img/${name}.webp`, width: 1400, height: 1750 };
+}
+
+export const isWide = (name: string) => WIDE.has(name);
+
+/** What each editorial picture shows, for screen readers. Descriptions only. */
+const ALT: Record<string, string> = {
+  'campaign-rule-line-wide': 'A model in a pale cropped jacket and trousers against a brown plaster wall.',
+  'campaign-rule-line': 'A model in a pale cropped jacket and trousers walking past a brown plaster wall.',
+  'campaign-atrium-wide': 'Close crop of an ivory double-breasted coat worn open over a navy knit, one hand at the lapel.',
+  'campaign-atrium': 'A model in an ivory double-breasted coat over a navy knit, head bowed.',
+  'campaign-foundation-wide': 'A figure in an olive jacket and trousers, lit low against a dark ground.',
+  'campaign-foundation': 'A figure in an olive jacket and trousers, lit low against a dark ground.',
+  'cat-essentials': 'A model in a white shirt and wide stone trousers, seated on a stool against a brown backdrop.',
+  'runway-01': 'A model on the runway in a pale draped dress and a knotted scarf, the audience in shadow.',
+  'atelier-basting-wide': 'A navy jacket on a tailor’s dummy, held together with white basting stitches.',
+  'atelier-basting': 'A navy jacket on a tailor’s dummy, held together with white basting stitches.',
+  'blazer-rule-2': 'Black and white: a model in a pale suit, seated on a bentwood chair.',
+  'statement-detail': 'Close detail of a grey wool coat and its tie belt.',
+  'trench-gallery-1': 'Black and white: a model in a trench coat, hair caught by the wind.',
+  'material-silk': 'Pale cloth folded in soft light.',
+  'material-wool': 'Close texture of a grey wool cloth.',
+  'material-linen': 'Close texture of natural linen.',
+  'blazer-archive-1': 'A model seen from behind in a dark check blazer.',
+  'manifesto-rail': 'Empty white hangers on a steel rail.',
+  'jacket-rule-m-1': 'Shirts and jackets hanging on a rail.',
+};
+
+export const alt = (name: string) => ALT[name] ?? '';
+
+// ─── Poster type ───────────────────────────────────────────────────────────
+
+/**
+ * Advance widths of the display face at weight 600 and -0.055em tracking,
+ * measured in the browser (Inter Tight, standing in for Neue Haas Grotesk).
+ * They let a poster word fill its container exactly, in CSS alone — no
+ * measuring after load, so nothing jumps. Re-measure if the face changes.
+ */
+const EM: Record<string, number> = {
+  A: 0.631, B: 0.565, C: 0.651, D: 0.632, E: 0.515, F: 0.493, G: 0.662, H: 0.651, I: 0.182,
+  J: 0.468, K: 0.585, L: 0.474, M: 0.816, N: 0.649, O: 0.683, P: 0.551, Q: 0.683, R: 0.558,
+  S: 0.557, T: 0.567, U: 0.641, V: 0.631, W: 0.917, X: 0.598, Y: 0.612, Z: 0.56,
+  0: 0.575, 1: 0.33, 2: 0.529, 3: 0.559, 4: 0.573, 5: 0.539, 6: 0.554, 7: 0.484, 8: 0.555, 9: 0.554,
+  ' ': 0.156, ':': 0.227, ',': 0.242, '.': 0.227, '-': 0.373, '&': 0.569, "'": 0.234,
+};
+
+/**
+ * A font size that sets `text` in capitals across the full width of the
+ * nearest `@container`, capped so a short word does not swallow the screen.
+ */
+export function posterSize(text: string, cap = '38svh') {
+  const em = [...text.toUpperCase()].reduce((w, c) => w + (EM[c] ?? 0.62), 0) * 1.012;
+  return `min(calc(100cqi / ${em.toFixed(3)}), ${cap})`;
+}
+
+// ─── Text ──────────────────────────────────────────────────────────────────
+
+export const sentences = (text: string) => text.split(/(?<=[.!?])\s+(?=[A-Z])/).map((s) => s.trim()).filter(Boolean);
+
+/** Chosen lines, each a verbatim sentence of the story it belongs to. */
+const QUOTES: Record<string, string> = {
+  'the-rule-line': 'The restriction was the point.',
+  'atrium-twelve-rooms': 'An atrium is a room that is also a route.',
+  'runway-01-riyadh': 'There was no music. The only sound was the floor.',
+  'on-making-the-basted-jacket': 'Everything after that is subtraction.',
+};
+
+/**
+ * The pull quote for a story. A chosen line is used only if it still appears
+ * word for word in the body; otherwise the shortest whole sentence stands in,
+ * so the quote can never say something the story does not.
+ */
+export function pullQuote(story: Story): string | null {
+  const body = story.body.join(' ');
+  const chosen = QUOTES[story.slug];
+  if (chosen && body.includes(chosen)) return chosen;
+  const pool = story.body.flatMap(sentences).filter((s) => s.length >= 24 && s.length <= 110);
+  return pool.sort((a, b) => a.length - b.length)[0] ?? null;
+}
+
+// ─── Collections ───────────────────────────────────────────────────────────
+
+/** Landscape crops for full-bleed covers. Portrait covers stay for phones. */
+const WIDE_COVER: Partial<Record<string, string>> = {
+  foundation: 'campaign-foundation-wide',
+  atrium: 'campaign-atrium-wide',
+};
+
+export const coverWide = (c: Collection) => WIDE_COVER[c.slug] ?? c.image;
+
+/** How a collection's cover sits behind its type, per crop. */
+export const COVER_POSITION: Partial<Record<string, string>> = {
+  index: 'object-[50%_28%]',
+  'runway-01': 'object-[46%_center]',
+};
+
+export type Look = { product: Product; image: string };
+
+/**
+ * The lookbook, frame by frame: the product each look sells and the picture
+ * that shows it best, chosen by eye from that product's own photographs.
+ */
+const LOOKS: Record<string, [slug: string, image: string][]> = {
+  foundation: [
+    ['atrium-wool-coat', 'coat-atrium-4'],
+    ['rule-single-breasted-blazer', 'blazer-rule-1'],
+    ['meridian-belted-coat', 'coat-meridian-2'],
+    ['margin-cashmere-crew', 'knit-margin-2'],
+    ['meridian-overcoat', 'coat-overcoat-2'],
+    ['stone-tailored-vest', 'vest-stone-2'],
+  ],
+  atrium: [
+    ['gallery-trench', 'trench-gallery-2'],
+    ['plane-slip-dress', 'dress-plane-1'],
+    ['pivot-mule', 'shoe-pivot-1'],
+    ['plinth-derby', 'shoe-derby-1'],
+  ],
+  index: [
+    ['column-wide-trouser', 'trouser-column-2'],
+    ['quiet-oxford-shirt', 'shirt-oxford-m-1'],
+    ['column-pleated-trouser', 'trouser-pleat-m-1'],
+    ['quiet-poplin-shirt', 'shirt-quiet-3'],
+    ['axis-structured-bag', 'bag-axis-1'],
+    ['hairline-chain', 'chain-hairline-1'],
+  ],
+  'runway-01': [['archive-check-blazer', 'blazer-archive-1']],
+};
+
+export function looksFor(c: Collection): Look[] {
+  const chosen = (LOOKS[c.slug] ?? [])
+    .map(([slug, image]) => {
+      const product = getProduct(slug);
+      return product && product.collection === c.slug ? { product, image } : null;
+    })
+    .filter((l): l is Look => l !== null);
+  if (chosen.length) return chosen;
+  return products
+    .filter((p) => p.collection === c.slug)
+    .slice(0, 6)
+    .map((product) => ({ product, image: product.images[0] }));
+}
+
+/**
+ * The story that belongs with a collection: one that names it, or failing
+ * that, the one that sells the most of its pieces.
+ */
+export function storyFor(c: Collection): Story | undefined {
+  const named = stories.find((s) => `${s.title} ${s.standfirst}`.includes(c.name));
+  if (named) return named;
+  const score = (s: Story) => s.shop.filter((slug) => getProduct(slug)?.collection === c.slug).length;
+  const best = [...stories].sort((a, b) => score(b) - score(a))[0];
+  return best && score(best) > 0 ? best : undefined;
+}
+
+export const collectionIndex = (slug: string) => collections.findIndex((c) => c.slug === slug);
+export const storyIndex = (slug: string) => stories.findIndex((s) => s.slug === slug);
+
+export const pad = (n: number) => String(n).padStart(2, '0');
+
+/** "Autumn Winter 2026", or just "2026" where the season repeats the kicker. */
+export const seasonOf = (s: { season: string; year: number; kicker?: string }) =>
+  s.season === s.kicker ? String(s.year) : `${s.season} ${s.year}`;

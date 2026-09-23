@@ -2,123 +2,220 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { DUR, EASE, reduced, setupGsap } from '@/lib/gsap';
-import { NAV } from '@/lib/nav';
+import { cn } from '@/lib/cn';
+import { reduced, setupGsap } from '@/lib/gsap';
+import type { MenuLink, NavItem } from '@/lib/nav';
 
 type Props = {
-  openLabel: string | null;
-  onClose: () => void;
-  onEnter: () => void;
-  onLeave: () => void;
+  item: NavItem & { menu: NonNullable<NavItem['menu']> };
+  id: string;
+  open: boolean;
+  /** Another menu was open a moment ago: swap the contents, keep the panel. */
+  switching: boolean;
+  /** Another menu is taking over from this one: vanish, do not animate out. */
+  handoff: boolean;
+  onClose: (refocus?: boolean) => void;
 };
 
+const SHUT = 'inset(0% 0% 100% 0%)';
+const OPEN = 'inset(0% 0% 0% 0%)';
+
 /**
- * The panel is kept mounted through its exit so it can animate out; `shown`
- * lags behind `openLabel` by exactly one transition.
+ * One panel per top-level item, rendered right after its link so the tab
+ * order runs link → menu → next link. It hangs from the header, full width:
+ * a poster-size list on the left, two quiet columns, and a picture well on
+ * the right that shows whatever you are pointing at.
+ *
+ * The panel is `hidden` until first opened, so none of its photographs load
+ * with the page; the well's other pictures are fetched once it has been open
+ * for a moment, so they are ready by the time the pointer reaches them.
  */
-export function MegaMenu({ openLabel, onClose, onEnter, onLeave }: Props) {
-  const [shown, setShown] = useState<string | null>(null);
+export function MegaMenu({ item, id, open, switching, handoff, onClose }: Props) {
   const panel = useRef<HTMLDivElement>(null);
-  const timeline = useRef<gsap.core.Timeline | null>(null);
+  const [preview, setPreview] = useState<MenuLink | null>(null);
+  const [warm, setWarm] = useState(false);
+  const { primary, columns, feature, viewAll, note } = item.menu;
+  const md = primary.size === 'md';
 
-  useEffect(() => {
-    if (openLabel) setShown(openLabel);
-  }, [openLabel]);
+  // Every picture the well can show, feature first, each once.
+  const images = useMemo(() => {
+    const all = [feature.image, ...primary.links.map((l) => l.image), ...columns.flatMap((c) => c.links.map((l) => l.image))];
+    return [...new Set(all.filter((x): x is string => Boolean(x)))];
+  }, [feature.image, primary.links, columns]);
 
-  useEffect(() => {
+  const shown = preview?.image ?? feature.image;
+
+  useLayoutEffect(() => {
     const el = panel.current;
-    if (!el || !shown) return;
+    if (!el) return;
     const { gsap } = setupGsap();
+    const lines = el.querySelectorAll('[data-mm-line]');
+    const items = el.querySelectorAll('[data-mm-item]');
+    const well = el.querySelector('[data-mm-well]');
 
-    if (reduced()) {
-      gsap.set(el, { opacity: openLabel ? 1 : 0 });
-      if (!openLabel) setShown(null);
+    if (open) {
+      el.hidden = false;
+      if (reduced()) {
+        gsap.set(el, { clipPath: 'none' });
+        return;
+      }
+      const tl = gsap.timeline();
+      if (switching) {
+        gsap.set(el, { clipPath: OPEN });
+      } else {
+        tl.fromTo(el, { clipPath: SHUT }, { clipPath: OPEN, duration: 0.75, ease: 'expo.out' }, 0);
+      }
+      const at = switching ? 0 : 0.08;
+      tl.fromTo(lines, { yPercent: 108 }, { yPercent: 0, duration: 0.85, ease: 'expo.out', stagger: 0.04 }, at)
+        .fromTo(items, { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out', stagger: 0.018 }, at + 0.12)
+        .fromTo(well, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: OPEN, duration: 1, ease: 'expo.out' }, at);
+      return () => { tl.kill(); };
+    }
+
+    if (el.hidden) return;
+    if (handoff || reduced()) {
+      el.hidden = true;
       return;
     }
+    const out = gsap.to(el, {
+      clipPath: SHUT,
+      duration: 0.42,
+      ease: 'power3.inOut',
+      onComplete: () => { el.hidden = true; },
+    });
+    return () => { out.kill(); };
+  }, [open, switching, handoff]);
 
-    timeline.current?.kill();
-    const cols = el.querySelectorAll<HTMLElement>('[data-col]');
-    const feature = el.querySelector<HTMLElement>('[data-feature]');
+  // Fetch the rest of the well once the menu has been open for a beat.
+  useEffect(() => {
+    if (!open || warm) return;
+    const t = window.setTimeout(() => setWarm(true), 380);
+    return () => window.clearTimeout(t);
+  }, [open, warm]);
 
-    if (openLabel) {
-      const tl = gsap.timeline();
-      tl.fromTo(el, { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: DUR.panel, ease: EASE.big })
-        .fromTo(cols, { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.36, ease: EASE.reveal, stagger: 0.05 }, 0.06)
-        .fromTo(
-          feature,
-          { clipPath: 'inset(0% 0% 100% 0%)', scale: 1.05 },
-          { clipPath: 'inset(0% 0% 0% 0%)', scale: 1, duration: 0.6, ease: EASE.big },
-          0.04,
-        );
-      timeline.current = tl;
-    } else {
-      const tl = gsap.timeline({ onComplete: () => setShown(null) });
-      tl.to(el, { opacity: 0, y: -8, duration: 0.2, ease: EASE.ui });
-      timeline.current = tl;
-    }
-
-    return () => { timeline.current?.kill(); };
-  }, [openLabel, shown]);
-
-  const item = NAV.find((n) => n.label === shown);
-  if (!item?.menu) return null;
-  const { columns, feature, viewAll } = item.menu;
+  const point = (l: MenuLink) => () => { if (l.image) setPreview(l); };
 
   return (
     <div
       ref={panel}
-      id={`menu-${item.label.toLowerCase()}`}
-      className="absolute inset-x-0 top-full hidden border-t border-line bg-bone text-ink lg:block"
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
-      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+      id={id}
+      hidden
+      className="absolute inset-x-0 top-[calc(100%+1px)] z-10 hidden border-b border-line bg-bone text-ink lg:block"
+      onMouseLeave={() => setPreview(null)}
+      onKeyDown={(e) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(true); } }}
+      // Choosing anything closes the menu at once; the route line at the top
+      // carries the wait if the next page takes a moment.
+      onClick={(e) => { if ((e.target as Element).closest('a[href]')) onClose(); }}
     >
-      <div className="page grid-page py-12">
-        {columns.map((col) => (
-          <div key={col.title} data-col className="col-span-3">
-            <p className="label-sm mb-5 text-mute">{col.title}</p>
-            <ul className="space-y-2.5">
-              {col.links.map((l) => (
-                <li key={l.label}>
-                  <Link href={l.href} className="link-quiet display-sm font-normal">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+      <div className="page grid-page pb-10 pt-9 xl:pb-12 xl:pt-11">
+        {/* The poster list */}
+        <div className={md ? 'col-span-6' : 'col-span-5'}>
+          <p className="label-sm flex items-center gap-3 text-mute" data-mm-item>
+            <span>{primary.title}</span>
+            <span aria-hidden className="h-px w-8 bg-line-2" />
+            <span className="nums">{String(primary.links.length).padStart(2, '0')}</span>
+          </p>
+          <ul className="group/list mt-6 xl:mt-7">
+            {primary.links.map((l) => (
+              <li key={l.href}>
+                <Link
+                  href={l.href}
+                  onMouseEnter={point(l)}
+                  onFocus={point(l)}
+                  className={cn(
+                    'group/l inline-flex items-start gap-3 py-[0.07em] font-semibold transition-[color,transform] duration-500 ease-(--ease-expo)',
+                    'group-hover/list:text-stone hover:translate-x-2 hover:text-ink! focus-visible:text-ink!',
+                    md
+                      ? 'text-[clamp(1.5rem,0.7rem+1.55vw,2.375rem)] leading-[1.02] tracking-[-0.04em]'
+                      : 'text-[clamp(2rem,0.7rem+2.5vw,3.5rem)] leading-[0.96] tracking-[-0.05em]',
+                  )}
+                >
+                  <span className="block overflow-hidden pb-[0.08em] -mb-[0.08em]">
+                    <span data-mm-line className="block">{l.label}</span>
+                  </span>
+                  {l.meta ? (
+                    <span data-mm-item className="label-sm nums mt-[0.55em] whitespace-nowrap font-semibold text-mute tracking-[0.12em]">
+                      {l.meta}
+                    </span>
+                  ) : null}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-        <div className="col-span-3">
-          <Link href={feature.href} className="group block" data-col>
-            <div className="frame frame-4-5" data-feature>
-              <Image
-                src={`/img/${feature.image}.webp`}
-                alt=""
-                width={1400}
-                height={1750}
-                sizes="25vw"
-                className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.03]"
-              />
+        {/* Quiet columns */}
+        <div className={cn('grid content-start gap-(--gutter)', md ? 'col-span-3 grid-cols-1' : 'col-span-4 grid-cols-2')}>
+          {columns.map((col) => (
+            <div key={col.title}>
+              <p className="label-sm text-mute" data-mm-item>{col.title}</p>
+              <ul className="mt-6 space-y-2.5 xl:mt-7">
+                {col.links.map((l) => (
+                  <li key={l.href + l.label} data-mm-item>
+                    <Link
+                      href={l.href}
+                      onMouseEnter={point(l)}
+                      onFocus={point(l)}
+                      className="link-quiet text-[0.9375rem] leading-snug"
+                    >
+                      {l.label}
+                      {l.meta ? <span className="label-sm nums ml-2 text-mute">{l.meta}</span> : null}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <p className="label-sm mt-4 text-mute">{feature.kicker}</p>
-            <p className="display-sm mt-1.5">{feature.title}</p>
-            <span className="label mt-3 inline-flex items-center gap-2">
-              {feature.cta}
-              <Icon name="arrowR" className="h-3.5 w-3.5" />
-            </span>
+          ))}
+        </div>
+
+        {/* The well */}
+        <div className="col-span-3">
+          <Link href={preview?.href ?? feature.href} className="group block" tabIndex={-1} aria-hidden>
+            <div data-mm-well className="frame frame-4-5 w-full">
+              {images.map((img) => (img === feature.image || warm || img === shown ? (
+                <Image
+                  key={img}
+                  src={`/img/${img}.webp`}
+                  alt=""
+                  fill
+                  sizes="(min-width: 1024px) 24vw, 1px"
+                  className={cn(
+                    'object-cover transition-[opacity,transform] duration-700 ease-(--ease-expo)',
+                    img === shown ? 'scale-100 opacity-100' : 'scale-[1.06] opacity-0',
+                  )}
+                />
+              ) : null))}
+            </div>
           </Link>
+          <div className="mt-4 min-h-[4.75rem]" data-mm-item>
+            {preview ? (
+              <>
+                <p className="label-sm text-mute">{preview.meta && /^\d+$/.test(preview.meta) ? `${preview.meta} pieces` : preview.meta ?? item.label}</p>
+                <p className="display-sm mt-1.5 font-semibold">{preview.label}</p>
+              </>
+            ) : (
+              <Link href={feature.href} className="group block">
+                <p className="label-sm text-mute">{feature.kicker}</p>
+                <p className="display-sm mt-1.5 font-semibold">{feature.title}</p>
+                <span className="label mt-2.5 inline-flex items-center gap-2">
+                  {feature.cta}
+                  <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-500 ease-(--ease-expo) group-hover:translate-x-1" />
+                </span>
+              </Link>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="border-t border-line">
-        <div className="page flex h-14 items-center">
-          <Link href={viewAll.href} className="label inline-flex items-center gap-2 hover:opacity-60">
+        <div className="page flex h-14 items-center justify-between gap-6">
+          <Link href={viewAll.href} className="label link-arrow" data-mm-item>
             {viewAll.label}
             <Icon name="arrowR" className="h-3.5 w-3.5" />
           </Link>
+          <p className="label-sm nums text-mute" data-mm-item>{note}</p>
         </div>
       </div>
     </div>

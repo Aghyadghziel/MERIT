@@ -1,49 +1,63 @@
 @import "tailwindcss";
 
 /* ══════════════════════════════════════════════════════════════════════════
-   MERIT — design tokens
-   "Quiet structure, expressive movement."
+   MERIT — design tokens, brand system 2026
+   Black, warm white, stone, graphite. One grotesk. One logotype.
 
-   The system has one structural idea: the rule. A 1px hairline that content
-   hangs from instead of sitting inside. Nothing here has a border radius, a
-   shadow, or a fill it did not earn. Luxury is made with space, not decoration.
+   The structure is still the rule: a 1px hairline content hangs from. What
+   changed is the voice: type is set heavy and tight, at a scale that fills
+   the page, and the only ornament is the logotype itself.
    ══════════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* Surface. Warm neutrals only — the photography brings every other colour. */
-  --color-bone: #f4f2ed;
-  --color-bone-2: #eae7e1;
-  --color-bone-3: #dfdbd3;
-  --color-ink: #101010;
-  --color-ink-2: #1a1a18;
-  --color-ink-3: #262622;
+  /* The brand palette. Warm white (#F8F6EF) is the page, stone (#D9D6CF) the
+     second surface and the rule, graphite (#3B3B3B) the dark room, black the
+     type. bone-2 sits between the two lights for image wells. */
+  --color-bone: #f8f6ef;
+  --color-bone-2: #efece5;
+  --color-bone-3: #d9d6cf;
+  --color-stone-brand: #d9d6cf;
+  --color-graphite: #3b3b3b;
+  --color-ink: #000000;
+  --color-ink-2: #141414;
+  --color-ink-3: #3b3b3b;
 
-  /* Text. --color-mute is 4.7:1 on bone, --color-stone is decoration only. */
-  --color-mute: #6c6860;
-  --color-mute-ink: #a5a099;
-  --color-stone: #b2ada4;
+  /* Text. --color-mute is 6.1:1 on warm white; --color-stone is decoration.
+     --color-hint is for placeholder text set at display size: 3.2:1, which
+     clears the large-text bar without reading as something already typed. */
+  --color-mute: #5c5a55;
+  --color-mute-ink: #b4b1aa;
+  --color-stone: #a9a59d;
+  --color-hint: #8d8a83;
 
   /* The rule, in both directions. */
-  --color-line: #d6d2ca;
-  --color-line-2: #c6c1b7;
-  --color-line-ink: rgb(244 242 237 / 0.16);
-  --color-line-ink-2: rgb(244 242 237 / 0.28);
+  --color-line: #d9d6cf;
+  --color-line-2: #c3bfb7;
+  --color-line-ink: rgb(248 246 239 / 0.16);
+  --color-line-ink-2: rgb(248 246 239 / 0.3);
 
-  /* One accent: oxide. Autumn 26. Sale, focus, and the marks that must be seen. */
-  --color-oxide: #7b3b2c;
-  --color-oxide-2: #a35a44;
-  --color-oxide-soft: #e6d9d2;
+  /* Not in the brand palette on purpose: reserved for errors, sale and focus,
+     the marks that must be seen. */
+  --color-oxide: #8a3a26;
+  --color-oxide-2: #a8543c;
+  --color-oxide-soft: #ecdcd4;
 
-  --font-display: var(--font-newsreader), "Times New Roman", serif;
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  /* Neue Haas Grotesk is the brand face (Monotype, licence required). Until the
+     licensed files are added, Inter Tight stands in: same grotesk DNA, tight
+     apertures, a real heavy weight. See src/lib/fonts.ts. */
+  --font-display: var(--font-grotesk), "Neue Haas Grotesk Display Pro", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: var(--font-grotesk), "Neue Haas Grotesk Text Pro", "Helvetica Neue", Arial, sans-serif;
 
-  /* Motion. Interface is quick, editorial is slow. */
+  /* Motion. Interface is quick, editorial is slow. --ease-expo is the house
+     "arrival": fast off the mark, a long settle. Menus, masks and wipes. */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --dur-fast: 180ms;
   --dur-ui: 240ms;
   --dur-panel: 420ms;
   --dur-reveal: 700ms;
+  --dur-slow: 900ms;
 }
 
 :root {
@@ -54,10 +68,25 @@
   --section: clamp(4.5rem, 2.5rem + 8vw, 10rem);
   --section-sm: clamp(3rem, 2rem + 4vw, 5.5rem);
   --rule: 1px;
+
+  /* How much of the top of the viewport the header is covering right now.
+     The header steps out of the way while you read down a page and comes
+     back the moment you scroll up; anything sticky should hang from this
+     rather than from --nav-h so it follows. */
+  --header-offset: var(--nav-h);
 }
 
 @media (min-width: 768px) {
   :root { --nav-h: 5rem; }
+}
+
+html[data-header="hidden"] { --header-offset: 0px; }
+
+/* Sticky bars written against --nav-h (the listing toolbar) follow the
+   header up and down instead of leaving a gap where it used to be. */
+.sticky.top-\(--nav-h\) {
+  top: var(--header-offset);
+  transition: top 560ms var(--ease-expo);
 }
 
 /* ─── Base ──────────────────────────────────────────────────────────────────
@@ -70,26 +99,44 @@
 
   html {
     -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
+    /* In-page anchors (#care, #cookies) land below the fixed header. */
+    scroll-padding-top: calc(var(--nav-h) + 1rem);
+    /* A hairline scrollbar in the stone of the rule, not the OS grey. */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-2) transparent;
   }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-line-2);
+    border: 3px solid var(--color-bone);
+    border-radius: 0;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-stone); }
 
   body {
     background: var(--color-bone);
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-size: 0.9375rem;
-    line-height: 1.6;
+    line-height: 1.55;
+    letter-spacing: -0.006em;
     font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
   }
 
-  /* The bag and search overlays lock the page without the layout jumping. */
+  /* The bag and search overlays lock the page without the layout jumping —
+     the fixed header included, or its centred logotype slides sideways. */
   body[data-locked="true"] {
     overflow: hidden;
     padding-right: var(--scrollbar, 0px);
   }
+  body[data-locked="true"] > header { padding-right: var(--scrollbar, 0px); }
 
   ::selection { background: var(--color-ink); color: var(--color-bone); }
 
@@ -100,13 +147,15 @@
   input::-webkit-search-cancel-button { display: none; }
 }
 
-/* One focus treatment everywhere: an oxide rule offset from the element. It
-   stays unlayered so nothing can accidentally remove it. */
+/* One focus treatment everywhere: a 2px ink outline offset from the element,
+   bone on dark grounds. It stays unlayered so nothing can accidentally remove
+   it. Selection follows the ground the same way. */
 :focus-visible {
-  outline: 2px solid var(--color-oxide);
+  outline: 2px solid var(--color-ink);
   outline-offset: 3px;
 }
 .on-ink :focus-visible { outline-color: var(--color-bone); }
+.on-ink ::selection { background: var(--color-bone); color: var(--color-ink); }
 
 /* ─── Layout utilities ──────────────────────────────────────────────────── */
 
@@ -136,42 +185,53 @@
 /* Editorial display. Newsreader, kept light and set tight; it carries the voice. */
 @utility display {
   font-family: var(--font-display);
-  font-weight: 300;
-  line-height: 0.95;
-  letter-spacing: -0.02em;
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.035em;
   text-wrap: balance;
 }
 
 @utility display-xl {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2.75rem, 1.2rem + 7vw, 7.5rem);
-  line-height: 0.9;
-  letter-spacing: -0.03em;
+  font-weight: 600;
+  font-size: clamp(3rem, 0.8rem + 9vw, 10rem);
+  line-height: 0.86;
+  letter-spacing: -0.055em;
 }
 
 @utility display-lg {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(2rem, 1rem + 4.4vw, 4.5rem);
-  line-height: 0.96;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  font-size: clamp(2.25rem, 1rem + 5vw, 5.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.045em;
 }
 
 @utility display-md {
   font-family: var(--font-display);
-  font-weight: 300;
-  font-size: clamp(1.5rem, 1rem + 2.2vw, 2.625rem);
-  line-height: 1.04;
-  letter-spacing: -0.02em;
+  font-weight: 600;
+  font-size: clamp(1.5rem, 1rem + 2.2vw, 2.75rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
 }
 
 @utility display-sm {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 500;
   font-size: clamp(1.125rem, 0.9rem + 1vw, 1.5rem);
-  line-height: 1.18;
-  letter-spacing: -0.012em;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+/* The index word: a single uppercase word at the size of the page, the voice
+   of the category index and the menus. Never for sentences. */
+@utility display-poster {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.5rem, 0.6rem + 8vw, 9rem);
+  line-height: 0.84;
+  letter-spacing: -0.055em;
+  text-transform: uppercase;
 }
 
 /* The index label. Every section, every filter group, every meta line uses it.
@@ -179,8 +239,8 @@
 @utility label {
   font-family: var(--font-sans);
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
@@ -189,8 +249,8 @@
 @utility label-sm {
   font-family: var(--font-sans);
   font-size: 0.625rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
@@ -215,7 +275,12 @@
 
 /* ─── Controls ──────────────────────────────────────────────────────────── */
 
-/* The house button: a rule that fills with ink on hover. No radius, no shadow. */
+/* The house button: a rule that fills with ink on hover. No radius, no shadow.
+   The fill does not blink on: it rises from the bottom edge like a blind, a
+   520ms expo that reads as precise rather than playful. It is painted as a
+   background image, so the button needs no positioning or pseudo-element and
+   can still be made absolute, sticky or full-width by whoever uses it. With
+   reduced motion the transition is zeroed and it simply fills. */
 @utility btn {
   display: inline-flex;
   align-items: center;
@@ -225,35 +290,43 @@
   padding-inline: 1.75rem;
   border: var(--rule) solid var(--color-ink);
   font-size: 0.6875rem;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  font-weight: 600;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
-  transition: background-color var(--dur-ui) var(--ease-out),
-              color var(--dur-ui) var(--ease-out),
+  --btn-fill: var(--color-ink);
+  background-image: linear-gradient(var(--btn-fill), var(--btn-fill));
+  background-repeat: no-repeat;
+  background-position: 50% 100%;
+  background-size: 100% 0%;
+  transition: background-size 520ms var(--ease-expo),
+              background-color var(--dur-ui) var(--ease-out),
+              color 320ms var(--ease-out),
               border-color var(--dur-ui) var(--ease-out),
               opacity var(--dur-ui) var(--ease-out);
-  &:hover { background: var(--color-ink); color: var(--color-bone); }
+  &:hover:not(:disabled) { background-size: 100% 100%; color: var(--color-bone); }
   &:disabled { opacity: 0.38; cursor: not-allowed; }
-  &:disabled:hover { background: none; color: inherit; }
+  & svg { transition: transform 420ms var(--ease-expo); }
+  &:hover svg[data-nudge] { transform: translateX(3px); }
 }
 
 @utility btn-solid {
-  background: var(--color-ink);
+  background-color: var(--color-ink);
   color: var(--color-bone);
-  &:hover { background: var(--color-ink-3); color: var(--color-bone); }
+  --btn-fill: var(--color-ink-3);
 }
 
 @utility btn-ghost {
   border-color: var(--color-line-2);
-  &:hover { background: var(--color-ink); color: var(--color-bone); border-color: var(--color-ink); }
+  &:hover:not(:disabled) { border-color: var(--color-ink); }
 }
 
-.on-ink .btn { border-color: var(--color-bone); }
-.on-ink .btn:hover { background: var(--color-bone); color: var(--color-ink); }
-.on-ink .btn-solid { background: var(--color-bone); color: var(--color-ink); }
-.on-ink .btn-solid:hover { background: var(--color-bone-3); }
+.on-ink .btn { border-color: var(--color-bone); --btn-fill: var(--color-bone); }
+.on-ink .btn:hover:not(:disabled) { color: var(--color-ink); }
+.on-ink .btn-solid { background-color: var(--color-bone); color: var(--color-ink); --btn-fill: var(--color-bone-3); }
 
-/* A text link underlined by the rule, which retracts on hover. */
+/* A text link underlined by the rule, which retracts on hover — out to the
+   right, and back in from the left, so the line passes through rather than
+   bouncing. */
 @utility link-rule {
   position: relative;
   display: inline-block;
@@ -265,10 +338,10 @@
     bottom: 0;
     height: var(--rule);
     background: currentColor;
-    transform-origin: right;
-    transition: transform var(--dur-ui) var(--ease-out);
+    transform-origin: left;
+    transition: transform 420ms var(--ease-expo);
   }
-  &:hover::after { transform: scaleX(0); }
+  &:hover::after { transform: scaleX(0); transform-origin: right; }
 }
 
 /* The same rule, but absent until you reach for it. Columns of links — menus,
@@ -286,10 +359,19 @@
     height: var(--rule);
     background: currentColor;
     transform: scaleX(0);
-    transform-origin: left;
-    transition: transform var(--dur-ui) var(--ease-out);
+    transform-origin: right;
+    transition: transform 420ms var(--ease-expo);
   }
-  &:hover::after { transform: scaleX(1); }
+  &:hover::after, &[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
+}
+
+/* A label followed by an arrow that leans forward when you reach for it. */
+@utility link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  & svg { transition: transform 420ms var(--ease-expo); }
+  &:hover svg { transform: translateX(4px); }
 }
 
 /* Icon buttons need a 44px target even when the glyph is 18px. */
@@ -315,8 +397,32 @@
   transition: border-color var(--dur-ui) var(--ease-out);
   &::placeholder { color: var(--color-mute); }
   &:focus { outline: none; border-color: var(--color-ink); }
-  &:focus-visible { outline: none; border-color: var(--color-oxide); border-width: 2px; }
+  /* Keyboard focus doubles the rule in ink. Drawn as an inset line under the
+     border rather than a thicker border, so the text does not move a pixel.
+     Oxide stays reserved for the error state below. */
+  &:focus-visible { outline: none; border-color: var(--color-ink); box-shadow: inset 0 -1px 0 0 var(--color-ink); }
   &[aria-invalid="true"] { border-color: var(--color-oxide); }
+  &[aria-invalid="true"]:focus-visible { box-shadow: inset 0 -1px 0 0 var(--color-oxide); }
+}
+.on-ink .field:focus, .on-ink .field:focus-visible { border-color: var(--color-bone); }
+.on-ink .field:focus-visible { box-shadow: inset 0 -1px 0 0 var(--color-bone); }
+
+/* A native select dressed as a label: no OS chrome, a drawn chevron in the
+   current colour, and still the real control underneath for keyboards,
+   screen readers and the phone's own picker. */
+@utility select-quiet {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: transparent;
+  background-image: none;
+  border: 0;
+  border-radius: 0;
+  padding-block: 0.625rem;
+  padding-right: 1.5rem;
+  min-height: 2.75rem;
+  cursor: pointer;
+  &::-ms-expand { display: none; }
+  & option { color: var(--color-ink); background: var(--color-bone); }
 }
 
 /* ─── Image treatment ───────────────────────────────────────────────────── */
@@ -327,7 +433,7 @@
   position: relative;
   overflow: hidden;
   background: var(--color-bone-2);
-  & img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.93) contrast(1.02); }
+  & img { width: 100%; height: 100%; object-fit: cover; filter: saturate(0.9) contrast(1.03); }
 }
 
 /* Never combine one of these with a max-height. An aspect-ratio box transfers
@@ -338,6 +444,14 @@
 @utility frame-3-4 { aspect-ratio: 3 / 4; }
 @utility frame-3-2 { aspect-ratio: 3 / 2; }
 @utility frame-1-1 { aspect-ratio: 1 / 1; }
+@utility frame-2-3 { aspect-ratio: 2 / 3; }
+
+/* A slow push-in on the photograph when its link is hovered. Put `group` on
+   the link and `frame-zoom` on the frame. */
+@utility frame-zoom {
+  & img { transition: transform 1100ms var(--ease-expo), filter 600ms var(--ease-out); }
+  :where(.group):hover & img { transform: scale(1.04); }
+}
 
 /* ─── Motion ────────────────────────────────────────────────────────────── */
 
@@ -405,3 +519,29 @@
 }
 
 @utility hide-empty { &:empty { display: none; } }
+
+/* ─── Marquee ───────────────────────────────────────────────────────────── */
+
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+.marquee { animation: marquee 38s linear infinite; }
+.marquee:hover { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) { .marquee { animation: none; } }
+
+/* ─── Chrome ────────────────────────────────────────────────────────────── */
+
+/* The page-load line: a hairline that runs across the top edge while the next
+   route is fetched. Difference blending keeps it visible over bone, ink and
+   photographs alike. */
+.route-line {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 90;
+  height: 2px;
+  background: var(--color-bone);
+  mix-blend-mode: difference;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  pointer-events: none;
+  opacity: 0;
+}

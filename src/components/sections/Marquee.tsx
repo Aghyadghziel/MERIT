@@ -1,0 +1,76 @@
+'use client';
+
+import { useLayoutEffect, useRef } from 'react';
+import { Wordmark } from '@/components/ui/Wordmark';
+import { reduced, setupGsap } from '@/lib/gsap';
+
+const WORDS = ['Foundation', 'Autumn Winter 2026', 'Cut in Riyadh', 'Made in small counts', 'Re-issued, not replaced'];
+
+/**
+ * The black band between the fitting room and the rail. It has no motor of its
+ * own: it travels only when the page does, in the direction the page goes,
+ * and glides to a stop when the reader stops. So it is never moving content
+ * the reader did not start, and it reads as part of the scroll rather than an
+ * animation laid on top of it. Screen readers get the line once.
+ */
+export function Marquee() {
+  const root = useRef<HTMLElement>(null);
+  const track = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const el = track.current;
+    const section = root.current;
+    if (!el || !section || reduced()) return;
+    const { gsap } = setupGsap();
+
+    let half = el.scrollWidth / 2;
+    const size = new ResizeObserver(() => { half = el.scrollWidth / 2; });
+    size.observe(el);
+
+    let visible = false;
+    const seen = new IntersectionObserver(([e]) => { visible = e.isIntersecting; }, { rootMargin: '120px 0px' });
+    seen.observe(section);
+
+    const RATE = 0.85;
+    let target = window.scrollY * RATE;
+    let current = target;
+    const place = gsap.quickSetter(el, 'x', 'px');
+
+    const tick = () => {
+      target = window.scrollY * RATE;
+      if (!visible) { current = target; return; }
+      current += (target - current) * 0.085;
+      if (Math.abs(target - current) < 0.05) current = target;
+      place(-(((current % half) + half) % half));
+    };
+    gsap.ticker.add(tick);
+    tick();
+
+    return () => {
+      gsap.ticker.remove(tick);
+      size.disconnect();
+      seen.disconnect();
+      gsap.set(el, { clearProps: 'transform' });
+    };
+  }, []);
+
+  const run = (hidden: boolean) => (
+    <div className="flex shrink-0 items-center gap-[clamp(1.5rem,3vw,3.25rem)] pr-[clamp(1.5rem,3vw,3.25rem)]" aria-hidden={hidden || undefined}>
+      {WORDS.map((w) => (
+        <span key={w} className="flex items-center gap-[clamp(1.5rem,3vw,3.25rem)]">
+          <span className="whitespace-nowrap text-[clamp(2.25rem,1rem+4.4vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]">{w}</span>
+          <Wordmark symbol className="h-[clamp(1.25rem,0.8rem+1.9vw,3rem)] w-auto shrink-0 text-stone" />
+        </span>
+      ))}
+    </div>
+  );
+
+  return (
+    <section ref={root} aria-label="Foundation, Autumn Winter 2026. Cut in Riyadh, made in small counts, re-issued, not replaced." className="on-ink overflow-hidden bg-ink py-[clamp(1.4rem,1rem+1.6vw,2.5rem)] text-bone">
+      <div ref={track} className="flex w-max will-change-transform" aria-hidden>
+        {run(false)}
+        {run(true)}
+      </div>
+    </section>
+  );
+}

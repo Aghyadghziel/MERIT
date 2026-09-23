@@ -10,8 +10,29 @@ import { useUi } from '@/components/providers/Ui';
 import { Icon } from '@/components/ui/Icon';
 import { newArrivals } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
+import { pad2 } from '@/lib/format';
 import { SUGGESTED, clearRecent, hrefOf, pushRecent, readRecent, search, type Hit } from '@/lib/search';
 
+/** Underline the part of a name that matched, so you can see why it is here. */
+function Match({ text, query }: { text: string; query: string }) {
+  const q = query.trim().toLowerCase();
+  const at = q.length >= 2 ? text.toLowerCase().indexOf(q) : -1;
+  if (at < 0) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, at)}
+      <mark className="bg-transparent text-inherit underline decoration-1 underline-offset-[0.22em]">{text.slice(at, at + q.length)}</mark>
+      {text.slice(at + q.length)}
+    </>
+  );
+}
+
+/**
+ * Search, set at the size of a headline. What you type is the biggest thing
+ * on the screen; results arrive as you type — garments as pictures, then
+ * collections and stories — and the arrow keys walk through them. Enter opens
+ * the one you are on, or the full results page if you are on none.
+ */
 export function SearchOverlay() {
   const { overlay, close } = useUi();
   const isOpen = overlay === 'search';
@@ -26,7 +47,7 @@ export function SearchOverlay() {
       setRecent(readRecent());
       setCursor(-1);
     } else {
-      const t = window.setTimeout(() => setQuery(''), 320);
+      const t = window.setTimeout(() => setQuery(''), 420);
       return () => window.clearTimeout(t);
     }
   }, [isOpen]);
@@ -35,11 +56,27 @@ export function SearchOverlay() {
   const flat = useMemo<Hit[]>(() => [...results.products, ...results.other], [results]);
   const hasQuery = query.trim().length >= 2;
   const empty = hasQuery && flat.length === 0;
+  const arrivals = useMemo(() => newArrivals().slice(0, 4), []);
 
-  const go = (hit: Hit) => {
+  // Keep the highlighted result on screen as the arrows move through a list
+  // longer than the sheet.
+  useEffect(() => {
+    if (cursor < 0) return;
+    document.getElementById(`search-hit-${cursor}`)?.scrollIntoView({ block: 'nearest' });
+  }, [cursor]);
+
+  const status = !hasQuery
+    ? ''
+    : empty
+      ? `No results for ${query.trim()}.`
+      : `${results.products.length} ${results.products.length === 1 ? 'garment' : 'garments'} and ${results.other.length} ${results.other.length === 1 ? 'collection or story' : 'collections and stories'}.`;
+
+  const seeAll = `/search?q=${encodeURIComponent(query.trim())}`;
+
+  const go = (href: string) => {
     pushRecent(query);
     close();
-    router.push(hrefOf(hit));
+    router.push(href);
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
@@ -50,176 +87,273 @@ export function SearchOverlay() {
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setCursor((c) => (c <= 0 ? flat.length - 1 : c - 1));
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      go(flat[cursor >= 0 ? cursor : 0]);
     }
   };
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cursor >= 0 && flat[cursor]) go(hrefOf(flat[cursor]));
+    else if (hasQuery) go(seeAll);
+  };
+
+  const card = 'group block outline-offset-4';
+
   return (
-    <Panel open={isOpen} onClose={close} label="Search" from="top" className="h-dvh md:h-auto md:max-h-[88dvh]">
-      <div className="shrink-0 border-b border-line">
-        <div className="page flex h-(--nav-h) items-center gap-4">
-          <Icon name="search" className="h-[18px] w-[18px] shrink-0 text-mute" />
-          <input
-            ref={input}
-            type="search"
-            value={query}
-            onChange={(e) => { setQuery(e.target.value); setCursor(-1); }}
-            onKeyDown={onKeyDown}
-            placeholder="Search garments, collections and stories"
-            aria-label="Search"
-            aria-controls="search-results"
-            autoComplete="off"
-            className="display-sm h-full flex-1 bg-transparent font-normal outline-none placeholder:text-mute"
-          />
-          <button type="button" className="icon-btn shrink-0" onClick={close} aria-label="Close search">
-            <Icon name="close" />
-          </button>
-        </div>
+    <Panel
+      open={isOpen}
+      onClose={close}
+      label="Search"
+      from="top"
+      initialFocus={input}
+      className="h-dvh md:h-auto md:max-h-[92dvh]"
+    >
+      <div className="page flex h-(--nav-h) shrink-0 items-center justify-between">
+        <p className="label text-mute" data-panel-item>Search</p>
+        <button
+          type="button"
+          className="label group/close -mr-2 flex min-h-11 items-center gap-2.5 px-2"
+          onClick={close}
+          aria-label="Close search"
+        >
+          <span className="hidden sm:inline">Close</span>
+          <Icon name="close" className="h-[18px] w-[18px] transition-transform duration-500 ease-(--ease-expo) group-hover/close:rotate-90" />
+        </button>
       </div>
 
-      <div id="search-results" className="no-bar flex-1 overflow-y-auto" aria-live="polite">
-        <div className="page py-8 md:py-10">
-          {!hasQuery ? (
-            <div className="grid-page">
-              <div className="col-span-4 md:col-span-3 lg:col-span-3" data-panel-item>
-                <p className="label-sm mb-4 text-mute">Suggested</p>
-                <ul className="space-y-2.5">
-                  {SUGGESTED.map((s) => (
-                    <li key={s}>
-                      <button type="button" className="link-quiet display-sm font-normal" onClick={() => setQuery(s)}>
-                        {s}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+      <form role="search" onSubmit={onSubmit} className="page shrink-0">
+        <label htmlFor="search-input" className="sr-only">Search garments, collections and stories</label>
+        <div className="flex items-end gap-4 pb-3 md:pb-5">
+          <span className="block min-w-0 flex-1 overflow-hidden">
+            <input
+              ref={input}
+              id="search-input"
+              type="search"
+              value={query}
+              onChange={(e) => { setQuery(e.target.value); setCursor(-1); }}
+              onKeyDown={onKeyDown}
+              placeholder="Coat, cashmere, Atrium"
+              aria-controls="search-results"
+              aria-describedby="search-status"
+              autoComplete="off"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="search"
+              data-panel-line
+              className="block w-full bg-transparent pb-[0.06em] text-[clamp(2.25rem,0.9rem+5.4vw,6.5rem)] font-semibold leading-[1.02] tracking-[-0.05em] caret-ink outline-none placeholder:text-hint"
+            />
+          </span>
+          {query ? (
+            <button
+              type="button"
+              className="label mb-[0.6em] shrink-0 text-mute transition-colors hover:text-ink md:mb-[1.1em]"
+              onClick={() => { setQuery(''); setCursor(-1); input.current?.focus(); }}
+            >
+              Clear
+            </button>
+          ) : null}
+        </div>
+        <div className="h-px origin-left bg-ink" data-panel-item />
+        <div className="flex h-11 items-center justify-between gap-4" data-panel-item>
+          <p id="search-status" className="label-sm nums text-mute">
+            {hasQuery ? (empty ? 'No results' : `${pad2(flat.length)} results`) : 'Type two letters or more'}
+          </p>
+          <p className="label-sm hidden items-center gap-2 text-mute md:flex">
+            <span>↑ ↓ to move</span>
+            <span aria-hidden>·</span>
+            <span className="inline-flex items-center gap-1.5"><Icon name="enter" className="h-3 w-3" /> to open</span>
+            <span aria-hidden>·</span>
+            <span>Esc to close</span>
+          </p>
+        </div>
+      </form>
+      <p className="sr-only" aria-live="polite">{status}</p>
 
-              <div className="col-span-4 md:col-span-3 lg:col-span-3" data-panel-item>
-                <div className="mb-4 flex items-baseline justify-between gap-4">
-                  <p className="label-sm text-mute">Recent</p>
-                  {recent.length > 0 ? (
-                    <button
-                      type="button"
-                      className="label-sm text-mute hover:text-ink"
-                      onClick={() => { clearRecent(); setRecent([]); }}
-                    >
-                      Clear
-                    </button>
-                  ) : null}
-                </div>
-                {recent.length === 0 ? (
-                  <p className="text-sm text-mute">Nothing searched yet.</p>
-                ) : (
-                  <ul className="space-y-2.5">
-                    {recent.map((r) => (
-                      <li key={r}>
-                        <button type="button" className="link-quiet text-sm" onClick={() => setQuery(r)}>{r}</button>
+      <div id="search-results" className="no-bar flex-1 overflow-y-auto">
+        <div className="page pb-10 pt-6 md:pb-12 md:pt-8">
+          {!hasQuery ? (
+            <div className="grid-page gap-y-10">
+              <div className="col-span-4 md:col-span-6 lg:col-span-4">
+                <div data-panel-item>
+                  <p className="label-sm text-mute">Suggested</p>
+                  <ul className="mt-4">
+                    {SUGGESTED.map((s, i) => (
+                      <li key={s} className="border-b border-line first:border-t">
+                        <button
+                          type="button"
+                          className="group/s flex min-h-12 w-full items-center gap-4 py-2 text-left"
+                          onClick={() => { setQuery(s); input.current?.focus(); }}
+                        >
+                          <span className="label-sm nums w-6 text-mute">{pad2(i + 1)}</span>
+                          <span className="flex-1 text-[clamp(1.125rem,1rem+0.5vw,1.375rem)] font-semibold tracking-[-0.03em] transition-transform duration-500 ease-(--ease-expo) group-hover/s:translate-x-1.5">{s}</span>
+                          <Icon name="arrowR" className="h-3.5 w-3.5 -translate-x-2 opacity-0 transition-[opacity,transform] duration-500 ease-(--ease-expo) group-hover/s:translate-x-0 group-hover/s:opacity-100" />
+                        </button>
                       </li>
                     ))}
                   </ul>
-                )}
+                </div>
+
+                {recent.length > 0 ? (
+                  <div className="mt-10" data-panel-item>
+                    <div className="flex items-baseline justify-between gap-4">
+                      <p className="label-sm text-mute">Recent</p>
+                      <button
+                        type="button"
+                        className="label-sm min-h-11 text-mute hover:text-ink"
+                        onClick={() => { clearRecent(); setRecent([]); }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <ul className="mt-1 flex flex-wrap gap-2">
+                      {recent.map((r) => (
+                        <li key={r}>
+                          <button
+                            type="button"
+                            className="flex min-h-9 items-center border border-line-2 px-3 text-sm transition-colors hover:border-ink"
+                            onClick={() => { setQuery(r); input.current?.focus(); }}
+                          >
+                            {r}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
 
-              <div className="col-span-4 md:col-span-6 lg:col-span-6" data-panel-item>
-                <p className="label-sm mb-4 text-mute">New this week</p>
-                <div className="grid grid-cols-3 gap-(--gutter)">
-                  {newArrivals().slice(0, 3).map((p) => (
-                    <Link key={p.slug} href={`/products/${p.slug}`} onClick={close} className="group">
-                      <div className="frame frame-4-5">
-                        <Image src={`/img/${p.images[0]}.webp`} alt="" width={400} height={500} sizes="18vw"
-                          className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.03]" />
-                      </div>
-                      <p className="mt-2.5 text-sm">{p.name}</p>
-                      <Price amount={p.price} compareAt={p.compareAt} className="mt-1 text-mute" />
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : empty ? (
-            <div>
-              <p className="display-md">No results for “{query.trim()}”.</p>
-              <p className="mt-3 max-w-md text-sm text-mute">
-                Check the spelling, or try a material — cashmere, poplin, gabardine — or a
-                collection name.
-              </p>
-              <p className="label-sm mt-10 mb-5 text-mute">You might look at</p>
-              <div className="grid grid-cols-2 gap-x-(--gutter) gap-y-8 md:grid-cols-4">
-                {newArrivals().slice(0, 4).map((p) => (
-                  <Link key={p.slug} href={`/products/${p.slug}`} onClick={close} className="group">
-                    <div className="frame frame-4-5">
-                      <Image src={`/img/${p.images[0]}.webp`} alt="" width={400} height={500} sizes="(min-width:768px) 22vw, 45vw"
-                        className="transition-transform duration-700 ease-[cubic-bezier(.22,1,.36,1)] group-hover:scale-[1.03]" />
-                    </div>
-                    <p className="mt-2.5 text-sm">{p.name}</p>
-                    <Price amount={p.price} compareAt={p.compareAt} className="mt-1 text-mute" />
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="grid-page">
               <div className="col-span-4 md:col-span-6 lg:col-span-8">
-                <p className="label-sm mb-5 text-mute">
-                  {results.products.length} {results.products.length === 1 ? 'garment' : 'garments'}
-                </p>
-                <ul>
-                  {results.products.map((hit, i) => (
-                    <li key={hit.slug}>
-                      <Link
-                        href={hrefOf(hit)}
-                        onClick={() => { pushRecent(query); close(); }}
-                        onMouseEnter={() => setCursor(i)}
-                        className={cn(
-                          'flex items-center gap-4 border-b border-line py-3 transition-colors',
-                          cursor === i && 'bg-bone-2',
-                        )}
-                      >
-                        <div className="frame frame-4-5 w-14 shrink-0">
-                          <Image src={`/img/${hit.image}.webp`} alt="" width={140} height={175} sizes="56px" />
+                <p className="label-sm text-mute" data-panel-item>New this season</p>
+                <ul className="mt-4 grid grid-cols-2 gap-x-(--gutter) gap-y-7 md:grid-cols-4">
+                  {arrivals.map((p) => (
+                    <li key={p.slug} data-panel-item>
+                      <Link href={`/products/${p.slug}`} onClick={close} className={card}>
+                        <div className="frame frame-4-5 frame-zoom">
+                          <Image src={`/img/${p.images[0]}.webp`} alt="" width={480} height={600} sizes="(min-width: 768px) 16vw, 45vw" />
                         </div>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm">{hit.title}</span>
-                          <span className="label-sm mt-1 block text-mute">{hit.meta}</span>
-                        </span>
-                        {hit.kind === 'product' ? <Price amount={hit.price} compareAt={hit.compareAt} /> : null}
+                        <p className="mt-3 text-sm leading-snug">{p.name}</p>
+                        <Price amount={p.price} compareAt={p.compareAt} className="mt-1 text-mute" />
                       </Link>
                     </li>
                   ))}
                 </ul>
               </div>
-
-              <div className="col-span-4 md:col-span-6 lg:col-span-4">
-                <p className="label-sm mb-5 text-mute">Collections and stories</p>
-                {results.other.length === 0 ? (
-                  <p className="text-sm text-mute">No matches.</p>
+            </div>
+          ) : empty ? (
+            <div>
+              <p className="display-md max-w-3xl">Nothing matches “{query.trim()}”.</p>
+              <p className="mt-4 max-w-md text-sm text-mute">
+                Check the spelling, or try a material — cashmere, poplin, gabardine — or a
+                collection name.
+              </p>
+              <ul className="mt-6 flex flex-wrap gap-2">
+                {SUGGESTED.slice(0, 4).map((s) => (
+                  <li key={s}>
+                    <button
+                      type="button"
+                      className="flex min-h-9 items-center border border-line-2 px-3 text-sm transition-colors hover:border-ink"
+                      onClick={() => { setQuery(s); input.current?.focus(); }}
+                    >
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <p className="label-sm mb-4 mt-12 text-mute">You might look at</p>
+              <ul className="grid grid-cols-2 gap-x-(--gutter) gap-y-7 md:grid-cols-4 lg:w-2/3">
+                {arrivals.map((p) => (
+                  <li key={p.slug}>
+                    <Link href={`/products/${p.slug}`} onClick={close} className={card}>
+                      <div className="frame frame-4-5 frame-zoom">
+                        <Image src={`/img/${p.images[0]}.webp`} alt="" width={480} height={600} sizes="(min-width: 768px) 16vw, 45vw" />
+                      </div>
+                      <p className="mt-3 text-sm leading-snug">{p.name}</p>
+                      <Price amount={p.price} compareAt={p.compareAt} className="mt-1 text-mute" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div className="grid-page gap-y-10">
+              <section className="col-span-4 md:col-span-6 lg:col-span-9" aria-label="Garments">
+                <p className="label-sm nums text-mute">
+                  Garments <span className="text-ink">{pad2(results.products.length)}</span>
+                </p>
+                {results.products.length === 0 ? (
+                  <p className="mt-4 text-sm text-mute">No garments by that name.</p>
                 ) : (
-                  <ul className="space-y-3">
-                    {results.other.map((hit, i) => (
-                      <li key={`${hit.kind}-${hit.slug}`}>
+                  <ul className="mt-4 grid grid-cols-2 gap-x-(--gutter) gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
+                    {results.products.map((hit, i) => (
+                      <li key={hit.slug}>
                         <Link
+                          id={`search-hit-${i}`}
                           href={hrefOf(hit)}
                           onClick={() => { pushRecent(query); close(); }}
-                          onMouseEnter={() => setCursor(results.products.length + i)}
-                          className={cn(
-                            'flex items-center gap-4 py-2 transition-colors',
-                            cursor === results.products.length + i && 'bg-bone-2',
-                          )}
+                          onMouseEnter={() => setCursor(i)}
+                          className={card}
+                          data-active={cursor === i || undefined}
                         >
-                          <div className="frame frame-1-1 w-12 shrink-0">
-                            <Image src={`/img/${hit.image}.webp`} alt="" width={120} height={120} sizes="48px" />
+                          <div className={cn('frame frame-4-5 frame-zoom', cursor === i && '[&_img]:scale-[1.04]')}>
+                            <Image src={`/img/${hit.image}.webp`} alt="" width={480} height={600} sizes="(min-width: 1024px) 17vw, (min-width: 640px) 30vw, 45vw" />
                           </div>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm">{hit.title}</span>
-                            <span className="label-sm mt-1 block text-mute">{hit.meta}</span>
-                          </span>
+                          <p className="mt-3 flex items-start justify-between gap-2 text-sm leading-snug">
+                            <span className={cn('min-w-0', cursor === i && 'underline decoration-1 underline-offset-4')}>
+                              <Match text={hit.title} query={query} />
+                            </span>
+                          </p>
+                          <p className="label-sm mt-1.5 text-mute">{hit.meta}</p>
+                          {hit.kind === 'product' ? <Price amount={hit.price} compareAt={hit.compareAt} className="mt-1.5" /> : null}
                         </Link>
                       </li>
                     ))}
                   </ul>
                 )}
+              </section>
+
+              <section className="col-span-4 md:col-span-6 lg:col-span-3" aria-label="Collections and stories">
+                <p className="label-sm nums text-mute">
+                  Collections and stories <span className="text-ink">{pad2(results.other.length)}</span>
+                </p>
+                {results.other.length === 0 ? (
+                  <p className="mt-4 text-sm text-mute">No matches.</p>
+                ) : (
+                  <ul className="mt-4 border-t border-line">
+                    {results.other.map((hit, i) => {
+                      const n = results.products.length + i;
+                      return (
+                        <li key={`${hit.kind}-${hit.slug}`} className="border-b border-line">
+                          <Link
+                            id={`search-hit-${n}`}
+                            href={hrefOf(hit)}
+                            onClick={() => { pushRecent(query); close(); }}
+                            onMouseEnter={() => setCursor(n)}
+                            className="group flex items-center gap-4 py-3"
+                            data-active={cursor === n || undefined}
+                          >
+                            <div className="frame frame-4-5 frame-zoom w-14 shrink-0">
+                              <Image src={`/img/${hit.image}.webp`} alt="" width={112} height={140} sizes="56px" />
+                            </div>
+                            <span className="min-w-0 flex-1">
+                              <span className="label-sm block text-mute">{hit.kind === 'story' ? 'Story' : 'Collection'}</span>
+                              <span className={cn('mt-1 block text-[1.0625rem] font-semibold leading-tight tracking-[-0.02em]', cursor === n && 'underline decoration-1 underline-offset-4')}>
+                                <Match text={hit.title} query={query} />
+                              </span>
+                              <span className="mt-1 block truncate text-xs text-mute">{hit.meta}</span>
+                            </span>
+                            <Icon name="arrowR" className={cn('h-3.5 w-3.5 shrink-0 transition-[opacity,transform] duration-500 ease-(--ease-expo)', cursor === n ? 'opacity-100' : '-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100')} />
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </section>
+
+              <div className="col-span-4 md:col-span-6 lg:col-span-12">
+                <Link href={seeAll} onClick={() => pushRecent(query)} className="btn btn-ghost w-full sm:w-auto">
+                  See every result for “{query.trim()}”
+                  <Icon name="arrowR" className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </div>
           )}
@@ -228,3 +362,4 @@ export function SearchOverlay() {
     </Panel>
   );
 }
+

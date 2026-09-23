@@ -1,110 +1,267 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { notifyQuery, QueryWatch, useLocationQuery } from '@/components/commerce/Listing';
 import { ProductGrid } from '@/components/commerce/ProductGrid';
+import { ArtImage } from '@/components/editorial/ArtImage';
 import { Icon } from '@/components/ui/Icon';
 import { getProduct, newArrivals } from '@/lib/catalog';
-import { hrefOf, search, SUGGESTED } from '@/lib/search';
-import { plural } from '@/lib/format';
+import { pad2, plural } from '@/lib/format';
+import { clearRecent, hrefOf, pushRecent, readRecent, search, SUGGESTED, type Hit } from '@/lib/search';
 
-/** The full-page counterpart to the overlay, for shared and bookmarked queries. */
+// ─── Recent searches, as a store so they render after hydration ────────────
+
+const recentListeners = new Set<() => void>();
+const notifyRecent = () => recentListeners.forEach((l) => l());
+const subscribeRecent = (cb: () => void) => {
+  recentListeners.add(cb);
+  return () => { recentListeners.delete(cb); };
+};
+const recentSnapshot = () => JSON.stringify(readRecent());
+const noRecent = () => '[]';
+
+const KIND: Record<Hit['kind'], string> = { product: 'Piece', collection: 'Collection', story: 'Story' };
+
+/**
+ * The full-page search. The query is typed at poster size and the results
+ * follow the keystrokes; the address bar keeps up a moment later, so a
+ * search can still be bookmarked and shared. With nothing typed, the page
+ * offers the suggested searches as an index and the newest pieces below.
+ */
 export function SearchResults() {
-  const params = useSearchParams();
-  const router = useRouter();
-  const initial = params.get('q') ?? '';
-  const [query, setQuery] = useState(initial);
+  const urlQuery = new URLSearchParams(useLocationQuery()).get('q') ?? '';
+  const [text, setText] = useState(urlQuery);
+  // The last query this page wrote to, or read from, the address bar. When
+  // the address changes from outside (a link, the header's search, the back
+  // button), the field follows; our own writes do not echo back into it.
+  const [synced, setSynced] = useState(urlQuery);
+  if (urlQuery !== synced) {
+    setSynced(urlQuery);
+    setText(urlQuery);
+  }
 
-  const results = useMemo(() => search(initial), [initial]);
-  const found = results.products
-    .map((h) => getProduct(h.slug))
-    .filter((p): p is NonNullable<typeof p> => Boolean(p));
+  const input = useRef<HTMLInputElement>(null);
+  const term = useDeferredValue(text.trim());
+  const results = useMemo(() => search(term), [term]);
+  const found = useMemo(
+    () => results.products.map((h) => getProduct(h.slug)).filter((p): p is NonNullable<typeof p> => Boolean(p)),
+    [results],
+  );
+  const recent = JSON.parse(useSyncExternalStore(subscribeRecent, recentSnapshot, noRecent)) as string[];
+  const fresh = useMemo(() => newArrivals(), []);
+
+  const write = (q: string) => {
+    setSynced(q);
+    window.history.replaceState(null, '', q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+    notifyQuery();
+  };
+
+  // The address follows the field once typing pauses.
+  useEffect(() => {
+    const q = text.trim();
+    if (q === synced) return;
+    const t = window.setTimeout(() => {
+      setSynced(q);
+      window.history.replaceState(null, '', q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+      notifyQuery();
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [text, synced]);
+
+  const run = (q: string) => {
+    setText(q);
+    write(q.trim());
+    pushRecent(q);
+    notifyRecent();
+  };
+
+  const searching = term.length >= 2;
+  const tally = [
+    found.length ? plural(found.length, 'piece') : '',
+    plural(results.other.filter((h) => h.kind === 'collection').length, 'collection'),
+    plural(results.other.filter((h) => h.kind === 'story').length, 'story', 'stories'),
+  ].filter((t) => t && !t.startsWith('0 '));
+  const status = !term
+    ? 'Pieces, collections and stories'
+    : !searching
+      ? 'Two letters or more'
+      : tally.length
+        ? `${tally.join(' · ')} — “${term}”`
+        : `Nothing for “${term}”`;
 
   return (
-    <div className="page pt-(--nav-h)">
-      <header className="section-y-sm">
-        <h1 className="sr-only">Search</h1>
-        <form
-          onSubmit={(e) => { e.preventDefault(); router.push(`/search?q=${encodeURIComponent(query)}`); }}
-          className="max-w-3xl"
-        >
-          <label htmlFor="search-page" className="label text-mute">Search</label>
-          <div className="mt-3 flex items-center gap-4 border-b border-line-2 focus-within:border-ink">
-            <input
-              id="search-page"
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Garments, collections and stories"
-              className="display-md w-full bg-transparent py-3 font-normal outline-none placeholder:text-mute"
-            />
-            <button type="submit" className="icon-btn" aria-label="Search">
-              <Icon name="arrowR" />
+    <div className="page pb-(--section) pt-[calc(var(--nav-h)+clamp(1.5rem,4vw,3.5rem))]">
+      <Suspense fallback={null}>
+        <QueryWatch />
+      </Suspense>
+      <h1 className="sr-only">{searching ? `Search results for “${term}”` : 'Search'}</h1>
+
+      {/* ─── The field ─────────────────────────────────────────────── */}
+      <form
+        role="search"
+        onSubmit={(e) => { e.preventDefault(); run(text); input.current?.blur(); }}
+      >
+        <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3" data-reveal>
+          <label htmlFor="search-page" className="label">Search the range</label>
+          <p className="label hidden text-mute sm:block">Enter to search · Esc to clear</p>
+        </div>
+        <div className="mt-[clamp(0.75rem,2vw,1.75rem)] flex items-center gap-2 border-b-2 border-ink pb-1 transition-shadow duration-300 focus-within:shadow-[0_2px_0_0_var(--color-ink)] md:gap-4 md:pb-2">
+          <input
+            ref={input}
+            id="search-page"
+            type="search"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Escape' && text) { e.preventDefault(); setText(''); } }}
+            placeholder="Type to search"
+            enterKeyHint="search"
+            autoComplete="off"
+            spellCheck={false}
+            className="min-w-0 flex-1 bg-transparent py-1 text-[clamp(2.5rem,0.9rem+7.4vw,8.5rem)] font-semibold leading-[1] tracking-[-0.05em] outline-none placeholder:text-hint focus-visible:outline-none"
+          />
+          {text ? (
+            <button
+              type="button"
+              onClick={() => { setText(''); write(''); input.current?.focus(); }}
+              className="flex h-11 w-11 shrink-0 items-center justify-center transition-opacity hover:opacity-60"
+              aria-label="Clear search"
+            >
+              <Icon name="close" className="h-5 w-5 md:h-6 md:w-6" />
             </button>
-          </div>
-        </form>
+          ) : null}
+          <button
+            type="submit"
+            aria-label="Search"
+            className="flex h-12 w-12 shrink-0 items-center justify-center bg-ink text-bone transition-colors duration-300 hover:bg-ink-3 md:h-16 md:w-16"
+          >
+            <Icon name="arrowR" className="h-5 w-5 md:h-6 md:w-6" />
+          </button>
+        </div>
+      </form>
 
-        {initial ? (
-          <p className="label nums mt-6 text-mute" aria-live="polite">
-            {plural(found.length, 'result')} for “{initial}”
-          </p>
-        ) : (
-          <div className="mt-8 flex flex-wrap items-center gap-2">
-            <span className="label-sm mr-1 text-mute">Try</span>
-            {SUGGESTED.map((s) => (
-              <Link
-                key={s}
-                href={`/search?q=${encodeURIComponent(s)}`}
-                className="label-sm border border-line px-3 py-1.5 transition-colors hover:border-ink"
-              >
+      <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-3">
+        <p className="label nums text-mute" aria-live="polite" aria-atomic="true">{status}</p>
+        {searching ? (
+          <p className="label flex flex-wrap items-baseline gap-x-4 gap-y-1 text-mute">
+            <span>Try</span>
+            {SUGGESTED.filter((s) => s.toLowerCase() !== term.toLowerCase()).slice(0, 4).map((s) => (
+              <button key={s} type="button" onClick={() => run(s)} className="link-quiet min-h-8 text-ink">
                 {s}
-              </Link>
+              </button>
             ))}
-          </div>
-        )}
-      </header>
-
-      <div className="rule-t pb-(--section) pt-10">
-        {initial && found.length === 0 ? (
-          <div className="max-w-lg">
-            <p className="display-md">No results for “{initial}”.</p>
-            <p className="mt-4 text-sm text-mute">
-              Try a material — cashmere, poplin, gabardine — or a collection name.
-            </p>
-            <p className="label-sm mb-6 mt-12 text-mute">You might look at</p>
-            <ProductGrid products={newArrivals().slice(0, 4)} columns={4} label="Suggested pieces" />
-          </div>
-        ) : found.length > 0 ? (
-          <>
-            <ProductGrid products={found} columns={4} label="Search results" />
-            {results.other.length > 0 ? (
-              <div className="mt-16">
-                <h2 className="label rule-t pt-4">Collections and stories</h2>
-                <ul className="mt-8 grid gap-x-(--gutter) gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-                  {results.other.map((hit) => (
-                    <li key={`${hit.kind}-${hit.slug}`}>
-                      <Link href={hrefOf(hit)} className="group flex items-center gap-4">
-                        <div className="frame frame-1-1 w-20 shrink-0">
-                          <Image src={`/img/${hit.image}.webp`} alt="" width={200} height={200} sizes="80px"
-                            className="transition-transform duration-700 group-hover:scale-105" />
-                        </div>
-                        <span>
-                          <span className="block text-sm">{hit.title}</span>
-                          <span className="label-sm mt-1 block text-mute">{hit.meta}</span>
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-          </>
-        ) : (
-          <ProductGrid products={newArrivals()} columns={4} label="New arrivals" />
-        )}
+          </p>
+        ) : null}
       </div>
+
+      {/* ─── Results ───────────────────────────────────────────────── */}
+      {!searching ? (
+        <>
+          <section aria-labelledby="try-title" className="mt-[clamp(3rem,7vw,6rem)]">
+            <div className="flex items-baseline justify-between gap-6" data-reveal>
+              <h2 id="try-title" className="label">
+                <span className="nums mr-3 text-mute">01</span>
+                Suggested
+              </h2>
+              {recent.length ? (
+                <div className="label flex min-w-0 flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-mute">
+                  <span>Recent</span>
+                  {recent.slice(0, 4).map((r) => (
+                    <button key={r} type="button" onClick={() => run(r)} className="link-quiet min-h-8 text-ink">{r}</button>
+                  ))}
+                  <button type="button" onClick={() => { clearRecent(); notifyRecent(); }} className="link-quiet min-h-8">Clear</button>
+                </div>
+              ) : null}
+            </div>
+            <ul className="mt-5">
+              {SUGGESTED.map((s, i) => (
+                <li key={s} className="border-t border-ink last:border-b" data-reveal>
+                  <button
+                    type="button"
+                    onClick={() => run(s)}
+                    className="group flex w-full items-center gap-4 py-[clamp(0.75rem,0.4rem+1.1vw,1.5rem)] text-left md:gap-8"
+                  >
+                    <span className="label-sm nums w-6 shrink-0 text-mute">{pad2(i + 1)}</span>
+                    <span className="min-w-0 flex-1 truncate text-[clamp(1.875rem,0.6rem+5.4vw,6.5rem)] font-semibold uppercase leading-[0.86] tracking-[-0.055em] transition-transform duration-700 ease-expo md:group-hover:translate-x-4">
+                      {s}
+                    </span>
+                    <Icon name="arrowR" className="h-5 w-5 shrink-0 -translate-x-2 opacity-0 transition-[opacity,transform] duration-500 ease-expo group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:h-7 md:w-7" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+
+          <Block n={2} title="New in the studio" count={fresh.length} className="mt-[clamp(4rem,9vw,8rem)]">
+            <ProductGrid products={fresh} columns={4} label="New in the studio" />
+          </Block>
+        </>
+      ) : found.length === 0 && results.other.length === 0 ? (
+        <>
+          <div className="mt-[clamp(3rem,7vw,6rem)] max-w-3xl">
+            <p className="display-lg">Nothing for “{term}”.</p>
+            <p className="body-lg mt-6 max-w-[34rem] text-mute">
+              Try a material — cashmere, poplin, gabardine — a category, or the name of a collection.
+            </p>
+          </div>
+          <Block n={1} title="In the studio now" count={Math.min(4, fresh.length)} className="mt-[clamp(4rem,8vw,7rem)]">
+            <ProductGrid products={fresh.slice(0, 4)} columns={4} label="In the studio now" />
+          </Block>
+        </>
+      ) : (
+        <>
+          {found.length ? (
+            <Block n={1} title="Pieces" count={found.length} className="mt-[clamp(3rem,6vw,5rem)]">
+              <ProductGrid products={found} columns={found.length <= 3 ? 3 : 4} label={`Pieces matching “${term}”`} />
+            </Block>
+          ) : null}
+          {results.other.length ? (
+            <Block
+              n={found.length ? 2 : 1}
+              title="Collections and stories"
+              count={results.other.length}
+              className="mt-[clamp(4rem,8vw,7rem)]"
+            >
+              <ul className="grid gap-x-(--gutter) gap-y-12 md:grid-cols-3">
+                {results.other.map((hit) => (
+                  <li key={`${hit.kind}-${hit.slug}`} data-reveal>
+                    <Link href={hrefOf(hit)} className="group block">
+                      <div className="frame frame-3-2 frame-zoom">
+                        <ArtImage wide={hit.image} alt="" sizes="(min-width:768px) 32vw, 100vw" />
+                      </div>
+                      <p className="label mt-4 text-mute">
+                        {KIND[hit.kind]} <span aria-hidden>·</span> {hit.meta}
+                      </p>
+                      <p className="display-md mt-2">{hit.title}</p>
+                      <span className="label link-arrow mt-4">
+                        {hit.kind === 'story' ? 'Read the story' : 'View the collection'}
+                        <Icon name="arrowR" className="h-3.5 w-3.5" />
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Block>
+          ) : null}
+        </>
+      )}
     </div>
+  );
+}
+
+function Block({
+  n, title, count, className, children,
+}: { n: number; title: string; count: number; className?: string; children: React.ReactNode }) {
+  return (
+    <section className={className} aria-label={title}>
+      <div className="mb-[clamp(1.75rem,3.5vw,3rem)] flex items-baseline justify-between gap-6 border-t border-ink pt-4" data-reveal>
+        <h2 className="label">
+          <span className="nums mr-3 text-mute">{pad2(n)}</span>
+          {title}
+        </h2>
+        <p className="label nums text-mute">{pad2(count)}</p>
+      </div>
+      {children}
+    </section>
   );
 }

@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import { SearchResults } from '@/components/commerce/SearchResults';
 
 export const metadata: Metadata = {
@@ -8,10 +7,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true },
 };
 
+/**
+ * No Suspense boundary here: the search reads its query from the address bar
+ * as a store, so the page prerenders whole and hydrates in one pass.
+ */
 export default function SearchPage() {
-  return (
-    <Suspense fallback={<div className="page pt-(--nav-h)"><div className="section-y h-64" /></div>}>
-      <SearchResults />
-    </Suspense>
-  );
+  return <SearchResults />;
 }

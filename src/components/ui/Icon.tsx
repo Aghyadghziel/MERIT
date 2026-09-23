@@ -33,6 +33,8 @@ const P = {
   ruler: 'M2.5 7.5h15v5h-15zM6 7.5v2.4M9 7.5v3.4M12 7.5v2.4M15 7.5v3.4',
   truck: 'M1.5 5h10v9h-10zM11.5 8h3.4l2.6 3v3h-6zM5 14a1.6 1.6 0 1 0 0 3.2A1.6 1.6 0 0 0 5 14ZM14 14a1.6 1.6 0 1 0 0 3.2A1.6 1.6 0 0 0 14 14Z',
   leaf: 'M4 16C4 8.5 9 4.5 16.5 4 17 11.5 12.5 16.5 5.5 16.5M4.5 16 10 10.5',
+  /** The return key, for "press enter to see everything" hints. */
+  enter: 'M16 4.5v6H4.5M8 7 4.5 10.5 8 14',
 } as const;
 
 export type IconName = keyof typeof P;

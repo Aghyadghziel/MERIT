@@ -1,22 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
+import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { cn } from '@/lib/cn';
 
-type Errors = Partial<Record<'name' | 'email' | 'message', string>>;
+type Key = 'name' | 'email' | 'message';
+type Errors = Partial<Record<Key, string>>;
 
 const SUBJECTS = ['An order', 'Sizing and fit', 'Alterations', 'An appointment', 'Press', 'Something else'];
+const EMPTY = { name: '', email: '', subject: SUBJECTS[0], message: '' };
+const MIN = 10;
 
 /**
  * Validated properly, then told the truth: there is no inbox behind this form,
- * so it hands over an email address instead of pretending to send.
+ * so it says so instead of pretending to send.
+ *
+ * Four numbered lines, set large, with the subject as a row of choices rather
+ * than a menu — one tap instead of three on a phone. On a failed submit the
+ * first field that needs attention takes focus; on success the thank-you does.
  */
 export function ContactForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [sent, setSent] = useState(false);
-  const [values, setValues] = useState({ name: '', email: '', subject: SUBJECTS[0], message: '' });
+  const [values, setValues] = useState(EMPTY);
+  const done = useRef<HTMLParagraphElement>(null);
+  const form = useRef<HTMLFormElement>(null);
 
-  const set = (k: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  useEffect(() => { if (sent) done.current?.focus(); }, [sent]);
+
+  const set = (k: keyof typeof values) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setValues((v) => ({ ...v, [k]: e.target.value }));
     setErrors((x) => ({ ...x, [k]: undefined }));
   };
@@ -26,69 +39,156 @@ export function ContactForm() {
     const next: Errors = {};
     if (!values.name.trim()) next.name = 'Tell us who you are.';
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(values.email.trim())) next.email = 'We need a working email address to reply to.';
-    if (values.message.trim().length < 10) next.message = 'A sentence or two, so we can answer properly.';
+    if (values.message.trim().length < MIN) next.message = 'A sentence or two, so we can answer properly.';
     setErrors(next);
-    if (Object.keys(next).length === 0) setSent(true);
+    const first = (['name', 'email', 'message'] as Key[]).find((k) => next[k]);
+    if (first) {
+      form.current?.querySelector<HTMLElement>(`#contact-${first}`)?.focus();
+      return;
+    }
+    setSent(true);
   };
 
   if (sent) {
     return (
-      <div className="rule-t pt-8" role="status">
-        <p className="display-md">Thank you, {values.name.split(' ')[0]}.</p>
-        <p className="mt-4 max-w-md text-sm text-mute">
+      <div className="border-t border-ink pt-8" role="status">
+        <p className="label-sm text-mute">Not sent — concept site</p>
+        <p ref={done} tabIndex={-1} className="display-lg mt-6 outline-none">
+          Thank you, {values.name.trim().split(/\s+/)[0]}.
+        </p>
+        <p className="body-lg mt-6 max-w-[46ch] text-ink-3">
           This is a concept site, so the message was not sent anywhere and no address was stored.
           On a real MERIT you would have an answer within a working day.
         </p>
-        <button type="button" className="btn btn-ghost mt-8" onClick={() => { setSent(false); setValues({ name: '', email: '', subject: SUBJECTS[0], message: '' }); }}>
+        <button
+          type="button"
+          className="btn btn-ghost mt-10"
+          onClick={() => { setSent(false); setValues(EMPTY); setErrors({}); }}
+        >
           Write another
         </button>
       </div>
     );
   }
 
+  const count = values.message.trim().length;
+
   return (
-    <form onSubmit={submit} noValidate className="max-w-xl">
-      <Field id="name" label="Name" error={errors.name}>
-        <input id="name" value={values.name} onChange={set('name')} autoComplete="name"
-          aria-invalid={!!errors.name} aria-describedby={errors.name ? 'name-error' : undefined} className="field" />
+    <form ref={form} onSubmit={submit} noValidate aria-label="Write to client care" className="border-t border-ink">
+      <Field n={1} id="contact-name" label="Your name" error={errors.name}>
+        <input
+          id="contact-name" value={values.name} onChange={set('name')} autoComplete="name" placeholder="First and last name"
+          aria-invalid={!!errors.name} aria-describedby={errors.name ? 'contact-name-error' : undefined}
+          className={INPUT}
+        />
       </Field>
 
-      <Field id="email" label="Email" error={errors.email}>
-        <input id="email" type="email" inputMode="email" value={values.email} onChange={set('email')} autoComplete="email"
-          aria-invalid={!!errors.email} aria-describedby={errors.email ? 'email-error' : undefined} className="field" />
+      <Field n={2} id="contact-email" label="Email" error={errors.email}>
+        <input
+          id="contact-email" type="email" inputMode="email" value={values.email} onChange={set('email')} autoComplete="email" placeholder="you@example.com"
+          aria-invalid={!!errors.email} aria-describedby={errors.email ? 'contact-email-error' : undefined}
+          className={INPUT}
+        />
       </Field>
 
-      <Field id="subject" label="About">
-        <select id="subject" value={values.subject} onChange={set('subject')} className="field cursor-pointer">
-          {SUBJECTS.map((s) => <option key={s}>{s}</option>)}
-        </select>
+      <fieldset className="border-b border-line py-6 sm:py-7">
+        <legend className="sr-only">What is it about?</legend>
+        <div className="grid gap-x-(--gutter) gap-y-4 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
+          <p aria-hidden className="label-sm flex items-baseline gap-3 pt-1 text-mute sm:pt-3.5">
+            <span className="nums">03</span>About
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {SUBJECTS.map((s) => (
+              <label
+                key={s}
+                className={cn(
+                  'label relative inline-flex min-h-11 cursor-pointer items-center border px-4 transition-colors duration-200',
+                  'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-3 has-[:focus-visible]:outline-ink',
+                  values.subject === s ? 'border-ink bg-ink text-bone' : 'border-line-2 hover:border-ink',
+                )}
+              >
+                <input
+                  type="radio" name="subject" value={s} checked={values.subject === s}
+                  onChange={() => setValues((v) => ({ ...v, subject: s }))}
+                  className="sr-only"
+                />
+                {s}
+              </label>
+            ))}
+          </div>
+        </div>
+      </fieldset>
+
+      <Field
+        n={4} id="contact-message" label="Message" error={errors.message}
+        hint={<span className={cn('nums', count >= MIN ? 'text-ink' : 'text-mute')}>{count} {count === 1 ? 'character' : 'characters'}</span>}
+      >
+        <textarea
+          id="contact-message" rows={5} value={values.message} onChange={set('message')}
+          placeholder="An order number, a piece, a size — whatever helps us answer."
+          aria-invalid={!!errors.message}
+          aria-describedby={errors.message ? 'contact-message-error' : 'contact-message-hint'}
+          className={cn(INPUT, 'resize-y leading-[1.5]')}
+        />
       </Field>
 
-      <Field id="message" label="Message" error={errors.message}>
-        <textarea id="message" rows={5} value={values.message} onChange={set('message')}
-          aria-invalid={!!errors.message} aria-describedby={errors.message ? 'message-error' : undefined}
-          className="field resize-y" />
-      </Field>
-
-      <button type="submit" className="btn btn-solid mt-8">Send</button>
-      <p className="mt-4 text-xs text-mute">
-        We keep what you write only as long as it takes to answer it. See the privacy policy.
-      </p>
+      <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <button type="submit" className="btn btn-solid group w-full sm:w-auto">
+          Send message <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+        </button>
+        <p className="max-w-[38ch] text-xs leading-relaxed text-mute sm:text-right">
+          A concept site: this form checks what you write, then tells you plainly that nothing was
+          sent. See the <Link href="/privacy" className="link-rule text-ink">privacy policy</Link>.
+        </p>
+      </div>
     </form>
   );
 }
 
-function Field({ id, label, error, children }: { id: string; label: string; error?: string; children: React.ReactNode }) {
+const INPUT =
+  'w-full min-h-12 border-0 bg-transparent py-2 text-[clamp(1.125rem,1rem+0.5vw,1.5rem)] font-medium tracking-[-0.02em] ' +
+  'placeholder:text-stone focus-visible:outline-none!';
+
+function Field({
+  n, id, label, error, hint, children,
+}: {
+  n: number;
+  id: string;
+  label: string;
+  error?: string;
+  hint?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="mt-7 first:mt-0">
-      <label htmlFor={id} className="label-sm text-mute">{label}</label>
-      {children}
-      {error ? (
-        <p id={`${id}-error`} role="alert" className="mt-2 flex items-center gap-2 text-sm text-oxide">
-          <Icon name="alert" className="h-4 w-4 shrink-0" />
-          {error}
-        </p>
-      ) : null}
+    <div
+      className={cn(
+        'group relative grid gap-x-(--gutter) gap-y-1 border-b py-5 transition-colors duration-300 sm:grid-cols-[7.5rem_minmax(0,1fr)] sm:py-6',
+        error ? 'border-oxide' : 'border-line focus-within:border-ink',
+      )}
+    >
+      <label htmlFor={id} className="label-sm flex items-baseline gap-3 pt-1 text-mute transition-colors group-focus-within:text-ink sm:pt-4">
+        <span className="nums">{String(n).padStart(2, '0')}</span>
+        {label}
+      </label>
+      <div className="min-w-0">
+        {children}
+        {error ? (
+          <p id={`${id}-error`} role="alert" className="mt-2 flex items-center gap-2 text-sm text-oxide">
+            <Icon name="alert" className="h-4 w-4 shrink-0" />
+            {error}
+          </p>
+        ) : hint ? (
+          <p id={`${id}-hint`} className="label-sm mt-2 text-mute">{hint}</p>
+        ) : null}
+      </div>
+      {/* The rule under the line thickens to ink while you type in it. */}
+      <span
+        aria-hidden
+        className={cn(
+          'absolute inset-x-0 -bottom-px h-0.5 origin-left scale-x-0 bg-ink transition-transform duration-500 ease-(--ease-out) group-focus-within:scale-x-100',
+          error && 'bg-oxide',
+        )}
+      />
     </div>
   );
 }

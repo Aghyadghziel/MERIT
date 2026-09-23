@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Gallery } from '@/components/commerce/Gallery';
-import { ProductGrid } from '@/components/commerce/ProductGrid';
 import { ProductPanel } from '@/components/commerce/ProductPanel';
 import { RecentlyViewed } from '@/components/commerce/RecentlyViewed';
-import { Icon } from '@/components/ui/Icon';
 import { BRAND } from '@/lib/brand';
-import { getProduct, isSoldOut, products, related } from '@/lib/catalog';
+import { getCollection, getProduct, isSoldOut, products } from '@/lib/catalog';
+import { Breadcrumb } from './_parts/Breadcrumb';
+import { CollectionBand } from './_parts/CollectionBand';
+import { CompleteTheLook } from './_parts/CompleteTheLook';
+import { Details } from './_parts/Details';
+import { alsoConsider, completeLook } from './_parts/pairing';
+import { Rail } from './_parts/Rail';
 
 export const dynamicParams = false;
 export const generateStaticParams = () => products.map((p) => ({ slug: p.slug }));
@@ -29,17 +32,32 @@ export async function generateMetadata({ params }: PageProps<'/products/[slug]'>
   };
 }
 
+/**
+ * The product page, read top to bottom:
+ *
+ *   1. The spread — photographs on the left half, one per screen, and the
+ *      buying panel on the right half, which stays while they pass.
+ *   2. The piece — the description set large, the facts in ruled folds.
+ *   3. The collection it belongs to, full bleed.
+ *   4. The look — this piece and what it is worn with.
+ *   5. More to consider, then what was looked at recently.
+ */
 export default async function ProductPage({ params }: PageProps<'/products/[slug]'>) {
   const { slug } = await params;
   const product = getProduct(slug);
   if (!product) notFound();
 
   const sold = isSoldOut(product);
-  const siblings = related(product, 4);
+  const collection = getCollection(product.collection);
+  const look = completeLook(product);
+  const consider = alsoConsider(product, look);
+  const section = product.gender === 'men' ? '/men' : '/women';
+  // Unisex pieces are listed by category alone; "Accessories / Accessories"
+  // would say the same thing twice.
   const crumbs = [
     { name: 'Home', href: '/' },
-    { name: product.gender === 'men' ? 'Men' : product.gender === 'women' ? 'Women' : 'Accessories', href: product.gender === 'men' ? '/men' : '/women' },
-    { name: product.category, href: `${product.gender === 'men' ? '/men' : '/women'}?category=${encodeURIComponent(product.category)}` },
+    ...(product.gender === 'unisex' ? [] : [{ name: product.gender === 'men' ? 'Men' : 'Women', href: section }]),
+    { name: product.category, href: `${section}?category=${encodeURIComponent(product.category)}` },
     { name: product.name, href: `/products/${product.slug}` },
   ];
 
@@ -80,45 +98,28 @@ export default async function ProductPage({ params }: PageProps<'/products/[slug
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="page pt-(--nav-h)">
-        <nav aria-label="Breadcrumb" className="py-5">
-          <ol className="label-sm flex flex-wrap items-center gap-2 text-mute">
-            {crumbs.map((c, i) => (
-              <li key={c.href} className="flex items-center gap-2">
-                {i > 0 ? <Icon name="chevR" className="h-3 w-3" /> : null}
-                {i === crumbs.length - 1 ? (
-                  <span aria-current="page" className="text-ink">{c.name}</span>
-                ) : (
-                  <Link href={c.href} className="hover:text-ink">{c.name}</Link>
-                )}
-              </li>
-            ))}
-          </ol>
-        </nav>
-
-        <div className="grid-page pb-(--section-sm)">
-          <div className="col-span-4 md:col-span-6 lg:col-span-7">
+      <div className="pt-(--nav-h)">
+        <div className="lg:grid lg:grid-cols-2">
+          <div className="min-w-0">
             <Gallery images={product.images} name={`${product.name}, ${product.colours[0].name}`} />
           </div>
-
-          <div className="col-span-4 mt-10 md:col-span-6 lg:col-span-4 lg:col-start-9 lg:mt-0">
-            <div className="lg:sticky lg:top-[calc(var(--nav-h)+2rem)]">
-              <ProductPanel product={product} />
-            </div>
+          <div className="relative min-w-0">
+            <ProductPanel
+              product={product}
+              lead={<Breadcrumb crumbs={crumbs} />}
+              kicker={collection ? `${collection.name} — ${collection.season} ${collection.year}` : undefined}
+            />
           </div>
         </div>
       </div>
 
-      {siblings.length > 0 ? (
-        <section className="page section-y-sm" aria-labelledby="related-title">
-          <div className="rule-t pt-4">
-            <h2 id="related-title" className="label">You might also consider</h2>
-          </div>
-          <div className="mt-10">
-            <ProductGrid products={siblings} columns={4} />
-          </div>
-        </section>
-      ) : null}
+      <Details product={product} />
+
+      {collection ? <CollectionBand collection={collection} /> : null}
+
+      {look.length > 0 ? <CompleteTheLook product={product} look={look} /> : null}
+
+      {consider.length > 0 ? <Rail title="You might also consider" products={consider} /> : null}
 
       <RecentlyViewed exclude={product.slug} />
     </>

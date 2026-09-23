@@ -147,7 +147,13 @@ export function MotionRoot() {
       };
     });
 
-    return () => ctx.revert();
+    return () => {
+      ctx.revert();
+      // revert() puts every element back to its hidden CSS state, so the next
+      // run (StrictMode remount, route change, refresh with scroll restore)
+      // must be free to bind and reveal them again.
+      document.querySelectorAll(`[${BOUND}]`).forEach((el) => el.removeAttribute(BOUND));
+    };
   }, [pathname]);
 
   return null;

@@ -1,161 +1,105 @@
 /**
- * The outfit carousel's image contract.
+ * The Fitting Room's media contract.
  *
- * Every outfit is one full-frame picture of the SAME model in the SAME pose,
- * in the same light, at the same scale, on a transparent background. Only the
- * garment differs. The carousel never moves the model: it keeps the base frame
- * on screen and crossfades the others through a mask that covers the torso and
- * arms, so a face or a trouser leg that drifted a pixel between shots is never
- * seen changing.
+ * One model, one pose, one frame. Look 0 is the base still: the tee and the
+ * jeans. Every jacket brings two filmed clips — putting it on, taking it off —
+ * that start and end on that same standing pose, so any clip can follow any
+ * other and the hand-off to a still is invisible.
  *
- * The frames are photography-style renders supplied by the client, cut out and
- * normalised to the contract below (figure height, feet line and horizontal
- * centre matched across files). The mask still governs what may change between
- * frames; everything outside it is always drawn from the base.
+ * The clips were generated, then stabilised frame by frame onto the base
+ * still's figure (head at 5.6%, feet at 96.6% of the frame), flattened, and cut
+ * out: they carry an alpha channel, so the model stands on whatever is behind
+ * him. Two encodes of each, because no single codec does alpha everywhere:
  *
- *   public/img/outfits/base.webp        model, tee, jeans — no jacket
- *   public/img/outfits/jacket-01.webp   same frame, first jacket
- *   public/img/outfits/jacket-02.webp   …
- *   public/img/outfits/preview-*.webp   the garment alone, flat, shown beside
- *                                       the model in the ring
+ *   <clip>.webm        VP9 + alpha   Chrome, Edge, Firefox
+ *   <clip>.hevc.mp4    HEVC + alpha  Safari (macOS, iOS)
+ *   <clip>-m.*         480 × 720     phones
  *
- * Frame:  1200 × 1800 px (2:3), portrait, model centred, feet at ~97% height,
- *         crown at ~6%. Transparent background.
- * Preview: 900 × 900 px, garment centred, transparent background.
- * Mask:   the region that is allowed to change between frames, as fractions of
- *         the frame. Everything outside it is always drawn from the base.
+ * Frame: 2:3. Stills are RGBA WebP of the clip's own last frame.
+ * Pipeline and scripts: merit-video-kit/ (outside the repo).
  */
-export const FRAME = {
-  width: 1200,
-  height: 1800,
-  mask: { top: 0.12, bottom: 0.72, left: 0.02, right: 0.98, feather: 0.06 },
+export const FRAME = { width: 1200, height: 1800 } as const;
+
+/**
+ * Where the figure sits inside that frame, as fractions of it. Measured from
+ * the alpha channel of every frame of all four clips (desktop and phone
+ * encodes) and of every still, so it holds for the whole film, not only the
+ * pose at rest. The stage is laid out from these numbers rather than from the
+ * viewport: the logotype behind him is sized from his height and placed on
+ * his body, so the two never drift apart on a wide or a tall screen.
+ */
+export const FIGURE = {
+  /** The highest pixel of his hair in any frame (he rises a little as he dresses). */
+  crown: 0.049,
+  /** Where his soles meet the floor. */
+  floor: 0.962,
+  /** How wide the pair of shoes stands, for the contact shadow. */
+  stance: 0.26,
+  /**
+   * The upper chest: the one patch of the frame that is opaque in every
+   * frame, whatever his arms and the jacket are doing. The counter of the
+   * R in the logotype is centred here so it is always behind him.
+   */
+  chest: { x: 0.511, y: 0.301 },
+  /**
+   * The widest the logotype may be, as a multiple of the frame's height, for
+   * that counter to stay inside the chest with about ten pixels to spare at
+   * full resolution. Any wider and a thin warm-white sliver of it shows past
+   * his shoulder at some point in a clip, and reads as a halo.
+   */
+  logoMax: 1.55,
 } as const;
 
-/** True while the frames are drawn placeholders rather than photographs. */
-export const PLACEHOLDER = false;
-
 export type Outfit = {
-  /** Product this frame shows; name, price and sizes come from the catalogue. */
+  /** Product this look shows; name, price and sizes come from the catalogue. */
   slug: string;
-  /** File under /img/outfits/, with extension. */
-  file: string;
-  /** Phone-sized version of `file` (800×1200), served under 768px. Optional. */
-  mobile?: string;
-  /**
-   * A filmed dressing transition for this garment. When present the carousel
-   * plays it instead of animating: the model physically puts the jacket on.
-   * `dressed` MUST be the video's own last frame, so the hand-off from video
-   * to still is pixel-identical; `start` is its first frame.
-   *
-   * The clip is pre-processed to the still contract by tools/outfits/video.md:
-   * the studio vignette is divided out so the backdrop is flat bone and the
-   * rectangle is invisible, and the crop is aligned on the model's head axis
-   * so he does not move between still, video and still.
-   */
-  video?: {
-    mp4: string;
-    webm?: string;
-    /** Phone-sized mp4, served under 768px. */
-    mobile?: string;
-    /** Taking it off again — the same clip reversed. */
-    reverseMp4?: string;
-    reverseMobile?: string;
-    /** Full-figure still matching the last video frame exactly. */
-    dressed: string;
-    dressedMobile?: string;
-    /** Full-figure still matching the first video frame. */
-    start?: string;
-    width: number;
-    height: number;
-  };
-  /**
-   * The put-on sequence: 6–8 intermediate frames, in order, from "jacket
-   * entering behind the shoulders" to "folds settling", NOT including the base
-   * or the final worn frame. Same contract as `file`. When absent the carousel
-   * uses its fallback: the final frame forms around the model through a
-   * shoulder-to-torso clip, a small drop, a breath of scale and a soft shadow.
-   */
-  frames?: string[];
-  /** Phone-sized versions of `frames`, same order. Optional. */
-  framesMobile?: string[];
-  /** File under /img/outfits/ for the flat garment shown beside the model. */
-  preview: string;
   /** The colour depicted, which is the colour "Add to bag" adds. */
   colour: string;
-  /** Meaningful alternative text for the whole outfit. */
+  /** Meaningful alternative text for the whole look. */
   alt: string;
+  /** The base look only: its still. */
+  still?: { file: string; mobile?: string };
+  /** A jacket: the flat shot on the rail, and its two clips. */
+  jacket?: {
+    preview: string;
+    /** Clip base names, without size suffix or extension. */
+    on: string;
+    off: string;
+    /** RGBA stills of the on-clip's last frame. */
+    dressed: string;
+    dressedMobile: string;
+  };
 };
 
 export const outfits: Outfit[] = [
   {
     slug: 'baseline-tee',
-    file: 'base.webp',
-    mobile: 'base-m.webp',
-    preview: 'preview-tee.webp',
     colour: 'Ink',
-    alt: 'The model in the Baseline Tee in ink and washed grey Column jeans, standing square to the camera, arms at the sides.',
+    alt: 'The model in the Baseline Tee in ink and washed grey Column jeans, standing square to the camera, arms at his sides.',
+    still: { file: 'base.webp', mobile: 'base-m.webp' },
   },
   {
     slug: 'plane-technical-jacket',
-    file: 'jacket-01.webp',
-    mobile: 'jacket-01-m.webp',
-    video: {
-      mp4: 'dress-01.mp4',
-      webm: 'dress-01.webm',
-      mobile: 'dress-01-m.mp4',
-      reverseMp4: 'undress-01.mp4',
-      reverseMobile: 'undress-01-m.mp4',
+    colour: 'Sand',
+    alt: 'The same model wearing the Plane Technical Jacket in sand, open over the tee.',
+    jacket: {
+      preview: 'preview-technical.webp',
+      on: 'dress-01',
+      off: 'undress-01',
       dressed: 'outfit-01-dressed.webp',
       dressedMobile: 'outfit-01-dressed-m.webp',
-      start: 'outfit-01-start.webp',
-      width: 1040,
-      height: 1200,
     },
-    preview: 'preview-technical.webp',
-    colour: 'Sand',
-    alt: 'The same model and pose, wearing the Plane Technical Jacket in sand, zipped open over the tee.',
   },
   {
     slug: 'axis-leather-jacket',
-    file: 'jacket-02.webp',
-    mobile: 'jacket-02-m.webp',
-    preview: 'preview-leather.webp',
     colour: 'Ink',
-    alt: 'The same model and pose, wearing the Axis Leather Jacket in ink, open over the tee.',
+    alt: 'The same model wearing the Axis Leather Jacket in black, open over the tee.',
+    jacket: {
+      preview: 'preview-leather.webp',
+      on: 'dress-02',
+      off: 'undress-02',
+      dressed: 'outfit-02-dressed.webp',
+      dressedMobile: 'outfit-02-dressed-m.webp',
+    },
   },
 ];
-
-/**
- * The clip and its matching still are rectangles of near-bone, not cut-outs.
- * Flattening the studio vignette gets the backdrop to within a few levels of
- * the page, and this dissolves the last of it: the outer band fades out, so
- * there is no edge to see. Applied to BOTH the video and the still it hands
- * off to, or the hand-off would show the mask appearing.
- *
- * The bands are clear of the model — his arms reach the middle 60% at most,
- * his head starts at 5.6% and his shoes end at 96.6% of the frame.
- */
-export function edgeFadeStyle(): React.CSSProperties {
-  const h = 'linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%)';
-  const v = 'linear-gradient(to bottom, transparent 0%, #000 3%, #000 97.5%, transparent 100%)';
-  return {
-    WebkitMaskImage: `${h}, ${v}`,
-    maskImage: `${h}, ${v}`,
-    WebkitMaskComposite: 'source-in',
-    maskComposite: 'intersect',
-  };
-}
-
-/** CSS for the torso mask, shared by the stage and by anything previewing it. */
-export function maskStyle(): React.CSSProperties {
-  const { top, bottom, left, right, feather } = FRAME.mask;
-  const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
-  const vertical = `linear-gradient(to bottom, transparent ${pct(top - feather)}, #000 ${pct(top)}, #000 ${pct(bottom)}, transparent ${pct(bottom + feather)})`;
-  const horizontal = `linear-gradient(to right, transparent ${pct(left - feather / 2)}, #000 ${pct(left)}, #000 ${pct(right)}, transparent ${pct(right + feather / 2)})`;
-  return {
-    WebkitMaskImage: `${vertical}, ${horizontal}`,
-    maskImage: `${vertical}, ${horizontal}`,
-    WebkitMaskComposite: 'source-in',
-    maskComposite: 'intersect',
-  };
-}

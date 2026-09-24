@@ -85,7 +85,7 @@ const ORGANISATION = {
     addressLocality: BRAND.city,
     addressCountry: 'SA',
   },
-  // No sameAs: a concept brand owns no social accounts to point at.
+  sameAs: [BRAND.instagram, BRAND.tiktok],
 };
 
 export function generateStaticParams() {

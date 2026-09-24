@@ -115,8 +115,12 @@ export function Footer() {
       <div className="page border-t border-line-ink">
         <div className="flex flex-col gap-5 py-6 lg:flex-row lg:items-center lg:justify-between">
           <ul className="flex flex-wrap items-center gap-x-8 gap-y-2 text-[0.9375rem]">
-            {/* No social link: MERIT is a concept and owns no account, so a
-                handle here would send people to whoever does. */}
+            <li>
+              <a href={BRAND.instagram} target="_blank" rel="noopener noreferrer" className="link-quiet inline-flex min-h-11 items-center" dir="ltr">Instagram</a>
+            </li>
+            <li>
+              <a href={BRAND.tiktok} target="_blank" rel="noopener noreferrer" className="link-quiet inline-flex min-h-11 items-center" dir="ltr">TikTok</a>
+            </li>
             <li>
               <a href={`mailto:${BRAND.email}`} className="link-quiet inline-flex min-h-11 items-center" dir="ltr">{BRAND.email}</a>
             </li>

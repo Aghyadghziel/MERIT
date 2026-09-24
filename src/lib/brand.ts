@@ -24,8 +24,9 @@ export const BRAND = {
   country: 'Saudi Arabia',
   founded: 2019,
   line: 'Quiet structure, expressive movement.',
-  domain: 'https://merit.example',
+  domain: 'https://www.meritbrand.store',
   email: 'clients@merit.example',
   phone: '+966 11 000 0000',
-  instagram: 'merit.atelier',
+  instagram: 'https://www.instagram.com/meritbrands',
+  tiktok: 'https://www.tiktok.com/@meritbrand',
 } as const;

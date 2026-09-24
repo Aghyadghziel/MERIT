@@ -1,9 +1,8 @@
 /**
  * The details a Saudi reader looks for on the Arabic site: the Hijri date
- * beside the Gregorian one, the payment methods people here actually use, and
- * WhatsApp as a way to reach the house. MERIT is a concept, so every one of
- * them is shown for what it is — nothing is connected, and the number is the
- * same placeholder the rest of the site prints.
+ * beside the Gregorian one and the payment methods people here actually use.
+ * MERIT is a concept, so they are shown for what they are: nothing is
+ * connected.
  */
 
 /** Today in the Umm al-Qura calendar, in Riyadh, with Western digits: "٢ ربيع الآخر ١٤٤٨ هـ" → "2 ربيع الآخر 1448 هـ". */

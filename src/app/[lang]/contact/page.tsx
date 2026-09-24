@@ -53,21 +53,6 @@ export default async function ContactPage() {
             </dd>
           </div>
           <div>
-            <dt className="label-sm text-mute">{ar ? 'الجوال' : 'Telephone'}</dt>
-            <dd className={`${VALUE} nums`}><span dir="ltr">{BRAND.phone}</span></dd>
-          </div>
-          {/* On the Arabic site, WhatsApp: how a Saudi customer reaches a shop.
-              The number is the placeholder above, so it is not linked. */}
-          {ar ? (
-            <div>
-              <dt className="label-sm text-mute">واتساب</dt>
-              <dd className={VALUE}>
-                على الرقم نفسه
-                <span className="block text-mute">رقم تجريبي، ما يستقبل رسايل</span>
-              </dd>
-            </div>
-          ) : null}
-          <div>
             <dt className="label-sm text-mute">{ar ? 'أوقات الدوام' : 'Hours'}</dt>
             <dd className={VALUE}>
               {ar ? 'من الأحد للخميس' : 'Sunday to Thursday'}
@@ -77,7 +62,7 @@ export default async function ContactPage() {
           <div>
             <dt className="label-sm text-mute">{ar ? 'الصحافة' : 'Press'}</dt>
             <dd className={VALUE}>
-              <a href="mailto:press@merit.example" className="link-rule break-all">press@merit.example</a>
+              <a href={`mailto:${BRAND.email}`} className="link-rule break-all">{BRAND.email}</a>
             </dd>
           </div>
           <div className="sm:col-span-2 lg:col-span-1">

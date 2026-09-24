@@ -25,8 +25,7 @@ export const BRAND = {
   founded: 2019,
   line: 'Quiet structure, expressive movement.',
   domain: 'https://www.meritbrand.store',
-  email: 'clients@merit.example',
-  phone: '+966 11 000 0000',
+  email: 'themeritbrand@gmail.com',
   instagram: 'https://www.instagram.com/meritbrands',
   tiktok: 'https://www.tiktok.com/@meritbrand',
 } as const;

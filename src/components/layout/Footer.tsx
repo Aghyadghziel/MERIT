@@ -124,10 +124,6 @@ export function Footer() {
             <li>
               <a href={`mailto:${BRAND.email}`} className="link-quiet inline-flex min-h-11 items-center" dir="ltr">{BRAND.email}</a>
             </li>
-            <li className="nums text-mute-ink" dir="ltr">{BRAND.phone}</li>
-            {/* WhatsApp is how a Saudi customer reaches a shop. The number is
-                the site's placeholder, so it is printed, never linked. */}
-            {ar ? <li className="text-mute-ink">واتساب على الرقم نفسه <span className="text-xs">(رقم تجريبي)</span></li> : null}
           </ul>
 
           <div className="grid grid-cols-2 items-center gap-x-(--gutter) gap-y-3 lg:flex lg:gap-x-9">

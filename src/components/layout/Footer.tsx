@@ -145,6 +145,10 @@ export function Footer() {
         <div className="grid-page gap-y-3 py-5 text-xs leading-relaxed text-mute-ink">
           <p className="col-span-4 md:col-span-3 lg:col-span-4">
             © {new Date().getFullYear()} {BRAND.legal}. {t('{city}, {country}.', { city: t(BRAND.city), country: t(BRAND.country) })}
+            <span className="block">
+              {ar ? 'من تنفيذ ' : 'Built by '}
+              <a href={`https://www.simastudio.it.com/${ar ? 'ar' : 'en'}`} target="_blank" rel="noopener" className="link-quiet text-bone" dir="ltr">SIMA Studio</a>
+            </span>
           </p>
           <p className="col-span-4 max-w-lg md:col-span-3 lg:col-span-5">
             {t('A concept site. {name} is not a real company: the garments, prices, stock and stores here are invented, and nothing can be bought.', { name: BRAND.name })}

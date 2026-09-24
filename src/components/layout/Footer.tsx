@@ -48,12 +48,15 @@ export function Footer() {
 
   return (
     <footer className="on-ink relative bg-ink text-bone">
-      <div className="page grid items-end gap-6 py-10 md:grid-cols-[minmax(0,34rem)_1fr] md:gap-12 md:py-12">
-        <LiquidLogo className="w-full max-w-[34rem]" />
-        <div className="flex flex-col gap-2 md:items-end md:text-right">
-          <p className="text-[clamp(1.05rem,0.95rem+0.5vw,1.3rem)] font-semibold leading-tight tracking-[-0.03em]">Quiet structure, expressive movement.</p>
-          <p className="label-sm text-bone/60">{BRAND.city} — since {BRAND.founded} · Autumn Winter 2026</p>
+      <div className="page pb-8 pt-10 md:pb-10 md:pt-12">
+        <div className="flex items-center justify-between">
+          <p className="label-sm text-bone/60">{BRAND.city} — since {BRAND.founded}</p>
+          <p className="label-sm text-bone/60">Autumn Winter 2026</p>
         </div>
+        <LiquidLogo className="mx-auto mt-4 w-full md:mt-6" />
+        <p className="mt-4 text-[clamp(1.05rem,0.95rem+0.5vw,1.3rem)] font-semibold leading-tight tracking-[-0.03em] md:mt-6">
+          Quiet structure, expressive movement.
+        </p>
       </div>
 
       <div className="border-t border-line-ink">

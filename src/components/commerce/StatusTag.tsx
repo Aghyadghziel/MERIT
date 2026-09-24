@@ -1,9 +1,13 @@
+'use client';
+
 import type { Product } from '@/lib/catalog';
 import { statusLabel } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
+import { useT } from '@/i18n/client';
 
 /** A word on a rule, not a badge. No pill, no fill, no colour except on sale. */
 export function StatusTag({ product, className }: { product: Product; className?: string }) {
+  const t = useT();
   const status = statusLabel(product);
   if (!status) return null;
   return (
@@ -16,7 +20,7 @@ export function StatusTag({ product, className }: { product: Product; className?
         className,
       )}
     >
-      {status.text}
+      {t(status.text)}
     </span>
   );
 }

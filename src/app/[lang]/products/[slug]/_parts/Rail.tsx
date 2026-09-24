@@ -7,6 +7,7 @@ import type { Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { pad2 } from '@/lib/format';
 import { reduced } from '@/lib/gsap';
+import { useT } from '@/i18n/client';
 
 /**
  * A rail that starts on the page's left edge and runs off the right one, so
@@ -17,12 +18,16 @@ export function Rail({ title, products }: { title: string; products: Product[] }
   const track = useRef<HTMLUListElement>(null);
   const [edge, setEdge] = useState({ start: true, end: false });
   const id = useId();
+  const tr = useT();
 
   useEffect(() => {
     const t = track.current;
     if (!t) return;
-    const measure = () =>
-      setEdge({ start: t.scrollLeft < 4, end: t.scrollLeft + t.clientWidth > t.scrollWidth - 4 });
+    // In RTL the scroll offset runs from 0 down to negative numbers.
+    const measure = () => {
+      const x = Math.abs(t.scrollLeft);
+      setEdge({ start: x < 4, end: x + t.clientWidth > t.scrollWidth - 4 });
+    };
     const frame = requestAnimationFrame(measure);
     t.addEventListener('scroll', measure, { passive: true });
     window.addEventListener('resize', measure);
@@ -40,7 +45,8 @@ export function Rail({ title, products }: { title: string; products: Product[] }
     const gap = parseFloat(getComputedStyle(t).columnGap) || 0;
     const w = card ? card.getBoundingClientRect().width + gap : t.clientWidth;
     const per = Math.max(1, Math.floor((t.clientWidth + gap) / w));
-    t.scrollBy({ left: dir * w * per, behavior: reduced() ? 'auto' : 'smooth' });
+    const rtl = getComputedStyle(t).direction === 'rtl' ? -1 : 1;
+    t.scrollBy({ left: rtl * dir * w * per, behavior: reduced() ? 'auto' : 'smooth' });
   };
 
   const pad = 'max(var(--gutter), calc((100% - var(--page)) / 2))';
@@ -61,7 +67,7 @@ export function Rail({ title, products }: { title: string; products: Product[] }
                 type="button"
                 onClick={() => step(dir)}
                 disabled={off}
-                aria-label={dir === -1 ? 'Previous pieces' : 'Next pieces'}
+                aria-label={tr(dir === -1 ? 'Previous pieces' : 'Next pieces')}
                 className={cn(
                   'flex h-11 w-11 items-center justify-center border transition-[border-color,opacity] duration-200',
                   off ? 'cursor-default border-line opacity-35' : 'border-line hover:border-ink',

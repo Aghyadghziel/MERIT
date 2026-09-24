@@ -2,14 +2,16 @@
 
 import Link from '@/i18n/link';
 import { useEffect, useRef, useState } from 'react';
-import { MaskHeadline, Tally } from '@/components/commerce/CartView';
+import { MaskHeadline, Tally, usePieces } from '@/components/commerce/CartView';
 import { ProductCard } from '@/components/commerce/ProductCard';
 import { useStore } from '@/components/providers/Store';
 import { Icon } from '@/components/ui/Icon';
 import { getProduct, isSoldOut, products, type Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
-import { pad2, plural } from '@/lib/format';
+import { pad2 } from '@/lib/format';
 import { reduced } from '@/lib/gsap';
+import { useLocale, useT } from '@/i18n/client';
+import { localizeProduct } from '@/i18n/products';
 
 /**
  * Saved pieces, hung as a rail: every other one drops, as on the home page.
@@ -20,6 +22,9 @@ import { reduced } from '@/lib/gsap';
  */
 export function WishlistView() {
   const { wishlist, ready, count, toggleWish } = useStore();
+  const t = useT();
+  const locale = useLocale();
+  const pieces = usePieces();
   const rail = useRef<HTMLUListElement>(null);
   // The piece whose heart takes the keyboard back once an undo has landed.
   const restore = useRef<string | null>(null);
@@ -50,13 +55,15 @@ export function WishlistView() {
 
   const shown = seen.order
     .map((slug) => ({ p: getProduct(slug), gone: !wishlist.includes(slug) }))
-    .filter((x): x is { p: Product; gone: boolean } => Boolean(x.p));
+    .filter((x): x is { p: Product; gone: boolean } => Boolean(x.p))
+    .map((x) => ({ ...x, p: localizeProduct(x.p, locale) }));
   const n = wishlist.length;
   // Everything on the page has just been let go of.
   const cleared = n === 0 && shown.length > 0;
   const picks = products
     .filter((p) => p.status === 'new' && !isSoldOut(p) && !wishlist.includes(p.slug) && !seen.order.includes(p.slug))
-    .slice(0, 4);
+    .slice(0, 4)
+    .map((p) => localizeProduct(p, locale));
 
   const undo = (slug: string) => {
     restore.current = slug;
@@ -73,13 +80,13 @@ export function WishlistView() {
     <div className="page pt-(--nav-h)">
       <header className="pt-[clamp(2.25rem,1rem+4vw,5.5rem)]">
         <div className="flex items-baseline justify-between gap-4" data-reveal>
-          <p className="label">Wishlist</p>
-          <p className="label nums text-mute">{n > 0 ? `${plural(n, 'piece')} saved` : 'Nothing saved'}</p>
+          <p className="label">{t('Wishlist')}</p>
+          <p className="label nums text-mute">{n > 0 ? t('{pieces} saved', { pieces: pieces(n) }) : t('Nothing saved')}</p>
         </div>
         <div className="mt-[clamp(1.25rem,0.8rem+1.6vw,2.5rem)] flex items-end justify-between gap-6 border-b border-ink pb-[clamp(1.25rem,0.8rem+1.2vw,2rem)]">
           <h1 className="display-xl">
-            <span className="sr-only">Wishlist — </span>
-            <MaskHeadline text="Saved." />
+            <span className="sr-only">{t('Wishlist')} — </span>
+            <MaskHeadline text={t('Saved.')} />
           </h1>
           <span data-reveal className="flex shrink-0">
             <Tally value={n} className="display-xl mb-[-0.04em] text-line-2" />
@@ -91,20 +98,20 @@ export function WishlistView() {
         <>
           <div className="flex flex-wrap items-center justify-between gap-x-8 gap-y-3 py-5" data-reveal>
             <p className="max-w-lg text-sm text-mute">
-              Kept in this browser, with no account behind it. Tap the{' '}
+              {t('Kept in this browser, with no account behind it. Tap the')}{' '}
               <Icon name="heart" filled className="relative -top-px inline h-3.5 w-3.5 text-oxide" />
-              <span className="sr-only">heart</span> on a piece again to let it go.
+              <span className="sr-only">{t('heart')}</span> {t('on a piece again to let it go.')}
             </p>
             {count > 0 ? (
               <Link href="/cart" className="label group inline-flex min-h-11 items-center gap-2.5">
-                Your bag <span className="nums text-mute">{pad2(count)}</span>
-                <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                {t('Your bag')} <span className="nums text-mute">{pad2(count)}</span>
+                <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
               </Link>
             ) : null}
           </div>
 
           <section aria-labelledby="saved-title" className="pb-(--section) pt-[clamp(1.5rem,1rem+2vw,3rem)]">
-            <h2 id="saved-title" className="sr-only">Saved pieces</h2>
+            <h2 id="saved-title" className="sr-only">{t('Saved pieces')}</h2>
             <ul ref={rail} className="grid grid-cols-2 gap-x-(--gutter) gap-y-12 md:grid-cols-3 lg:grid-cols-4">
               {shown.map(({ p, gone }, i) => (
                 <li
@@ -135,28 +142,28 @@ export function WishlistView() {
 
           <div className="grid-page items-end gap-y-8 pt-[clamp(2rem,1rem+3vw,4rem)]">
             <div className="col-span-4 md:col-span-4 lg:col-span-6">
-              <p className="display-md" data-reveal>{cleared ? 'Nothing saved now.' : 'Nothing saved yet.'}</p>
+              <p className="display-md" data-reveal>{t(cleared ? 'Nothing saved now.' : 'Nothing saved yet.')}</p>
               <p className="body-lg mt-5 max-w-md text-mute" data-reveal>
-                Tap the{' '}
+                {t('Tap the')}{' '}
                 <Icon name="heart" className="relative -top-0.5 inline h-4 w-4 text-ink" />
-                <span className="sr-only">heart</span> on any piece to keep it here. Saved pieces stay
-                in this browser; there is no account behind them.
+                <span className="sr-only">{t('heart')}</span>{' '}
+                {t('on any piece to keep it here. Saved pieces stay in this browser; there is no account behind them.')}
               </p>
             </div>
             <div className="col-span-4 flex flex-wrap gap-3 md:col-span-2 md:flex-col lg:col-span-5 lg:col-start-8 lg:flex-row lg:justify-end" data-reveal>
-              <Link href="/women" className="btn btn-solid">Women</Link>
-              <Link href="/men" className="btn">Men</Link>
+              <Link href="/women" className="btn btn-solid">{t('Women')}</Link>
+              <Link href="/men" className="btn">{t('Men')}</Link>
             </div>
           </div>
 
           {picks.length > 0 ? (
             <section aria-labelledby="picks-title" className="mt-[clamp(3.5rem,2rem+5vw,7rem)]">
               <div className="flex items-baseline justify-between gap-6 border-t border-ink pt-4" data-reveal>
-                <h2 id="picks-title" className="label">New this season — save one to start</h2>
+                <h2 id="picks-title" className="label">{t('New this season — save one to start')}</h2>
                 <Link href="/new" className="label group inline-flex shrink-0 items-center gap-2">
-                  <span className="hidden sm:inline">All new</span>
-                  <span className="sm:hidden">All</span>
-                  <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                  <span className="hidden sm:inline">{t('All new')}</span>
+                  <span className="sm:hidden">{t('All')}</span>
+                  <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </Link>
               </div>
               <div className="mt-8 grid grid-cols-2 gap-x-(--gutter) gap-y-12 lg:grid-cols-4">
@@ -177,6 +184,7 @@ export function WishlistView() {
 /** Laid over a piece that has just been let go of, until the page is left. */
 function Removed({ name, onUndo }: { name: string; onUndo: () => void }) {
   const button = useRef<HTMLButtonElement>(null);
+  const t = useT();
 
   // The heart that had focus has just gone inert; catch the keyboard here
   // rather than letting it fall back to the top of the page.
@@ -189,15 +197,15 @@ function Removed({ name, onUndo }: { name: string; onUndo: () => void }) {
 
   return (
     <div className="absolute inset-x-0 top-0 flex aspect-[4/5] flex-col items-center justify-center gap-4 p-4 text-center">
-      <p className="label">Removed</p>
+      <p className="label">{t('Removed')}</p>
       <button
         ref={button}
         type="button"
         className="btn btn-solid min-w-[8.5rem]"
         onClick={onUndo}
-        aria-label={`Undo — save ${name} again`}
+        aria-label={t('Undo — save {name} again', { name })}
       >
-        Undo
+        {t('Undo')}
       </button>
     </div>
   );
@@ -210,6 +218,8 @@ function Removed({ name, onUndo }: { name: string; onUndo: () => void }) {
  */
 function UndoAll({ pieces, onUndo }: { pieces: Product[]; onUndo: () => void }) {
   const button = useRef<HTMLButtonElement>(null);
+  const t = useT();
+  const count = usePieces();
 
   // The rail has just collapsed from under the reader, who was most likely
   // scrolled down it. Bring the top of the page back, where this line now
@@ -226,9 +236,9 @@ function UndoAll({ pieces, onUndo }: { pieces: Product[]; onUndo: () => void }) 
   return (
     <div className="flex flex-col gap-4 border-b border-line py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
       <p className="min-w-0 text-sm">
-        <span className="label mr-3">Removed</span>
+        <span className="label me-3">{t('Removed')}</span>
         <span className="text-mute">
-          {k === 1 ? pieces[0].name : `${plural(k, 'piece')}: ${pieces.map((p) => p.name).join(', ')}`}.
+          {k === 1 ? pieces[0].name : `${count(k)}: ${pieces.map((p) => p.name).join(t(', '))}`}.
         </span>
       </p>
       <button
@@ -236,9 +246,11 @@ function UndoAll({ pieces, onUndo }: { pieces: Product[]; onUndo: () => void }) 
         type="button"
         className="btn btn-solid shrink-0 self-start sm:self-auto"
         onClick={onUndo}
-        aria-label={k === 1 ? `Undo — save ${pieces[0].name} again` : `Undo — save all ${k} pieces again`}
+        aria-label={k === 1
+          ? t('Undo — save {name} again', { name: pieces[0].name })
+          : t('Undo — save all {pieces} again', { pieces: count(k) })}
       >
-        {k === 1 ? 'Undo' : 'Undo all'}
+        {t(k === 1 ? 'Undo' : 'Undo all')}
       </button>
     </div>
   );

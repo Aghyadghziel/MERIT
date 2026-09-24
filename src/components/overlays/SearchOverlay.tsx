@@ -3,7 +3,8 @@
 import Image from 'next/image';
 import Link from '@/i18n/link';
 import { useRouter } from 'next/navigation';
-import { useLocale } from '@/i18n/client';
+import { useLocale, useT } from '@/i18n/client';
+import { localizeProduct } from '@/i18n/products';
 import { localePath } from '@/i18n/config';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Panel } from '@/components/overlays/Panel';
@@ -13,11 +14,14 @@ import { Icon } from '@/components/ui/Icon';
 import { newArrivals } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { pad2 } from '@/lib/format';
-import { SUGGESTED, clearRecent, hrefOf, pushRecent, readRecent, search, type Hit } from '@/lib/search';
+import { clearRecent, hrefOf, pushRecent, readRecent, search, suggestedFor, type Hit } from '@/lib/search';
 
 /** Underline the part of a name that matched, so you can see why it is here. */
 function Match({ text, query }: { text: string; query: string }) {
   const q = query.trim().toLowerCase();
+  // Arabic letters join across the cut: underlining part of a word would
+  // break it, so only whole-query matches in Latin text are marked.
+  if (/[\u0600-\u06FF]/.test(text)) return <>{text}</>;
   const at = q.length >= 2 ? text.toLowerCase().indexOf(q) : -1;
   if (at < 0) return <>{text}</>;
   return (
@@ -44,6 +48,7 @@ export function SearchOverlay() {
   const input = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const locale = useLocale();
+  const t = useT();
 
   useEffect(() => {
     if (isOpen) {
@@ -55,15 +60,15 @@ export function SearchOverlay() {
     }
   }, [isOpen]);
 
-  const results = useMemo(() => search(query), [query]);
+  const results = useMemo(() => search(query, locale), [query, locale]);
   const flat = useMemo<Hit[]>(() => [...results.products, ...results.other], [results]);
   const hasQuery = query.trim().length >= 2;
   const empty = hasQuery && flat.length === 0;
-  const arrivals = useMemo(() => newArrivals().slice(0, 4), []);
+  const arrivals = useMemo(() => newArrivals().slice(0, 4).map((p) => localizeProduct(p, locale)), [locale]);
   // A suggestion is a promise: only offer the ones that find something.
   const suggested = useMemo(
-    () => SUGGESTED.filter((s) => { const r = search(s); return r.products.length + r.other.length > 0; }),
-    [],
+    () => suggestedFor(locale).filter((s) => { const r = search(s, locale); return r.products.length + r.other.length > 0; }),
+    [locale],
   );
   const listOpen = hasQuery && flat.length > 0;
 
@@ -77,8 +82,13 @@ export function SearchOverlay() {
   const status = !hasQuery
     ? ''
     : empty
-      ? `No results for ${query.trim()}.`
-      : `${results.products.length} ${results.products.length === 1 ? 'garment' : 'garments'} and ${results.other.length} ${results.other.length === 1 ? 'collection or story' : 'collections and stories'}.`;
+      ? t('No results for {q}.', { q: query.trim() })
+      : t(
+          results.products.length === 1
+            ? results.other.length === 1 ? '{a} garment and {b} collection or story.' : '{a} garment and {b} collections and stories.'
+            : results.other.length === 1 ? '{a} garments and {b} collection or story.' : '{a} garments and {b} collections and stories.',
+          { a: results.products.length, b: results.other.length },
+        );
 
   const seeAll = `/search?q=${encodeURIComponent(query.trim())}`;
 
@@ -111,26 +121,26 @@ export function SearchOverlay() {
     <Panel
       open={isOpen}
       onClose={close}
-      label="Search"
+      label={t('Search')}
       from="top"
       initialFocus={input}
       className="h-dvh md:h-auto md:max-h-[92dvh]"
     >
       <div className="page flex h-(--nav-h) shrink-0 items-center justify-between">
-        <p className="label text-mute" data-panel-item>Search</p>
+        <p className="label text-mute" data-panel-item>{t('Search')}</p>
         <button
           type="button"
-          className="label group/close -mr-2 flex min-h-11 items-center gap-2.5 px-2"
+          className="label group/close -me-2 flex min-h-11 items-center gap-2.5 px-2"
           onClick={close}
-          aria-label="Close search"
+          aria-label={t('Close search')}
         >
-          <span className="hidden sm:inline">Close</span>
+          <span className="hidden sm:inline">{t('Close')}</span>
           <Icon name="close" className="h-[18px] w-[18px] transition-transform duration-500 ease-(--ease-expo) group-hover/close:rotate-90" />
         </button>
       </div>
 
       <form role="search" onSubmit={onSubmit} className="page shrink-0">
-        <label htmlFor="search-input" className="sr-only">Search garments, collections and stories</label>
+        <label htmlFor="search-input" className="sr-only">{t('Search garments, collections and stories')}</label>
         <div className="flex items-end gap-4 pb-3 md:pb-5">
           <span className="block min-w-0 flex-1 overflow-hidden">
             <input
@@ -140,7 +150,7 @@ export function SearchOverlay() {
               value={query}
               onChange={(e) => { setQuery(e.target.value); setCursor(-1); }}
               onKeyDown={onKeyDown}
-              placeholder="Coat, cashmere, Atrium"
+              placeholder={t('Coat, cashmere, Atrium')}
               // A combobox over two listboxes (garments, then collections and
               // stories): the arrow keys move aria-activedescendant through
               // both, so a screen reader hears each result as it is reached.
@@ -161,24 +171,24 @@ export function SearchOverlay() {
           {query ? (
             <button
               type="button"
-              className="label -mr-2 mb-[0.2em] flex min-h-11 shrink-0 items-center px-2 text-mute transition-colors hover:text-ink md:mb-[0.75em]"
+              className="label -me-2 mb-[0.2em] flex min-h-11 shrink-0 items-center px-2 text-mute transition-colors hover:text-ink md:mb-[0.75em]"
               onClick={() => { setQuery(''); setCursor(-1); input.current?.focus(); }}
             >
-              Clear
+              {t('Clear')}
             </button>
           ) : null}
         </div>
-        <div className="h-px origin-left bg-ink" data-panel-item />
+        <div className="h-px origin-left bg-ink rtl:origin-right" data-panel-item />
         <div className="flex h-11 items-center justify-between gap-4" data-panel-item>
           <p id="search-status" className="label-sm nums text-mute">
-            {hasQuery ? (empty ? 'No results' : `${pad2(flat.length)} results`) : 'Type two letters or more'}
+            {hasQuery ? (empty ? t('No results') : t('{n} results', { n: pad2(flat.length) })) : t('Type two letters or more')}
           </p>
           <p className="label-sm hidden items-center gap-2 text-mute md:flex">
-            <span>↑ ↓ to move</span>
+            <span>{t('↑ ↓ to move')}</span>
             <span aria-hidden>·</span>
-            <span className="inline-flex items-center gap-1.5"><Icon name="enter" className="h-3 w-3" /> to open</span>
+            <span className="inline-flex items-center gap-1.5"><Icon name="enter" className="h-3 w-3 rtl:-scale-x-100" /> {t('to open')}</span>
             <span aria-hidden>·</span>
-            <span>Esc to close</span>
+            <span>{t('Esc to close')}</span>
           </p>
         </div>
       </form>
@@ -190,18 +200,18 @@ export function SearchOverlay() {
             <div className="grid-page gap-y-10">
               <div className="col-span-4 md:col-span-6 lg:col-span-4">
                 <div data-panel-item>
-                  <p className="label-sm text-mute">Suggested</p>
+                  <p className="label-sm text-mute">{t('Suggested')}</p>
                   <ul className="mt-4">
                     {suggested.map((s, i) => (
                       <li key={s} className="border-b border-line first:border-t">
                         <button
                           type="button"
-                          className="group/s flex min-h-12 w-full items-center gap-4 py-2 text-left"
+                          className="group/s flex min-h-12 w-full items-center gap-4 py-2 text-start"
                           onClick={() => { setQuery(s); input.current?.focus(); }}
                         >
                           <span className="label-sm nums w-6 text-mute">{pad2(i + 1)}</span>
-                          <span className="flex-1 text-[clamp(1.125rem,1rem+0.5vw,1.375rem)] font-semibold tracking-[-0.03em] transition-transform duration-500 ease-(--ease-expo) group-hover/s:translate-x-1.5">{s}</span>
-                          <Icon name="arrowR" className="h-3.5 w-3.5 -translate-x-2 opacity-0 transition-[opacity,translate] duration-500 ease-(--ease-expo) group-hover/s:translate-x-0 group-hover/s:opacity-100" />
+                          <span className="flex-1 text-[clamp(1.125rem,1rem+0.5vw,1.375rem)] font-semibold tracking-[-0.03em] transition-transform duration-500 ease-(--ease-expo) group-hover/s:translate-x-1.5 rtl:group-hover/s:-translate-x-1.5">{s}</span>
+                          <Icon name="arrowR" className="h-3.5 w-3.5 -translate-x-2 rtl:translate-x-2 opacity-0 transition-[opacity,translate] duration-500 ease-(--ease-expo) group-hover/s:translate-x-0 rtl:group-hover/s:translate-x-0 group-hover/s:opacity-100" />
                         </button>
                       </li>
                     ))}
@@ -211,13 +221,13 @@ export function SearchOverlay() {
                 {recent.length > 0 ? (
                   <div className="mt-10" data-panel-item>
                     <div className="flex items-baseline justify-between gap-4">
-                      <p className="label-sm text-mute">Recent</p>
+                      <p className="label-sm text-mute">{t('Recent')}</p>
                       <button
                         type="button"
                         className="label-sm min-h-11 text-mute hover:text-ink"
                         onClick={() => { clearRecent(); setRecent([]); }}
                       >
-                        Clear
+                        {t('Clear')}
                       </button>
                     </div>
                     <ul className="mt-1 flex flex-wrap gap-2">
@@ -238,7 +248,7 @@ export function SearchOverlay() {
               </div>
 
               <div className="col-span-4 md:col-span-6 lg:col-span-8">
-                <p className="label-sm text-mute" data-panel-item>New this season</p>
+                <p className="label-sm text-mute" data-panel-item>{t('New this season')}</p>
                 <ul className="mt-4 grid grid-cols-2 gap-x-(--gutter) gap-y-7 md:grid-cols-4">
                   {arrivals.map((p) => (
                     <li key={p.slug} data-panel-item>
@@ -256,10 +266,9 @@ export function SearchOverlay() {
             </div>
           ) : empty ? (
             <div>
-              <p className="display-md max-w-3xl">Nothing matches “{query.trim()}”.</p>
+              <p className="display-md max-w-3xl">{t('Nothing matches “{q}”.', { q: query.trim() })}</p>
               <p className="mt-4 max-w-md text-sm text-mute">
-                Check the spelling, or try a material — cashmere, poplin, gabardine — or a
-                collection name.
+                {t('Check the spelling, or try a material — cashmere, poplin, gabardine — or a collection name.')}
               </p>
               <ul className="mt-6 flex flex-wrap gap-2">
                 {suggested.slice(0, 4).map((s) => (
@@ -274,7 +283,7 @@ export function SearchOverlay() {
                   </li>
                 ))}
               </ul>
-              <p className="label-sm mb-4 mt-12 text-mute">You might look at</p>
+              <p className="label-sm mb-4 mt-12 text-mute">{t('You might look at')}</p>
               <ul className="grid grid-cols-2 gap-x-(--gutter) gap-y-7 md:grid-cols-4 lg:w-2/3">
                 {arrivals.map((p) => (
                   <li key={p.slug}>
@@ -291,14 +300,14 @@ export function SearchOverlay() {
             </div>
           ) : (
             <div className="grid-page gap-y-10">
-              <section className="col-span-4 md:col-span-6 lg:col-span-9" aria-label="Garments">
+              <section className="col-span-4 md:col-span-6 lg:col-span-9" aria-label={t('Garments')}>
                 <p className="label-sm nums text-mute">
-                  Garments <span className="text-ink">{pad2(results.products.length)}</span>
+                  {t('Garments')} <span className="text-ink">{pad2(results.products.length)}</span>
                 </p>
                 {results.products.length === 0 ? (
-                  <p className="mt-4 text-sm text-mute">No garments by that name.</p>
+                  <p className="mt-4 text-sm text-mute">{t('No garments by that name.')}</p>
                 ) : (
-                  <ul id="search-garments" role="listbox" aria-label="Garments" className="mt-4 grid grid-cols-2 gap-x-(--gutter) gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
+                  <ul id="search-garments" role="listbox" aria-label={t('Garments')} className="mt-4 grid grid-cols-2 gap-x-(--gutter) gap-y-7 sm:grid-cols-3 lg:grid-cols-4">
                     {results.products.map((hit, i) => (
                       <li key={hit.slug} role="none">
                         {/* The link itself is the option, so nothing
@@ -330,14 +339,14 @@ export function SearchOverlay() {
                 )}
               </section>
 
-              <section className="col-span-4 md:col-span-6 lg:col-span-3" aria-label="Collections and stories">
+              <section className="col-span-4 md:col-span-6 lg:col-span-3" aria-label={t('Collections and stories')}>
                 <p className="label-sm nums text-mute">
-                  Collections and stories <span className="text-ink">{pad2(results.other.length)}</span>
+                  {t('Collections and stories')} <span className="text-ink">{pad2(results.other.length)}</span>
                 </p>
                 {results.other.length === 0 ? (
-                  <p className="mt-4 text-sm text-mute">No matches.</p>
+                  <p className="mt-4 text-sm text-mute">{t('No matches.')}</p>
                 ) : (
-                  <ul id="search-other" role="listbox" aria-label="Collections and stories" className="mt-4 border-t border-line">
+                  <ul id="search-other" role="listbox" aria-label={t('Collections and stories')} className="mt-4 border-t border-line">
                     {results.other.map((hit, i) => {
                       const n = results.products.length + i;
                       return (
@@ -356,13 +365,13 @@ export function SearchOverlay() {
                               <Image src={`/img/${hit.image}.webp`} alt="" width={112} height={140} sizes="56px" />
                             </div>
                             <span className="min-w-0 flex-1">
-                              <span className="label-sm block text-mute">{hit.kind === 'story' ? 'Story' : 'Collection'}</span>
+                              <span className="label-sm block text-mute">{t(hit.kind === 'story' ? 'Story' : 'Collection')}</span>
                               <span className={cn('mt-1 block text-[1.0625rem] font-semibold leading-tight tracking-[-0.02em]', cursor === n && 'underline decoration-1 underline-offset-4')}>
                                 <Match text={hit.title} query={query} />
                               </span>
                               <span className="mt-1 block truncate text-xs text-mute">{hit.meta}</span>
                             </span>
-                            <Icon name="arrowR" className={cn('h-3.5 w-3.5 shrink-0 transition-[opacity,translate] duration-500 ease-(--ease-expo)', cursor === n ? 'opacity-100' : '-translate-x-1 opacity-0 group-hover:translate-x-0 group-hover:opacity-100')} />
+                            <Icon name="arrowR" className={cn('h-3.5 w-3.5 shrink-0 transition-[opacity,translate] duration-500 ease-(--ease-expo)', cursor === n ? 'opacity-100' : '-translate-x-1 rtl:translate-x-1 opacity-0 group-hover:translate-x-0 rtl:group-hover:translate-x-0 group-hover:opacity-100')} />
                           </Link>
                         </li>
                       );
@@ -375,7 +384,7 @@ export function SearchOverlay() {
                 {/* Closes like every other result: on /search itself only the
                     query changes, which would not close the overlay. */}
                 <Link href={seeAll} onClick={() => { pushRecent(query); close(); }} className="btn btn-ghost w-full sm:w-auto">
-                  See every result for “{query.trim()}”
+                  {t('See every result for “{q}”', { q: query.trim() })}
                   <Icon name="arrowR" className="h-3.5 w-3.5" />
                 </Link>
               </div>

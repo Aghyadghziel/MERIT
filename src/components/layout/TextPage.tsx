@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Lines } from '@/components/ui/Lines';
 import { LINE_ROOM } from '@/components/ui/SectionHead';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { useT } from '@/i18n/client';
 import { LOGO } from '@/lib/brand';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
@@ -49,6 +50,7 @@ export function TextPage({
   const bar = useRef<HTMLSpanElement>(null);
   const rail = useRef<HTMLSpanElement>(null);
   const [active, setActive] = useState(0);
+  const t = useT();
 
   // The embossed mark drifts slower than the page, so the title slides over it.
   useLayoutEffect(() => {
@@ -98,7 +100,12 @@ export function TextPage({
     const s = strip.current;
     const item = s?.children[active] as HTMLElement | undefined;
     if (!s || !item || s.scrollWidth <= s.clientWidth) return;
-    s.scrollTo({ left: Math.max(0, item.offsetLeft - 20), behavior: reduced() ? 'auto' : 'smooth' });
+    // In RTL the strip scrolls towards negative offsets from its right edge.
+    const rtl = getComputedStyle(s).direction === 'rtl';
+    const left = rtl
+      ? Math.min(0, -(s.clientWidth - item.offsetLeft - item.offsetWidth - 20))
+      : Math.max(0, item.offsetLeft - 20);
+    s.scrollTo({ left, behavior: reduced() ? 'auto' : 'smooth' });
   }, [active]);
 
   return (
@@ -111,7 +118,7 @@ export function TextPage({
           <div
             data-tp="mark"
             aria-hidden
-            className="pointer-events-none absolute right-0 top-[clamp(2.5rem,1.25rem+5.5vw,7.5rem)] hidden w-[clamp(9rem,1rem+17vw,20rem)] text-stone-brand md:block"
+            className="pointer-events-none absolute end-0 top-[clamp(2.5rem,1.25rem+5.5vw,7.5rem)] hidden w-[clamp(9rem,1rem+17vw,20rem)] text-stone-brand md:block"
           >
             <div data-reveal-img>
               <Wordmark symbol className="h-auto w-full" />
@@ -120,7 +127,7 @@ export function TextPage({
 
           <p className="label flex flex-wrap items-baseline gap-x-4 gap-y-1" data-reveal>
             {eyebrow}
-            {toc?.length ? <span className="label-sm nums text-mute">{pad(toc.length)} sections</span> : null}
+            {toc?.length ? <span className="label-sm nums text-mute">{t('{n} sections', { n: pad(toc.length) })}</span> : null}
           </p>
           <h1 className={cn('display-xl relative mt-[clamp(1.5rem,0.75rem+3vw,4rem)] max-w-[12ch]', LINE_ROOM)}>
             <Lines text={title} />
@@ -143,11 +150,12 @@ export function TextPage({
               <div key={f.label} className="flex flex-col border-t border-ink pb-8 pt-4" data-reveal>
                 <dt className="label-sm text-mute">{f.label}</dt>
                 <dd className="mt-[clamp(1rem,0.5rem+1.5vw,2rem)]">
-                  <span className="nums text-[clamp(2.5rem,1.4rem+3.6vw,5.25rem)] font-semibold leading-[0.88] tracking-[-0.055em]">
+                  {/* Figures only, so kept left-to-right: a range reads 5–7 in Arabic too. */}
+                  <span dir="ltr" className="nums text-[clamp(2.5rem,1.4rem+3.6vw,5.25rem)] font-semibold leading-[0.88] tracking-[-0.055em]">
                     {f.value}
                   </span>
                   {f.unit ? (
-                    <span className="ml-1.5 text-[clamp(0.9375rem,0.8rem+0.5vw,1.25rem)] font-semibold tracking-[-0.02em]">
+                    <span className="ms-1.5 text-[clamp(0.9375rem,0.8rem+0.5vw,1.25rem)] font-semibold tracking-[-0.02em]">
                       {f.unit}
                     </span>
                   ) : null}
@@ -162,7 +170,7 @@ export function TextPage({
       <div className="relative">
         {toc?.length ? (
           <nav
-            aria-label="On this page"
+            aria-label={t('On this page')}
             className="sticky top-(--header-offset) z-30 border-y border-line bg-bone/92 backdrop-blur-md transition-[top] duration-[560ms] ease-(--ease-expo) lg:hidden"
           >
             <ol ref={strip} className="no-bar relative flex gap-7 overflow-x-auto px-(--gutter)">
@@ -182,7 +190,7 @@ export function TextPage({
                 </li>
               ))}
             </ol>
-            <span ref={bar} aria-hidden className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-ink" />
+            <span ref={bar} aria-hidden className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-ink rtl:origin-right" />
           </nav>
         ) : null}
 
@@ -197,10 +205,10 @@ export function TextPage({
             <div className={cn('col-span-4 md:col-span-6 lg:col-span-3', !aside && 'max-lg:hidden', asideLast && 'max-lg:order-last')}>
               <div className="transition-[top] duration-[560ms] ease-(--ease-expo) lg:sticky lg:top-[calc(var(--header-offset)+2.5rem)]">
                 {toc?.length ? (
-                  <nav aria-label="On this page" className="relative hidden pl-5 lg:block">
-                    <span aria-hidden className="absolute inset-y-0 left-0 w-px bg-line" />
-                    <span ref={rail} aria-hidden className="absolute inset-y-0 left-0 w-px origin-top scale-y-0 bg-ink" />
-                    <p className="label-sm text-mute">On this page</p>
+                  <nav aria-label={t('On this page')} className="relative hidden ps-5 lg:block">
+                    <span aria-hidden className="absolute inset-y-0 start-0 w-px bg-line" />
+                    <span ref={rail} aria-hidden className="absolute inset-y-0 start-0 w-px origin-top scale-y-0 bg-ink" />
+                    <p className="label-sm text-mute">{t('On this page')}</p>
                     <ol className="mt-5 space-y-0.5">
                       {toc.map((t, i) => (
                         <li key={t.id}>
@@ -213,7 +221,7 @@ export function TextPage({
                             )}
                           >
                             <span className="label-sm nums w-5 shrink-0">{pad(i + 1)}</span>
-                            <span className={cn('transition-transform duration-500 ease-(--ease-out)', active === i && 'translate-x-1.5 font-medium')}>
+                            <span className={cn('transition-transform duration-500 ease-(--ease-out)', active === i && 'translate-x-1.5 font-medium rtl:-translate-x-1.5')}>
                               {t.label}
                             </span>
                           </a>
@@ -300,9 +308,11 @@ export function Drift({
     if (!el || reduced()) return;
     const { gsap } = setupGsap();
     const mm = gsap.matchMedia();
+    // Mirrored in RTL, so the line drifts in from the side it is read from.
+    const dir = getComputedStyle(el).direction === 'rtl' ? -1 : 1;
     mm.add('(min-width: 768px)', () => {
-      gsap.fromTo(el, { xPercent: from }, {
-        xPercent: to, ease: 'none',
+      gsap.fromTo(el, { xPercent: from * dir }, {
+        xPercent: to * dir, ease: 'none',
         scrollTrigger: { trigger: el, start, end, scrub: 0.8 },
       });
     });
@@ -332,7 +342,7 @@ export function Strike({ children, className }: { children: React.ReactNode; cla
   return (
     <span
       ref={ref}
-      className={cn('bg-[linear-gradient(currentColor,currentColor)] bg-[length:100%_0.07em] bg-[position:0_56%] bg-no-repeat', className)}
+      className={cn('bg-[linear-gradient(currentColor,currentColor)] bg-[length:100%_0.07em] bg-[position:0_56%] bg-no-repeat rtl:bg-[position:100%_56%]', className)}
     >
       {children}
     </span>

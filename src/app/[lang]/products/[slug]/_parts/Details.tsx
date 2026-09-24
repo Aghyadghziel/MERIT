@@ -2,6 +2,7 @@ import Link from '@/i18n/link';
 import type { Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { pad2 } from '@/lib/format';
+import { getT } from '@/i18n/server';
 
 /**
  * <details> opens and closes by animating its content box where the browser
@@ -20,25 +21,26 @@ const ACCORDION = cn(
  * The piece, in words: the description set large on the left, the facts in
  * ruled folds on the right. Everything here comes from the catalogue entry.
  */
-export function Details({ product }: { product: Product }) {
+export async function Details({ product }: { product: Product }) {
+  const t = await getT();
   const oneSize = product.sizes.length === 1;
   const items = [
     {
-      title: oneSize ? 'Size and dimensions' : 'Fit and size',
+      title: t(oneSize ? 'Size and dimensions' : 'Fit and size'),
       body: (
         <>
           <p>{product.fit}</p>
           {product.modelNote ? <p className="mt-2 text-mute">{product.modelNote}</p> : null}
           {!oneSize ? (
             <Link href="/size-guide" className="link-rule mt-4 inline-block text-mute">
-              Size guide
+              {t('Size guide')}
             </Link>
           ) : null}
         </>
       ),
     },
     {
-      title: 'Materials and origin',
+      title: t('Materials and origin'),
       body: (
         <>
           <ul className="space-y-1.5">
@@ -49,7 +51,7 @@ export function Details({ product }: { product: Product }) {
       ),
     },
     {
-      title: 'Care',
+      title: t('Care'),
       body: (
         <ul className="space-y-1.5">
           {product.care.map((c) => <li key={c}>{c}</li>)}
@@ -57,17 +59,17 @@ export function Details({ product }: { product: Product }) {
       ),
     },
     {
-      title: 'Delivery and returns',
+      title: t('Delivery and returns'),
       body: (
         <>
           <ul className="space-y-1.5">
-            <li>Riyadh and Jeddah — two working days; the rest of Saudi Arabia, two to three.</li>
-            <li>Gulf — three to five working days. Free over 1,500 SAR in Saudi Arabia and the Gulf.</li>
-            <li>Europe and UK — five to eight working days; elsewhere five to ten, duties paid at checkout.</li>
-            <li>Returns accepted within 30 days, unworn and with the tag attached.</li>
+            <li>{t('Riyadh and Jeddah — two working days; the rest of Saudi Arabia, two to three.')}</li>
+            <li>{t('Gulf — three to five working days. Free over 1,500 SAR in Saudi Arabia and the Gulf.')}</li>
+            <li>{t('Europe and UK — five to eight working days; elsewhere five to ten, duties paid at checkout.')}</li>
+            <li>{t('Returns accepted within 30 days, unworn and with the tag attached.')}</li>
           </ul>
           <Link href="/shipping-returns" className="link-rule mt-4 inline-block text-mute">
-            Full policy
+            {t('Full policy')}
           </Link>
         </>
       ),
@@ -78,8 +80,8 @@ export function Details({ product }: { product: Product }) {
     <section id="details" aria-labelledby="details-title" className="page border-t border-line">
       <div className="grid-page section-y gap-y-14">
         <div className="col-span-4 md:col-span-6 lg:col-span-6">
-          <p className="label text-mute" data-reveal>The piece</p>
-          <h2 id="details-title" className="sr-only">About the {product.name}</h2>
+          <p className="label text-mute" data-reveal>{t('The piece')}</p>
+          <h2 id="details-title" className="sr-only">{t('About the {name}', { name: product.name })}</h2>
           <p
             className="mt-6 max-w-[40rem] text-[clamp(1.375rem,0.95rem+1.2vw,2.125rem)] font-medium leading-[1.14] tracking-[-0.028em]"
             data-reveal
@@ -88,11 +90,11 @@ export function Details({ product }: { product: Product }) {
           </p>
           <dl className="mt-10 grid max-w-[40rem] grid-cols-2 gap-x-(--gutter) border-t border-line pt-5" data-reveal>
             <div>
-              <dt className="label-sm text-mute">Material</dt>
+              <dt className="label-sm text-mute">{t('Material')}</dt>
               <dd className="mt-2 text-sm leading-snug">{product.materials[0]}</dd>
             </div>
             <div>
-              <dt className="label-sm text-mute">Origin</dt>
+              <dt className="label-sm text-mute">{t('Origin')}</dt>
               <dd className="mt-2 text-sm leading-snug">{product.madeIn}</dd>
             </div>
           </dl>
@@ -110,7 +112,7 @@ export function Details({ product }: { product: Product }) {
                     <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-current transition-transform duration-300 ease-[cubic-bezier(.16,1,.3,1)] group-open:scale-y-0" />
                   </span>
                 </summary>
-                <div className="pb-8 pl-11 text-sm leading-relaxed">{it.body}</div>
+                <div className="pb-8 ps-11 text-sm leading-relaxed">{it.body}</div>
               </details>
             ))}
           </div>

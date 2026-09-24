@@ -7,6 +7,9 @@ import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
 import { cn } from '@/lib/cn';
 import { pad, pic, type Look } from '@/components/editorial/data';
+import type { T } from '@/i18n/dictionary';
+import { getLocale, getT } from '@/i18n/server';
+import { keepLatin } from '@/i18n/stories';
 
 type Size = 'lead' | 'side' | 'solo';
 
@@ -15,9 +18,14 @@ type Size = 'lead' | 'side' | 'solo';
  * smaller one dropped against it, the pair mirrored on the next spread. Every
  * frame sells the piece it shows — name, price and the way to it sit on the
  * frame's own rule. `interlude` is set after the first spread, where a
- * magazine would break the run with a full page.
+ * magazine would break the run with a full page. Pass the looks with their
+ * products already in the reader's language (localizeProduct); the labels
+ * are translated here. The grid mirrors on its own in RTL.
  */
-export function Lookbook({ looks, interlude }: { looks: Look[]; interlude?: React.ReactNode }) {
+export async function Lookbook({ looks, interlude }: { looks: Look[]; interlude?: React.ReactNode }) {
+  const t = await getT();
+  // Names are set word by word; a run of Latin words stays in its order.
+  if ((await getLocale()) === 'ar') looks = looks.map((l) => ({ ...l, product: { ...l.product, name: keepLatin(l.product.name) } }));
   const rows: Look[][] = [];
   for (let i = 0; i < looks.length; i += 2) rows.push(looks.slice(i, i + 2));
 
@@ -30,19 +38,19 @@ export function Lookbook({ looks, interlude }: { looks: Look[]; interlude?: Reac
           <Fragment key={row[0].product.slug}>
             <div className={cn('page grid-page gap-y-16', r > 0 && 'mt-24 md:mt-32 lg:mt-44')}>
               {row.length === 1 ? (
-                <LookFrame look={row[0]} n={first + 1} size="solo" className="col-span-4 md:col-span-4 md:col-start-2 lg:col-span-6 lg:col-start-4" />
+                <LookFrame t={t} look={row[0]} n={first + 1} size="solo" className="col-span-4 md:col-span-4 md:col-start-2 lg:col-span-6 lg:col-start-4" />
               ) : mirrored ? (
                 <>
-                  <LookFrame look={row[0]} n={first + 1} size="side"
+                  <LookFrame t={t} look={row[0]} n={first + 1} size="side"
                     className="col-span-3 md:col-span-3 lg:col-span-4 lg:col-start-1 lg:mt-[clamp(10rem,16vw,17rem)]" />
-                  <LookFrame look={row[1]} n={first + 2} size="lead"
+                  <LookFrame t={t} look={row[1]} n={first + 2} size="lead"
                     className="col-span-4 md:col-span-5 md:col-start-2 lg:col-span-7 lg:col-start-6" />
                 </>
               ) : (
                 <>
-                  <LookFrame look={row[0]} n={first + 1} size="lead" priority={r === 0}
+                  <LookFrame t={t} look={row[0]} n={first + 1} size="lead" priority={r === 0}
                     className="col-span-4 md:col-span-5 lg:col-span-7" />
-                  <LookFrame look={row[1]} n={first + 2} size="side"
+                  <LookFrame t={t} look={row[1]} n={first + 2} size="side"
                     className="col-span-3 col-start-2 md:col-span-3 md:col-start-4 lg:col-span-4 lg:col-start-9 lg:mt-[clamp(10rem,16vw,17rem)]" />
                 </>
               )}
@@ -71,8 +79,8 @@ const SIZES: Record<Size, string> = {
  * translate(0) counts), or the stretched link shrinks to the caption.
  */
 function LookFrame({
-  look, n, size, className, priority = false,
-}: { look: Look; n: number; size: Size; className?: string; priority?: boolean }) {
+  look, n, size, className, priority = false, t,
+}: { look: Look; n: number; size: Size; className?: string; priority?: boolean; t: T }) {
   const { product } = look;
   const href = `/products/${product.slug}`;
   const image = pic(look.image);
@@ -95,7 +103,7 @@ function LookFrame({
             </div>
           </div>
         </Link>
-        <span className="absolute right-2 top-2 z-10">
+        <span className="absolute end-2 top-2 z-10">
           <WishButton slug={product.slug} name={product.name} className="bg-bone/80 backdrop-blur-[2px]" />
         </span>
       </div>
@@ -103,7 +111,7 @@ function LookFrame({
       <div className="mt-4 flex items-start justify-between gap-4 border-t border-ink pt-3">
         <div className="min-w-0">
           <p className="label-sm text-mute" data-reveal>
-            <span className="nums">Frame {pad(n)}</span> · {product.category}
+            <span className="nums">{t('Frame {n}', { n: pad(n) })}</span> · {t(product.category)}
           </p>
           <h3 className={cn('mt-1.5', size === 'side' ? 'text-base font-medium leading-snug tracking-[-0.01em]' : 'display-sm')}>
             <Link href={href} className="after:absolute after:inset-0 after:content-['']">
@@ -114,8 +122,8 @@ function LookFrame({
         <div className="flex shrink-0 flex-col items-end gap-1.5" data-reveal>
           <Price amount={product.price} compareAt={product.compareAt} />
           <span aria-hidden className="label-sm inline-flex items-center gap-1.5">
-            Shop
-            <Icon name="arrowR" className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1" />
+            {t('Shop')}
+            <Icon name="arrowR" className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
           </span>
         </div>
       </div>

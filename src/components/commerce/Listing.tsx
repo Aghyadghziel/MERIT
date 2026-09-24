@@ -2,7 +2,7 @@
 
 import Link from '@/i18n/link';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { usePath } from '@/i18n/client';
+import { useLocale, usePath, useT } from '@/i18n/client';
 import {
   Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
 } from 'react';
@@ -176,6 +176,8 @@ function ListingView({
   pool, title, description, campaign, eyebrow, stories, next, variant, query, onQuery,
 }: ViewProps) {
   const pathname = usePath();
+  const t = useT();
+  const locale = useLocale();
   const mode = variant ?? (pathname.startsWith('/collections/') ? 'section' : 'page');
 
   const [drawer, setDrawer] = useState(false);
@@ -198,7 +200,7 @@ function ListingView({
   const dropped = countActive(parsed.filters) !== countActive(filters);
   const results = useMemo(() => apply(pool, filters, sort), [pool, filters, sort]);
   const active = countActive(filters);
-  const selected = chips(filters);
+  const selected = chips(filters, t);
 
   const perCategory = useMemo(() => {
     const m = new Map<string, number>();
@@ -400,7 +402,7 @@ function ListingView({
               'col-span-4 md:col-span-6',
               description && !section ? 'lg:col-span-7 lg:col-start-6' : 'lg:col-span-12',
             )}
-            label={section ? `${eyebrow ?? title}: categories` : `${title}: categories`}
+            label={t('{title}: categories', { title: section ? eyebrow ?? title : title })}
             total={pool.length}
             categories={options.category}
             counts={perCategory}
@@ -425,21 +427,21 @@ function ListingView({
               aria-haspopup="dialog"
               aria-expanded={drawer}
               aria-controls="listing-filters"
-              className="label -ml-1 inline-flex min-h-11 items-center gap-2.5 px-1 transition-opacity hover:opacity-60"
+              className="label -ms-1 inline-flex min-h-11 items-center gap-2.5 px-1 transition-opacity hover:opacity-60"
             >
               <Icon name="filter" className="h-4 w-4" />
-              Filter
+              {t('Filter')}
               {active ? (
                 <span className="nums inline-flex h-[1.125rem] min-w-[1.125rem] items-center justify-center bg-ink px-1 text-[0.625rem] leading-none text-bone">
                   {active}
-                  <span className="sr-only"> active</span>
+                  <span className="sr-only"> {t('active')}</span>
                 </span>
               ) : null}
             </button>
             <span aria-hidden className="hidden h-4 w-px bg-line-2 md:block" />
             <ResultCount n={results.length} />
 
-            <div className="ml-auto flex items-center gap-1 md:gap-6">
+            <div className="ms-auto flex items-center gap-1 md:gap-6">
               <SortMenu sort={sort} onSort={(s) => commit(filters, s)} />
               <ViewToggle density={density} onChange={changeDensity} />
             </div>
@@ -454,10 +456,10 @@ function ListingView({
                   key={`${chip.group}-${chip.value}`}
                   type="button"
                   onClick={() => onToggle(chip.group, chip.value)}
-                  aria-label={`Remove filter: ${chip.label}`}
+                  aria-label={t('Remove filter: {label}', { label: chip.label })}
                   className="group/chip inline-flex h-11 shrink-0 items-center focus-visible:-outline-offset-2"
                 >
-                  <span className="label-sm inline-flex h-8 items-center gap-2 border border-line-2 bg-bone pl-3 pr-2.5 transition-colors duration-200 group-hover/chip:border-ink">
+                  <span className="label-sm inline-flex h-8 items-center gap-2 border border-line-2 bg-bone ps-3 pe-2.5 transition-colors duration-200 group-hover/chip:border-ink">
                     {chip.label}
                     <Icon name="close" className="h-3 w-3" />
                   </span>
@@ -466,9 +468,9 @@ function ListingView({
               <button
                 type="button"
                 onClick={clearAll}
-                className="label-sm ml-1 inline-flex h-11 shrink-0 items-center px-2 underline decoration-1 underline-offset-4 transition-opacity hover:opacity-60 focus-visible:-outline-offset-2"
+                className="label-sm ms-1 inline-flex h-11 shrink-0 items-center px-2 underline decoration-1 underline-offset-4 transition-opacity hover:opacity-60 focus-visible:-outline-offset-2"
               >
-                Clear all
+                {t('Clear all')}
               </button>
             </div>
           ) : null}
@@ -487,12 +489,12 @@ function ListingView({
                 density={density}
                 inserts={inserts}
                 priorityCount={campaign ? 0 : density === 'large' ? 2 : 4}
-                label={`${section ? eyebrow ?? title : title} — ${plural(results.length, 'piece')}`}
+                label={`${section ? eyebrow ?? title : title} — ${plural(results.length, 'piece', undefined, locale)}`}
               />
               <div className="mt-[clamp(3.5rem,7vw,6rem)] flex items-center justify-between gap-6 border-t border-ink pt-4">
                 <p className="label nums text-mute">
-                  {pad2(results.length)} of {pad2(pool.length)}
-                  <span className="hidden sm:inline"> — {active ? 'filtered' : 'all shown'}</span>
+                  {t('{shown} of {total}', { shown: pad2(results.length), total: pad2(pool.length) })}
+                  <span className="hidden sm:inline"> — {active ? t('filtered') : t('all shown')}</span>
                 </p>
                 <button
                   type="button"
@@ -503,7 +505,7 @@ function ListingView({
                   }}
                   className="label link-arrow min-h-11"
                 >
-                  Back to top
+                  {t('Back to top')}
                   <Icon name="arrowUp" className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -607,15 +609,16 @@ function CampaignHero({
 }
 
 function Crumbs({ title, pathname }: { title: string; pathname: string }) {
+  const t = useT();
   const inCollection = pathname.startsWith('/collections/');
   return (
-    <nav aria-label="Breadcrumb">
+    <nav aria-label={t('Breadcrumb')}>
       <ol className="label flex flex-wrap items-baseline gap-x-2 text-mute">
-        <li><Link href="/" className="link-quiet">Home</Link></li>
+        <li><Link href="/" className="link-quiet">{t('Home')}</Link></li>
         {inCollection ? (
           <>
             <li aria-hidden>/</li>
-            <li><Link href="/collections" className="link-quiet">Collections</Link></li>
+            <li><Link href="/collections" className="link-quiet">{t('Collections')}</Link></li>
           </>
         ) : null}
         <li aria-hidden>/</li>
@@ -641,6 +644,7 @@ function CategoryIndex({
   active: string[];
   onPick: (c: Category | null) => void;
 }) {
+  const t = useT();
   const item = (on: boolean) =>
     cn(
       'group/cat relative inline-flex min-h-11 items-start gap-1.5 whitespace-nowrap pt-2 text-[clamp(1.375rem,1rem+1vw,1.875rem)] font-semibold leading-none tracking-[-0.045em] transition-colors duration-300',
@@ -648,7 +652,7 @@ function CategoryIndex({
     );
   const rule = (on: boolean) =>
     cn(
-      'absolute inset-x-0 -bottom-1.5 h-[2px] origin-left bg-ink transition-transform duration-500 ease-expo',
+      'absolute inset-x-0 -bottom-1.5 h-[2px] origin-left rtl:origin-right bg-ink transition-transform duration-500 ease-expo',
       on ? 'scale-x-100' : 'scale-x-0 group-hover/cat:scale-x-100',
     );
 
@@ -657,7 +661,7 @@ function CategoryIndex({
       <ul className="no-bar -mx-(--gutter) flex gap-x-[clamp(1.25rem,1.9vw,2rem)] overflow-x-auto px-(--gutter) pb-2 md:mx-0 md:flex-wrap md:gap-y-1 md:overflow-visible md:px-0">
         <li className="shrink-0">
           <button type="button" aria-pressed={active.length === 0} onClick={() => onPick(null)} className={item(active.length === 0)}>
-            <span className="relative">All<span aria-hidden className={rule(active.length === 0)} /></span>
+            <span className="relative">{t('All')}<span aria-hidden className={rule(active.length === 0)} /></span>
             <span className="label-sm nums text-mute">{pad2(total)}</span>
           </button>
         </li>
@@ -666,11 +670,11 @@ function CategoryIndex({
           return (
             <li key={c} className="shrink-0">
               <button type="button" aria-pressed={on} onClick={() => onPick(c)} className={item(on)}>
-                <span className="relative">{c}<span aria-hidden className={rule(on)} /></span>
+                <span className="relative">{t(c)}<span aria-hidden className={rule(on)} /></span>
                 <span className="label-sm nums text-mute">
                   <span className="sr-only">, </span>
                   {pad2(counts.get(c) ?? 0)}
-                  <span className="sr-only"> pieces</span>
+                  <span className="sr-only"> {t('pieces')}</span>
                 </span>
               </button>
             </li>
@@ -685,6 +689,7 @@ function CategoryIndex({
 
 /** The count in the toolbar settles in when it changes, and is announced. */
 function ResultCount({ n }: { n: number }) {
+  const locale = useLocale();
   const ref = useRef<HTMLSpanElement>(null);
   const last = useRef(n);
   useEffect(() => {
@@ -698,12 +703,13 @@ function ResultCount({ n }: { n: number }) {
   }, [n]);
   return (
     <p className="label nums overflow-hidden text-mute" aria-live="polite" aria-atomic="true">
-      <span ref={ref} className="inline-block">{plural(n, 'piece')}</span>
+      <span ref={ref} className="inline-block">{plural(n, 'piece', undefined, locale)}</span>
     </p>
   );
 }
 
 function SortMenu({ sort, onSort }: { sort: SortKey; onSort: (s: SortKey) => void }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const wrap = useRef<HTMLDivElement>(null);
   const button = useRef<HTMLButtonElement>(null);
@@ -746,20 +752,20 @@ function SortMenu({ sort, onSort }: { sort: SortKey; onSort: (s: SortKey) => voi
         onClick={() => setOpen((o) => !o)}
         className="label inline-flex min-h-11 items-center gap-2 px-1 transition-opacity hover:opacity-60"
       >
-        <span className="md:text-mute">Sort</span>
-        <span className="hidden md:inline">{current.label}</span>
+        <span className="md:text-mute">{t('Sort')}</span>
+        <span className="hidden md:inline">{t(current.label)}</span>
         <Icon name="chevD" className={cn('h-3 w-3 transition-transform duration-300', open && 'rotate-180')} />
       </button>
       <div
         id="listing-sort"
         role="menu"
-        aria-label="Sort by"
+        aria-label={t('Sort by')}
         className={cn(
-          'absolute right-0 top-[calc(100%+0.625rem)] z-40 w-64 border border-line bg-bone py-2 transition-[opacity,transform,visibility] duration-300 ease-expo',
+          'absolute end-0 top-[calc(100%+0.625rem)] z-40 w-64 border border-line bg-bone py-2 transition-[opacity,transform,visibility] duration-300 ease-expo',
           open ? 'visible translate-y-0 opacity-100' : 'invisible -translate-y-1.5 opacity-0',
         )}
       >
-        <p className="label-sm px-4 pb-2 pt-1 text-mute" aria-hidden>Sort by</p>
+        <p className="label-sm px-4 pb-2 pt-1 text-mute" aria-hidden>{t('Sort by')}</p>
         {SORTS.map((s) => {
           const on = s.key === sort;
           return (
@@ -771,11 +777,11 @@ function SortMenu({ sort, onSort }: { sort: SortKey; onSort: (s: SortKey) => voi
               tabIndex={-1}
               onClick={() => { onSort(s.key); setOpen(false); button.current?.focus(); }}
               className={cn(
-                'flex min-h-11 w-full items-center justify-between gap-4 px-4 text-left text-sm transition-colors duration-200 hover:bg-bone-2 focus-visible:-outline-offset-2',
+                'flex min-h-11 w-full items-center justify-between gap-4 px-4 text-start text-sm transition-colors duration-200 hover:bg-bone-2 focus-visible:-outline-offset-2',
                 on ? 'font-medium text-ink' : 'text-mute hover:text-ink',
               )}
             >
-              {s.label}
+              {t(s.label)}
               {on ? <Icon name="check" className="h-3.5 w-3.5" /> : null}
             </button>
           );
@@ -786,21 +792,22 @@ function SortMenu({ sort, onSort }: { sort: SortKey; onSort: (s: SortKey) => voi
 }
 
 function ViewToggle({ density, onChange }: { density: GridDensity; onChange: (d: GridDensity) => void }) {
+  const t = useT();
   const btn = (on: boolean) =>
     cn(
       'inline-flex h-11 w-10 items-center justify-center transition-colors duration-200',
       on ? 'text-ink' : 'text-hint hover:text-ink',
     );
   return (
-    <div role="group" aria-label="Picture size" className="-mr-2 flex items-center">
-      <span className="label mr-1 hidden text-mute lg:inline" aria-hidden>View</span>
-      <button type="button" aria-pressed={density === 'compact'} aria-label="Smaller pictures, more per row" onClick={() => onChange('compact')} className={btn(density === 'compact')}>
+    <div role="group" aria-label={t('Picture size')} className="-me-2 flex items-center">
+      <span className="label me-1 hidden text-mute lg:inline" aria-hidden>{t('View')}</span>
+      <button type="button" aria-pressed={density === 'compact'} aria-label={t('Smaller pictures, more per row')} onClick={() => onChange('compact')} className={btn(density === 'compact')}>
         <svg viewBox="0 0 16 16" className="h-[15px] w-[15px]" fill="currentColor" aria-hidden>
           <rect x="1" y="1" width="6" height="6" /><rect x="9" y="1" width="6" height="6" />
           <rect x="1" y="9" width="6" height="6" /><rect x="9" y="9" width="6" height="6" />
         </svg>
       </button>
-      <button type="button" aria-pressed={density === 'large'} aria-label="Larger pictures, fewer per row" onClick={() => onChange('large')} className={btn(density === 'large')}>
+      <button type="button" aria-pressed={density === 'large'} aria-label={t('Larger pictures, fewer per row')} onClick={() => onChange('large')} className={btn(density === 'large')}>
         <svg viewBox="0 0 16 16" className="h-[15px] w-[15px]" fill="currentColor" aria-hidden>
           <rect x="1" y="1" width="14" height="14" />
         </svg>
@@ -858,7 +865,7 @@ function StoryTile({ story, side, density }: { story: ListingStory; side: 'left'
         ) : null}
         <span className="label mt-6 inline-flex items-center gap-2 border-b border-bone/50 pb-1.5 transition-colors duration-300 group-hover/story:border-bone">
           {story.cta}
-          <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-500 ease-expo group-hover/story:translate-x-1" />
+          <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-500 ease-expo group-hover/story:translate-x-1 rtl:group-hover/story:-translate-x-1" />
         </span>
       </div>
     </Link>
@@ -920,34 +927,35 @@ function EndCell({
   total: number;
   onClear: () => void;
 }) {
+  const t = useT();
   const cls = cn(
-    'group/end @container relative isolate min-h-[13rem] flex-col justify-between overflow-hidden bg-bone-2 p-[clamp(0.875rem,0.6rem+0.9vw,1.75rem)] text-left',
+    'group/end @container relative isolate min-h-[13rem] flex-col justify-between overflow-hidden bg-bone-2 p-[clamp(0.875rem,0.6rem+0.9vw,1.75rem)] text-start',
     SPAN_BASE[spans.base], SPAN_MD[spans.md], SPAN_LG[spans.lg],
   );
   const body = (
     <>
       <Wordmark
         symbol
-        className="pointer-events-none absolute -bottom-[6%] -right-[4%] -z-10 h-[72%] w-auto max-w-none text-stone-brand transition-transform duration-[1400ms] ease-expo group-hover/end:-translate-y-2"
+        className="pointer-events-none absolute -bottom-[6%] -end-[4%] -z-10 h-[72%] w-auto max-w-none text-stone-brand transition-transform duration-[1400ms] ease-expo group-hover/end:-translate-y-2"
       />
       <span className="label-sm flex items-baseline justify-between gap-3 text-mute">
-        {filtered ? 'End of the selection' : 'End of the range'}
+        {filtered ? t('End of the selection') : t('End of the range')}
         {filtered ? <span className="nums">{pad2(shown)} / {pad2(total)}</span> : null}
       </span>
       <span className="mt-10 block">
-        <span className="label-sm block text-mute">{filtered ? 'Filters on' : next.kicker}</span>
+        <span className="label-sm block text-mute">{filtered ? t('Filters on') : next.kicker}</span>
         <span className="mt-2.5 flex items-start gap-1.5 text-[clamp(1.75rem,13cqi,6.5rem)] font-semibold leading-[0.84] tracking-[-0.055em]">
           <span className="border-b-2 border-transparent pb-[0.04em] transition-colors duration-500 group-hover/end:border-ink">
-            {filtered ? `See all ${total}` : next.title}
+            {filtered ? t('See all {n}', { n: total }) : next.title}
           </span>
           {!filtered && next.count !== undefined ? (
             <span className="label-sm nums pt-1 tracking-[0.12em] text-mute">
               {pad2(next.count)}
-              <span className="sr-only"> pieces</span>
+              <span className="sr-only"> {t('pieces')}</span>
             </span>
           ) : null}
         </span>
-        <span aria-hidden className="mt-4 flex h-10 w-10 items-center justify-center bg-ink text-bone transition-transform duration-500 ease-expo group-hover/end:translate-x-1 @min-[20rem]:mt-5 @min-[20rem]:h-12 @min-[20rem]:w-12">
+        <span aria-hidden className="mt-4 flex h-10 w-10 items-center justify-center bg-ink text-bone transition-transform duration-500 ease-expo group-hover/end:translate-x-1 rtl:group-hover/end:-translate-x-1 @min-[20rem]:mt-5 @min-[20rem]:h-12 @min-[20rem]:w-12">
           <Icon name="arrowR" className="h-4 w-4" />
         </span>
       </span>
@@ -967,21 +975,22 @@ function EndCell({
 function Empty({ filters, onClear, onEdit }: { filters: Filters; onClear: () => void; onEdit: () => void }) {
   // The reason given depends on what is set: sizes and colours are where a
   // selection runs out, since most pieces come in a few of each.
+  const t = useT();
   const narrow = filters.size.length > 0 || filters.colour.length > 0;
   return (
     <div className="grid-page py-[clamp(2.5rem,7vw,6rem)]">
       <div className="col-span-4 md:col-span-6 lg:col-span-8">
-        <p className="label text-mute">No pieces</p>
-        <p className="display-lg mt-5 max-w-[14ch]">Nothing in that combination.</p>
+        <p className="label text-mute">{t('No pieces')}</p>
+        <p className="display-lg mt-5 max-w-[14ch]">{t('Nothing in that combination.')}</p>
         <p className="body-lg mt-6 max-w-[34rem] text-mute">
           {narrow
-            ? 'Most pieces are made in a few colours and five sizes, so a size or a colour narrows the range quickly. '
-            : 'No piece matches all of these filters at once. '}
-          Take a filter off, or start again.
+            ? t('Most pieces are made in a few colours and five sizes, so a size or a colour narrows the range quickly.')
+            : t('No piece matches all of these filters at once.')}{' '}
+          {t('Take a filter off, or start again.')}
         </p>
         <div className="mt-9 flex flex-wrap gap-3">
-          <button type="button" onClick={onClear} className="btn btn-solid">Clear all filters</button>
-          <button type="button" onClick={onEdit} className="btn btn-ghost">Edit filters</button>
+          <button type="button" onClick={onClear} className="btn btn-solid">{t('Clear all filters')}</button>
+          <button type="button" onClick={onEdit} className="btn btn-ghost">{t('Edit filters')}</button>
         </div>
       </div>
     </div>
@@ -996,7 +1005,7 @@ const FOCUSABLE =
   'a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
 /**
- * The panel comes in from the left on a desktop, over a light scrim, so the
+ * The panel comes in from the reading side (left, or right in Arabic) on a desktop, over a light scrim, so the
  * grid can be seen rearranging behind it; on a phone it is a sheet from the
  * bottom. Every option carries the number of pieces it would leave, given
  * everything else chosen, and an option that would leave none is set aside.
@@ -1014,6 +1023,8 @@ function FilterDrawer({
   count: number;
   active: number;
 }) {
+  const t = useT();
+  const locale = useLocale();
   const root = useRef<HTMLDivElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const scrim = useRef<HTMLDivElement>(null);
@@ -1036,7 +1047,9 @@ function FilterDrawer({
     const { gsap } = setupGsap();
     const desk = window.matchMedia('(min-width: 1024px)').matches;
     const axis = desk ? 'xPercent' : 'yPercent';
-    const away = desk ? -100 : 100;
+    // The desktop panel sits on the start side, so it leaves towards it.
+    const rtl = getComputedStyle(p).direction === 'rtl';
+    const away = desk ? (rtl ? 100 : -100) : 100;
 
     if (reduced()) {
       gsap.set(el, { autoAlpha: open ? 1 : 0 });
@@ -1104,31 +1117,31 @@ function FilterDrawer({
         role="dialog"
         aria-modal="true"
         aria-labelledby="listing-filters-title"
-        className="absolute inset-x-0 bottom-0 flex max-h-[90dvh] flex-col bg-bone lg:inset-y-0 lg:left-0 lg:right-auto lg:max-h-none lg:w-[min(31rem,100vw)]"
+        className="absolute inset-x-0 bottom-0 flex max-h-[90dvh] flex-col bg-bone lg:inset-y-0 lg:start-0 lg:end-auto lg:max-h-none lg:w-[min(31rem,100vw)]"
       >
         <div aria-hidden className="mx-auto mt-2.5 h-1 w-10 bg-line-2 lg:hidden" />
         <div className="flex items-start justify-between gap-4 px-(--gutter) pb-5 pt-4 lg:pt-[calc(var(--nav-h)*0.5)]">
           <h2 id="listing-filters-title" className="flex items-start gap-2 text-[clamp(2.25rem,1.6rem+2vw,3.25rem)] font-semibold uppercase leading-[0.82] tracking-[-0.055em]">
-            Filter
+            {t('Filter')}
             {active ? <span className="label nums mt-1 tracking-[0.1em] text-mute">{pad2(active)}</span> : null}
           </h2>
-          <button type="button" data-autofocus onClick={onClose} className="icon-btn -mt-1.5" aria-label="Close filters">
+          <button type="button" data-autofocus onClick={onClose} className="icon-btn -mt-1.5" aria-label={t('Close filters')}>
             <Icon name="close" />
           </button>
         </div>
 
         <div className="no-bar flex-1 overflow-y-auto overscroll-contain px-(--gutter) pb-8">
-          <Group n={1} title="Category" picked={picked('category')}>
+          <Group n={1} title={t('Category')} picked={picked('category')}>
             {options.category.map((c) => (
-              <CheckRow key={c} label={c} on={filters.category.includes(c)} count={countOf('category', c)} onChange={() => onToggle('category', c)} />
+              <CheckRow key={c} label={t(c)} on={filters.category.includes(c)} count={countOf('category', c)} onChange={() => onToggle('category', c)} />
             ))}
           </Group>
 
-          <Group n={2} title="Size" picked={picked('size')}>
+          <Group n={2} title={t('Size')} picked={picked('size')}>
             <div className="space-y-5 pt-1">
               {options.size.map((sys) => (
                 <div key={sys.system}>
-                  <p className="label-sm mb-2.5 text-mute">{sys.label}</p>
+                  <p className="label-sm mb-2.5 text-mute">{t(sys.label)}</p>
                   <div className="grid grid-cols-5 gap-1.5">
                     {sys.values.map((v) => {
                       const on = filters.size.includes(v.key);
@@ -1140,7 +1153,7 @@ function FilterDrawer({
                           aria-pressed={on}
                           disabled={none}
                           onClick={() => onToggle('size', v.key)}
-                          aria-label={`${sys.label} ${v.label}${none ? ', none in this selection' : ''}`}
+                          aria-label={`${t(sys.label)} ${t(v.label)}${none ? t(', none in this selection') : ''}`}
                           className={cn(
                             'label-sm nums min-h-11 border px-1 text-center transition-colors duration-200',
                             on
@@ -1150,7 +1163,7 @@ function FilterDrawer({
                                 : 'border-line-2 hover:border-ink',
                           )}
                         >
-                          {v.label}
+                          {t(v.label)}
                         </button>
                       );
                     })}
@@ -1160,12 +1173,12 @@ function FilterDrawer({
             </div>
           </Group>
 
-          <Group n={3} title="Colour" picked={picked('colour')}>
+          <Group n={3} title={t('Colour')} picked={picked('colour')}>
             <div className="grid grid-cols-1 gap-x-6 sm:grid-cols-2">
               {options.colour.map((c) => (
                 <CheckRow
                   key={c.name}
-                  label={c.name}
+                  label={t(c.name)}
                   swatch={c.hex}
                   on={filters.colour.includes(c.name)}
                   count={countOf('colour', c.name)}
@@ -1175,37 +1188,37 @@ function FilterDrawer({
             </div>
           </Group>
 
-          <Group n={4} title="Price" picked={picked('price')}>
+          <Group n={4} title={t('Price')} picked={picked('price')}>
             {PRICE_BANDS.map((b) => (
-              <CheckRow key={b.key} label={`${b.label} SAR`} on={filters.price.includes(b.key)} count={countOf('price', b.key)} onChange={() => onToggle('price', b.key)} />
+              <CheckRow key={b.key} label={t('{band} SAR', { band: t(b.label) })} on={filters.price.includes(b.key)} count={countOf('price', b.key)} onChange={() => onToggle('price', b.key)} />
             ))}
           </Group>
 
           {options.collection.length > 1 ? (
-            <Group n={5} title="Collection" picked={picked('collection')}>
+            <Group n={5} title={t('Collection')} picked={picked('collection')}>
               {options.collection.map((c) => (
-                <CheckRow key={c.slug} label={c.name} on={filters.collection.includes(c.slug)} count={countOf('collection', c.slug)} onChange={() => onToggle('collection', c.slug)} />
+                <CheckRow key={c.slug} label={t(c.name)} on={filters.collection.includes(c.slug)} count={countOf('collection', c.slug)} onChange={() => onToggle('collection', c.slug)} />
               ))}
             </Group>
           ) : null}
 
-          <Group n={options.collection.length > 1 ? 6 : 5} title="Fit and availability" picked={picked('fit') + picked('availability')}>
+          <Group n={options.collection.length > 1 ? 6 : 5} title={t('Fit and availability')} picked={picked('fit') + picked('availability')}>
             {options.fit.length > 1
               ? options.fit.map((f) => (
-                  <CheckRow key={f} label={FIT_LABELS[f]} on={filters.fit.includes(f)} count={countOf('fit', f)} onChange={() => onToggle('fit', f)} />
+                  <CheckRow key={f} label={t(FIT_LABELS[f])} on={filters.fit.includes(f)} count={countOf('fit', f)} onChange={() => onToggle('fit', f)} />
                 ))
               : null}
-            <CheckRow label="In stock" on={filters.availability.includes('in-stock')} count={countOf('availability', 'in-stock')} onChange={() => onToggle('availability', 'in-stock')} />
-            <CheckRow label="On sale" on={filters.availability.includes('sale')} count={countOf('availability', 'sale')} onChange={() => onToggle('availability', 'sale')} />
+            <CheckRow label={t('In stock')} on={filters.availability.includes('in-stock')} count={countOf('availability', 'in-stock')} onChange={() => onToggle('availability', 'in-stock')} />
+            <CheckRow label={t('On sale')} on={filters.availability.includes('sale')} count={countOf('availability', 'sale')} onChange={() => onToggle('availability', 'sale')} />
           </Group>
         </div>
 
         <div className="grid shrink-0 grid-cols-[auto_1fr] gap-3 border-t border-line px-(--gutter) py-4">
           <button type="button" className="btn btn-ghost px-5" onClick={onClear} disabled={!active}>
-            Clear
+            {t('Clear')}
           </button>
           <button type="button" className="btn btn-solid" onClick={onClose} disabled={count === 0}>
-            {count === 0 ? 'No pieces' : `Show ${plural(count, 'piece')}`}
+            {count === 0 ? t('No pieces') : t('Show {pieces}', { pieces: plural(count, 'piece', undefined, locale) })}
           </button>
         </div>
       </div>
@@ -1216,6 +1229,7 @@ function FilterDrawer({
 function Group({
   n, title, picked, children,
 }: { n: number; title: string; picked: number; children: React.ReactNode }) {
+  const t = useT();
   const [open, setOpen] = useState(true);
   const id = useId();
   return (
@@ -1226,14 +1240,14 @@ function Group({
           aria-expanded={open}
           aria-controls={id}
           onClick={() => setOpen((o) => !o)}
-          className="flex min-h-14 w-full items-center justify-between gap-4 text-left"
+          className="flex min-h-14 w-full items-center justify-between gap-4 text-start"
         >
           <span className="label">
-            <span className="nums mr-3 text-mute">{pad2(n)}</span>
+            <span className="nums me-3 text-mute">{pad2(n)}</span>
             {title}
           </span>
           <span className="flex items-center gap-3">
-            {picked ? <span className="label-sm nums text-mute">{picked} selected</span> : null}
+            {picked ? <span className="label-sm nums text-mute">{t('{n} selected', { n: picked })}</span> : null}
             <Icon name={open ? 'minus' : 'plus'} className="h-3.5 w-3.5" />
           </span>
         </button>
@@ -1253,6 +1267,7 @@ function Group({
 function CheckRow({
   label, on, count, onChange, swatch,
 }: { label: string; on: boolean; count: number; onChange: () => void; swatch?: string }) {
+  const t = useT();
   const none = !on && count === 0;
   return (
     <label className={cn('group/row flex min-h-11 items-center gap-3 text-[0.9375rem]', none ? 'cursor-not-allowed text-hint' : 'cursor-pointer')}>
@@ -1274,7 +1289,7 @@ function CheckRow({
       <span className="label-sm nums text-mute">
         <span className="sr-only">, </span>
         {count}
-        <span className="sr-only">{count === 1 ? ' piece' : ' pieces'}</span>
+        <span className="sr-only"> {count === 1 ? t('piece') : t('pieces')}</span>
       </span>
     </label>
   );

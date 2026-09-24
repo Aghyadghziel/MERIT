@@ -8,6 +8,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
 import { LINE_ROOM } from '@/components/ui/SectionHead';
 import { reduced, setupGsap } from '@/lib/gsap';
+import { useT } from '@/i18n/client';
 
 const ROUTES = [
   { label: 'Women', href: '/women' },
@@ -25,6 +26,7 @@ const ROUTES = [
 export default function NotFound() {
   const root = useRef<HTMLElement>(null);
   const { open } = useUi();
+  const t = useT();
 
   useLayoutEffect(() => {
     const el = root.current;
@@ -58,55 +60,57 @@ export default function NotFound() {
       </div>
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-bone from-28% via-bone/65 via-48% to-transparent to-66% md:bg-gradient-to-r md:from-bone/95 md:from-0% md:via-bone/55 md:via-40% md:to-transparent md:to-70%"
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-bone from-28% via-bone/65 via-48% to-transparent to-66% md:bg-gradient-to-r rtl:md:bg-gradient-to-l md:from-bone/95 md:from-0% md:via-bone/55 md:via-40% md:to-transparent md:to-70%"
       />
 
       <div className="page flex flex-1 flex-col pb-[clamp(2rem,1.5rem+2vw,3.5rem)] pt-[calc(var(--nav-h)+clamp(1.25rem,0.75rem+2vw,2.5rem))]">
         <div className="flex items-baseline justify-between gap-6">
-          <p className="label">Error 404</p>
-          <p className="label">Not found</p>
+          <p className="label nums">{t('Error 404')}</p>
+          <p className="label">{t('Not found')}</p>
         </div>
 
         <div className="mt-auto max-w-[40rem] pt-[38svh] md:pt-24">
           <p
             aria-hidden
-            className="nums -ml-[0.04em] flex overflow-hidden pb-[0.02em] text-[clamp(8.5rem,5rem+14vw,15rem)] font-semibold leading-[0.8] tracking-[-0.07em] md:hidden"
+            lang="en" className="nums -ms-[0.04em] flex overflow-hidden pb-[0.02em] text-[clamp(8.5rem,5rem+14vw,15rem)] font-semibold [line-height:0.8] tracking-[-0.07em] md:hidden"
           >
             {['4', '0', '4'].map((d, i) => <span key={i} data-nf="digit" className="block">{d}</span>)}
           </p>
           <h1 id="nf-title" className={`display-lg mt-6 max-w-[13ch] md:mt-0 ${LINE_ROOM}`}>
-            <Lines text="This page has been taken down." />
+            <Lines text={t('This page has been taken down.')} />
           </h1>
           <p className="body-lg mt-6 max-w-[40ch] text-ink-3">
-            Pieces are made in small counts and the pages go with them. The link may have been correct once.
+            {t('Pieces are made in small counts and the pages go with them. The link may have been correct once.')}
           </p>
 
           <div className="mt-9 flex flex-wrap gap-3">
             <button type="button" onClick={() => open('search')} className="btn btn-solid">
-              <Icon name="search" className="h-4 w-4" /> Search the collection
+              <Icon name="search" className="h-4 w-4" /> {t('Search the collection')}
             </button>
-            <Link href="/new" className="btn">New arrivals</Link>
+            <Link href="/new" className="btn">{t('New arrivals')}</Link>
           </div>
 
-          <nav aria-label="Elsewhere" className="mt-10">
+          <nav aria-label={t('Elsewhere')} className="mt-10">
             <ul className="flex flex-wrap gap-x-7 gap-y-1">
               {ROUTES.map((r) => (
                 <li key={r.href}>
-                  <Link href={r.href} className="inline-flex min-h-11 items-center"><span className="label link-quiet">{r.label}</span></Link>
+                  <Link href={r.href} className="inline-flex min-h-11 items-center"><span className="label link-quiet">{t(r.label)}</span></Link>
                 </li>
               ))}
               <li>
-                <Link href="/" className="inline-flex min-h-11 items-center"><span className="label link-quiet">Home</span></Link>
+                <Link href="/" className="inline-flex min-h-11 items-center"><span className="label link-quiet">{t('Home')}</span></Link>
               </li>
             </ul>
           </nav>
         </div>
       </div>
 
-      {/* The number, at the scale of the room, cropped by its floor. */}
+      {/* The number, at the scale of the room, cropped by its floor. Its
+          line height is an arbitrary property rather than leading-[0.8], so
+          the Arabic line-height override in globals.css leaves it alone. */}
       <p
         aria-hidden
-        className="nums pointer-events-none absolute bottom-0 right-(--gutter) hidden translate-y-[16%] overflow-hidden text-[clamp(16rem,4rem+26vw,34rem)] font-semibold leading-[0.8] tracking-[-0.07em] md:flex"
+        lang="en" className="nums pointer-events-none absolute bottom-0 end-(--gutter) hidden translate-y-[16%] overflow-hidden text-[clamp(16rem,4rem+26vw,34rem)] font-semibold [line-height:0.8] tracking-[-0.07em] md:flex"
       >
         {['4', '0', '4'].map((d, i) => <span key={i} data-nf="digit" className="block">{d}</span>)}
       </p>

@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { useT } from '@/i18n/client';
 import { BRAND } from '@/lib/brand';
 import { reduced, setupGsap } from '@/lib/gsap';
 import { cn } from '@/lib/cn';
@@ -78,6 +79,7 @@ export function LiquidLogo({ className, speed = 0.55 }: { className?: string; sp
 
 /** A black room with the poured logotype at full width, growing in as it arrives. */
 export function LiquidMark() {
+  const t = useT();
   const root = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -94,17 +96,17 @@ export function LiquidMark() {
   }, []);
 
   return (
-    <section ref={root} className="on-ink relative overflow-hidden bg-ink text-bone" aria-label={`${BRAND.name}, ${BRAND.city}, since ${BRAND.founded}`}>
+    <section ref={root} className="on-ink relative overflow-hidden bg-ink text-bone" aria-label={t('{name}, {city}, since {year}', { name: BRAND.name, city: t(BRAND.city), year: BRAND.founded })}>
       <div className="page flex items-center justify-between pt-10 md:pt-14">
-        <p className="label text-bone/60">{BRAND.city} — since {BRAND.founded}</p>
-        <p className="label text-bone/60">Autumn Winter 2026</p>
+        <p className="label text-bone/60">{t('{city} — since {year}', { city: t(BRAND.city), year: BRAND.founded })}</p>
+        <p className="label text-bone/60">{t('Autumn Winter 2026')}</p>
       </div>
       <div data-lm="mark" className="mx-auto w-[min(100%-2*var(--gutter),110rem)] will-change-transform">
         <LiquidLogo />
       </div>
       <div className="page pb-10 md:pb-14">
         <p className="max-w-md text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold leading-[1.05] tracking-[-0.035em]">
-          Quiet structure, expressive movement.
+          {t('Quiet structure, expressive movement.')}
         </p>
       </div>
     </section>

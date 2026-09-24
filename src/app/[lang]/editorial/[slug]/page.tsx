@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { Fragment } from 'react';
 import { ProductCard } from '@/components/commerce/ProductCard';
 import { ArtImage } from '@/components/editorial/ArtImage';
-import { alt, isWide, pad, pic, pullQuote, seasonOf, storyIndex } from '@/components/editorial/data';
+import { alt, isWide, pad, pic, seasonOf, storyIndex } from '@/components/editorial/data';
 import { NextPanel } from '@/components/editorial/NextPanel';
 import { PullQuote } from '@/components/editorial/PullQuote';
 import { ReadingProgress } from '@/components/editorial/ReadingProgress';
@@ -16,18 +16,28 @@ import { Wordmark } from '@/components/ui/Wordmark';
 import { BRAND } from '@/lib/brand';
 import { getProduct, getStory, stories } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
+import { localePath } from '@/i18n/config';
+import type { T } from '@/i18n/dictionary';
+import { localizeProduct } from '@/i18n/products';
+import { getLocale, getT } from '@/i18n/server';
+import { count, localizeStory, storyQuote } from '@/i18n/stories';
 
 export const dynamicParams = false;
 export const generateStaticParams = () => stories.map((s) => ({ slug: s.slug }));
 
-export async function generateMetadata({ params }: PageProps<'/editorial/[slug]'>): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<'/[lang]/editorial/[slug]'>): Promise<Metadata> {
   const { slug } = await params;
-  const story = getStory(slug);
-  if (!story) return {};
+  const found = getStory(slug);
+  if (!found) return {};
+  const locale = await getLocale();
+  const story = localizeStory(found, locale);
   return {
     title: story.title,
     description: story.standfirst,
-    alternates: { canonical: `/editorial/${story.slug}` },
+    alternates: {
+      canonical: localePath(`/editorial/${story.slug}`, locale),
+      languages: { en: `/editorial/${story.slug}`, ar: `/ar/editorial/${story.slug}` },
+    },
     openGraph: {
       type: 'article',
       title: story.title,
@@ -42,15 +52,23 @@ export async function generateMetadata({ params }: PageProps<'/editorial/[slug]'
  * the size of a headline, the text in numbered parts with its pictures and
  * one line lifted out of it, then the pieces it shows and the next story.
  */
-export default async function StoryPage({ params }: PageProps<'/editorial/[slug]'>) {
+export default async function StoryPage({ params }: PageProps<'/[lang]/editorial/[slug]'>) {
   const { slug } = await params;
-  const story = getStory(slug);
-  if (!story) notFound();
+  const found = getStory(slug);
+  if (!found) notFound();
+  const locale = await getLocale();
+  const t = await getT();
+  const ar = locale === 'ar';
+  const story = localizeStory(found, locale);
+  const issue = stories.map((s) => localizeStory(s, locale));
 
   const index = storyIndex(story.slug);
-  const next = stories[(index + 1) % stories.length];
-  const shop = story.shop.map(getProduct).filter((p): p is NonNullable<typeof p> => Boolean(p));
-  const quote = pullQuote(story);
+  const next = issue[(index + 1) % issue.length];
+  const shop = story.shop
+    .map(getProduct)
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
+    .map((p) => localizeProduct(p, locale));
+  const quote = storyQuote(found, locale);
   const parts = story.body.length;
   const [opener, ...plates] = story.images;
 
@@ -65,6 +83,7 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
     headline: story.title,
     description: story.standfirst,
     image: `${BRAND.domain}/img/${story.cover}.webp`,
+    inLanguage: ar ? 'ar' : 'en',
     author: { '@type': 'Organization', name: BRAND.name },
     publisher: { '@type': 'Organization', name: BRAND.name },
     // No datePublished: the catalogue gives a year, not a day, and a day
@@ -89,7 +108,7 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
               <ArtImage
                 wide={opener}
                 tall={story.cover}
-                alt={alt(opener)}
+                alt={t(alt(opener))}
                 // Drawn at whichever of width or height the crop fills first.
                 sizes={isWide(opener) ? 'max(100vw, 178svh)' : 'max(100vw, 80svh)'}
                 tallSizes={isWide(story.cover) ? 'max(100vw, 178svh)' : 'max(100vw, 80svh)'}
@@ -103,21 +122,21 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
           <div className="page relative flex h-full flex-col justify-between pb-(--gutter) pt-[calc(var(--nav-h)+1.25rem)]">
             <div className="flex items-baseline justify-between gap-6 border-t border-bone/35 pt-4">
               <p className="label">
-                <Link href="/editorial" className="link-quiet">Editorial</Link>
+                <Link href="/editorial" className="link-quiet">{t('Editorial')}</Link>
                 <span aria-hidden className="mx-2 text-bone/45">/</span>
-                {story.kicker}
+                {t(story.kicker)}
               </p>
               <p className="label nums text-bone/70">
-                <span className="sr-only">Story </span>{pad(index + 1)} / {pad(stories.length)}
+                <span className="sr-only">{t('Story ')}</span>{pad(index + 1)} / {pad(stories.length)}
               </p>
             </div>
 
             <div>
               <h1 className="display-xl max-w-[12ch]"><Lines text={story.title} /></h1>
               <ul className="label mt-8 flex flex-wrap gap-x-7 gap-y-2 text-bone/80" data-reveal>
-                <li className="nums">{seasonOf(story)}</li>
-                <li className="nums">{story.readingTime} minute read</li>
-                <li className="nums">{parts} parts</li>
+                <li className="nums">{seasonOf(story, t)}</li>
+                <li className="nums">{ar ? t('{time} read', { time: count(locale, story.readingTime, 'minute') }) : `${story.readingTime} minute read`}</li>
+                <li className="nums">{count(locale, parts, 'part')}</li>
               </ul>
             </div>
           </div>
@@ -128,9 +147,9 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
           <div className="col-span-4 md:col-span-2 lg:col-span-3">
             <dl>
               {[
-                ['Story', story.kicker],
-                ['Season', seasonOf(story)],
-                ['Reading', `${story.readingTime} minutes`],
+                [t('Story'), t(story.kicker)],
+                [t('Season'), seasonOf(story, t)],
+                [t('Reading'), count(locale, story.readingTime, 'minute')],
               ].map(([k, v]) => (
                 <div key={k} className="flex items-baseline justify-between gap-4 border-t border-line py-2.5" data-reveal>
                   <dt className="label-sm text-mute">{k}</dt>
@@ -140,7 +159,7 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
             </dl>
             {shop.length ? (
               <a href="#shop" className="label mt-5 inline-flex min-h-11 items-center gap-2 border-t border-ink pt-2.5" data-reveal>
-                Shop the story <Icon name="arrowR" className="h-3.5 w-3.5 rotate-90" />
+                {t('Shop the story')} <Icon name="arrowR" className="h-3.5 w-3.5 rotate-90 rtl:-rotate-90" />
               </a>
             ) : null}
           </div>
@@ -159,32 +178,34 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
               <div className="page grid-page gap-y-5 py-10 md:py-14">
                 <div className="col-span-4 md:col-span-1 lg:col-span-3">
                   <p className="flex items-baseline gap-2 border-t border-ink pt-3 transition-[top] duration-500 ease-[cubic-bezier(.16,1,.3,1)] lg:sticky lg:top-[calc(var(--header-offset,var(--nav-h))+1.5rem)]" data-reveal>
-                    <span className="sr-only">Part </span>
+                    <span className="sr-only">{t('Part ')}</span>
                     <span className="nums text-[clamp(2.25rem,1.4rem+2.6vw,4rem)] font-semibold leading-[0.9] tracking-[-0.05em]">{pad(k + 1)}</span>
-                    <span className="label-sm nums text-mute"><span className="sr-only">of</span> / {pad(parts)}</span>
+                    <span className="label-sm nums text-mute"><span className="sr-only">{t('of')}</span> / {pad(parts)}</span>
                   </p>
                 </div>
                 <p
                   className={cn(
                     'col-span-4 md:col-span-5 lg:col-span-6 lg:col-start-5',
                     'text-[clamp(1.0625rem,0.96rem+0.42vw,1.3125rem)] leading-[1.62] tracking-[-0.008em] [text-wrap:pretty]',
-                    k === 0 && 'first-letter:float-left first-letter:mr-3 first-letter:mt-[0.065em] first-letter:text-[5.3em] first-letter:font-semibold first-letter:leading-[0.76] first-letter:tracking-[-0.05em]',
+                    // A drop cap would cut the first letter from the word it
+                    // joins in Arabic, so it is Latin only.
+                    k === 0 && !ar && 'first-letter:float-left first-letter:mr-3 first-letter:mt-[0.065em] first-letter:text-[5.3em] first-letter:font-semibold first-letter:leading-[0.76] first-letter:tracking-[-0.05em]',
                   )}
                   data-reveal
                 >
                   {para}
                   {k === parts - 1 ? (
-                    <Wordmark symbol className="ml-2 inline-block h-[0.72em] w-auto align-baseline" title="End of story" />
+                    <Wordmark symbol className="ms-2 inline-block h-[0.72em] w-auto align-baseline" title={t('End of story')} />
                   ) : null}
                 </p>
               </div>
 
-              {k === platesAfter && plates.length ? <Plates names={plates} /> : null}
+              {k === platesAfter && plates.length ? <Plates names={plates} t={t} /> : null}
 
               {k === quoteAfter && quote ? (
                 <Stage className="on-ink my-10 bg-graphite text-bone md:my-16">
                   <div className="page section-y">
-                    <PullQuote text={quote} source={`From “${story.title}”`} />
+                    <PullQuote text={quote} source={t('From “{title}”', { title: story.title })} />
                   </div>
                 </Stage>
               ) : null}
@@ -199,9 +220,9 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
               <div className="col-span-4 md:col-span-6 lg:col-span-4">
                 <div className="border-t border-ink pt-4 transition-[top] duration-500 ease-[cubic-bezier(.16,1,.3,1)] lg:sticky lg:top-[calc(var(--header-offset,var(--nav-h))+1.5rem)]">
                   <p className="label text-mute" data-reveal>
-                    Shop the story — <span className="nums">{pad(shop.length)}</span> pieces
+                    {t('Shop the story — {pieces}', { pieces: count(locale, shop.length, 'piece', pad(shop.length)) })}
                   </p>
-                  <h2 id="shop-title" className="display-lg mt-5 max-w-[10ch]"><Lines text="Pieces from this story." /></h2>
+                  <h2 id="shop-title" className="display-lg mt-5 max-w-[10ch]"><Lines text={t('Pieces from this story.')} /></h2>
                 </div>
               </div>
               <div
@@ -219,15 +240,15 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
         ) : null}
 
         {/* ─── In this issue ──────────────────────────────────────────── */}
-        <nav aria-label="Stories" className="page pb-10">
+        <nav aria-label={t('Stories')} className="page pb-10">
           <div className="flex items-center justify-between gap-6 border-t border-ink pt-2">
             <Link href="/editorial" className="label inline-flex min-h-11 items-center gap-2 link-quiet">
-              <Icon name="arrowL" className="h-3.5 w-3.5" /> All stories
+              <Icon name="arrowL" className="h-3.5 w-3.5" /> {t('All stories')}
             </Link>
-            <p className="label-sm nums text-mute">{pad(stories.length)} stories</p>
+            <p className="label-sm nums text-mute">{count(locale, stories.length, 'story', pad(stories.length))}</p>
           </div>
           <ol className="grid gap-x-(--gutter) sm:grid-cols-2 lg:grid-cols-4">
-            {stories.map((s, i) => {
+            {issue.map((s, i) => {
               const current = s.slug === story.slug;
               return (
                 <li key={s.slug} className="border-t border-line">
@@ -249,15 +270,15 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
       <NextPanel
         id="next-story"
         href={`/editorial/${next.slug}`}
-        eyebrow="Next story"
-        position={`${pad(stories.indexOf(next) + 1)} / ${pad(stories.length)}`}
+        eyebrow={t('Next story')}
+        position={`${pad(issue.indexOf(next) + 1)} / ${pad(stories.length)}`}
         title={next.title}
-        meta={`${next.kicker} · ${next.readingTime} min`}
+        meta={`${t(next.kicker)} · ${count(locale, next.readingTime, 'min')}`}
         dek={next.standfirst}
-        cta="Read the story"
+        cta={t('Read the story')}
         wide={next.images[0]}
         tall={next.cover}
-        alt={alt(next.images[0])}
+        alt={t(alt(next.images[0]))}
       />
     </>
   );
@@ -267,13 +288,13 @@ export default async function StoryPage({ params }: PageProps<'/editorial/[slug]
  * The story's pictures as a spread: the first large, the second smaller and
  * dropped against it, each captioned with what it shows.
  */
-function Plates({ names }: { names: string[] }) {
+function Plates({ names, t }: { names: string[]; t: T }) {
   const [a, b] = names;
   const frame = (name: string) => (isWide(name) ? 'frame-3-2' : pic(name).width === pic(name).height ? 'frame-1-1' : 'frame-4-5');
   const caption = (name: string, n: number) => (
     <figcaption className="mt-3 flex gap-3 text-xs leading-snug text-mute" data-reveal>
-      <span className="label-sm nums shrink-0 text-ink">Plate {pad(n)}</span>
-      <span>{alt(name)}</span>
+      <span className="label-sm nums shrink-0 text-ink">{t('Plate {n}', { n: pad(n) })}</span>
+      <span>{t(alt(name))}</span>
     </figcaption>
   );
 

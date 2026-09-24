@@ -1,12 +1,20 @@
 import type { MetadataRoute } from 'next';
 import { BRAND } from '@/lib/brand';
 import { collections, products, stories } from '@/lib/catalog';
+import { localePath } from '@/i18n/config';
 
+type Entry = MetadataRoute.Sitemap[number];
+
+/**
+ * Every page twice: the English at its bare path and the Arabic under /ar,
+ * each listing the other (and itself) as hreflang alternates, with English
+ * as the x-default.
+ */
 export default function sitemap(): MetadataRoute.Sitemap {
   const at = (path: string) => `${BRAND.domain}${path}`;
   const now = new Date();
 
-  const fixed: [string, number, MetadataRoute.Sitemap[number]['changeFrequency']][] = [
+  const fixed: [string, number, Entry['changeFrequency']][] = [
     ['/', 1, 'weekly'],
     ['/new', 0.9, 'weekly'],
     ['/women', 0.9, 'weekly'],
@@ -23,18 +31,20 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ['/terms', 0.3, 'yearly'],
   ];
 
-  return [
-    ...fixed.map(([path, priority, changeFrequency]) => ({
-      url: at(path), lastModified: now, changeFrequency, priority,
-    })),
-    ...products.map((p) => ({
-      url: at(`/products/${p.slug}`), lastModified: now, changeFrequency: 'weekly' as const, priority: 0.8,
-    })),
-    ...collections.map((c) => ({
-      url: at(`/collections/${c.slug}`), lastModified: now, changeFrequency: 'monthly' as const, priority: 0.7,
-    })),
-    ...stories.map((s) => ({
-      url: at(`/editorial/${s.slug}`), lastModified: now, changeFrequency: 'monthly' as const, priority: 0.6,
-    })),
+  const pages: [string, number, Entry['changeFrequency']][] = [
+    ...fixed,
+    ...products.map((p) => [`/products/${p.slug}`, 0.8, 'weekly'] as [string, number, Entry['changeFrequency']]),
+    ...collections.map((c) => [`/collections/${c.slug}`, 0.7, 'monthly'] as [string, number, Entry['changeFrequency']]),
+    ...stories.map((s) => [`/editorial/${s.slug}`, 0.6, 'monthly'] as [string, number, Entry['changeFrequency']]),
   ];
+
+  return pages.flatMap(([path, priority, changeFrequency]) => {
+    const en = at(path);
+    const ar = at(localePath(path, 'ar'));
+    const alternates = { languages: { en, ar, 'x-default': en } };
+    return [
+      { url: en, lastModified: now, changeFrequency, priority, alternates },
+      { url: ar, lastModified: now, changeFrequency, priority, alternates },
+    ];
+  });
 }

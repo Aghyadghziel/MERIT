@@ -15,9 +15,11 @@ import type { Product } from '@/lib/catalog';
 import { isSoldOut, SIZE_SYSTEM_LABEL, sizeSystemOf } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
+import { useT } from '@/i18n/client';
+import type { T } from '@/i18n/dictionary';
 
-const genderLabel = (p: Product) =>
-  p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? "Women's" : "Men's";
+const genderLabel = (p: Product, t: T) =>
+  t(p.gender === 'unisex' ? 'Unisex' : p.gender === 'women' ? "Women's" : "Men's");
 
 /**
  * The buying panel. On a desktop it is the right-hand page of the spread and
@@ -56,6 +58,7 @@ export function ProductPanel({
   const sheetTitle = useId();
   const { add, toggleWish, wishlist, markViewed, ready } = useStore();
   const { open } = useUi();
+  const t = useT();
 
   const sold = isSoldOut(product);
   const saved = ready && wishlist.includes(product.slug);
@@ -76,8 +79,8 @@ export function ProductPanel({
 
   useEffect(() => {
     if (!added) return;
-    const t = window.setTimeout(() => setAdded(false), 2600);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setAdded(false), 2600);
+    return () => window.clearTimeout(timer);
   }, [added]);
 
   // The panel's own height, for the sticky top that pins a tall panel by its foot.
@@ -177,24 +180,32 @@ export function ProductPanel({
   // The small oxide mark on a size cell, said in words for everyone.
   const lowSizes = single || blocked ? [] : product.sizes.filter((s) => !unavailable(s) && low(s));
   const lowNote = lowSizes.length > 0 && !(size && low(size))
-    ? `Three or fewer left in ${listOf(lowSizes)}.`
+    ? t('Three or fewer left in {sizes}.', { sizes: listOf(lowSizes, t) })
     : null;
 
+  const colourName = t(colour);
   const availability = sold
-    ? 'Every size is sold out.'
+    ? t('Every size is sold out.')
     : colourSold
-      ? `Sold out in ${colour}. Another colour may still be available.`
+      ? t('Sold out in {colour}. Another colour may still be available.', { colour: colourName })
       : size && !single && low(size)
-        ? 'Three or fewer left in this size.'
+        ? t('Three or fewer left in this size.')
         : single
-          ? low(product.sizes[0]) ? `Three or fewer left in ${colour}.` : `In stock in ${colour}.`
-          : `${inStock} of ${product.sizes.length} sizes available in ${colour}.`;
+          ? low(product.sizes[0])
+            ? t('Three or fewer left in {colour}.', { colour: colourName })
+            : t('In stock in {colour}.', { colour: colourName })
+          : t('{n} of {total} sizes available in {colour}.', { n: inStock, total: product.sizes.length, colour: colourName });
 
   // A finished piece has nothing to offer from a bar, so it never shows; a
   // colour that has sold out opens the sheet, where another can be chosen.
   const bar = showBar && !sold;
 
-  const ctaLabel = sold ? 'Sold out' : colourSold ? `Sold out in ${colour}` : added ? 'Added to bag' : 'Add to bag';
+  const ctaLabel = sold
+    ? t('Sold out')
+    : colourSold
+      ? t('Sold out in {colour}', { colour: colourName })
+      : added ? t('Added to bag') : t('Add to bag');
+  const freeLine = t('Free Gulf delivery over {n} SAR', { n: FREE_SHIPPING.toLocaleString('en') });
 
   return (
     <>
@@ -209,7 +220,7 @@ export function ProductPanel({
 
             <div className="flex items-center justify-between gap-4" data-reveal>
               <p className="label-sm text-mute">
-                {kicker ?? `${product.category} — ${genderLabel(product)}`}
+                {kicker ?? `${t(product.category)} — ${genderLabel(product, t)}`}
               </p>
               <StatusTag product={product} className="shrink-0" />
             </div>
@@ -221,7 +232,7 @@ export function ProductPanel({
             <div className="mt-5 flex items-baseline gap-3 lg:mt-[clamp(0.75rem,2.2vh,1.25rem)]" data-reveal>
               <Price amount={product.price} compareAt={product.compareAt} size="xl" />
               {product.compareAt ? (
-                <span className="label-sm text-oxide">
+                <span className="label-sm text-oxide" dir="ltr">
                   −{Math.round((1 - product.price / product.compareAt) * 100)}%
                 </span>
               ) : null}
@@ -236,9 +247,9 @@ export function ProductPanel({
 
               {single ? (
                 <div>
-                  <p className="label-sm text-mute">Size</p>
+                  <p className="label-sm text-mute">{t('Size')}</p>
                   <p className="mt-2.5 flex items-baseline gap-3 text-sm">
-                    <span className="label shrink-0">One size</span>
+                    <span className="label shrink-0">{t('One size')}</span>
                     <span className="text-mute">{product.fit}</span>
                   </p>
                 </div>
@@ -248,7 +259,7 @@ export function ProductPanel({
                   sizes={product.sizes}
                   size={size}
                   colour={colour}
-                  system={system === 'apparel' ? null : SIZE_SYSTEM_LABEL[system]}
+                  system={system === 'apparel' ? null : t(SIZE_SYSTEM_LABEL[system])}
                   unavailable={unavailable}
                   low={low}
                   error={error}
@@ -262,7 +273,7 @@ export function ProductPanel({
               {error ? (
                 <p role="alert" className="flex items-center gap-2 text-xs text-oxide">
                   <Icon name="alert" className="h-4 w-4 shrink-0" />
-                  Choose a size to continue.
+                  {t('Choose a size to continue.')}
                 </p>
               ) : (
                 <p className="text-xs text-mute">
@@ -294,7 +305,7 @@ export function ProductPanel({
                 type="button"
                 onClick={() => toggleWish(product.slug)}
                 aria-pressed={saved}
-                aria-label={saved ? 'Remove from wishlist' : 'Save to wishlist'}
+                aria-label={t(saved ? 'Remove from wishlist' : 'Save to wishlist')}
                 className={cn('btn btn-ghost h-14 w-14 shrink-0 px-0', saved && 'border-ink')}
               >
                 <Icon name="heart" filled={saved} />
@@ -303,7 +314,7 @@ export function ProductPanel({
 
             {sold ? (
               <p id="sold-note" className="mt-3 text-xs text-mute">
-                This piece is finished. Made in a count of a few hundred and not re-cut.
+                {t('This piece is finished. Made in a count of a few hundred and not re-cut.')}
               </p>
             ) : null}
 
@@ -311,22 +322,22 @@ export function ProductPanel({
               <li className="flex items-start gap-3.5 border-b border-line py-3.5 lg:py-[clamp(0.625rem,1.5vh,0.875rem)]">
                 <Icon name="truck" className="mt-px h-4 w-4 shrink-0" />
                 <span>
-                  Two working days to Riyadh and Jeddah.{' '}
-                  <span className="text-mute">Free Gulf delivery over {FREE_SHIPPING.toLocaleString('en')} SAR.</span>
+                  {t('Two working days to Riyadh and Jeddah.')}{' '}
+                  <span className="text-mute">{freeLine}.</span>
                 </span>
               </li>
               <li className="flex items-start gap-3.5 border-b border-line py-3.5 lg:py-[clamp(0.625rem,1.5vh,0.875rem)]">
                 <Icon name="arrowL" className="mt-px h-4 w-4 shrink-0" />
                 <span>
-                  Returns within 30 days.{' '}
-                  <span className="text-mute">Unworn, with the tag attached.</span>
+                  {t('Returns within 30 days.')}{' '}
+                  <span className="text-mute">{t('Unworn, with the tag attached.')}</span>
                 </span>
               </li>
             </ul>
 
             <a href="#details" className="label-sm group mt-6 inline-flex min-h-11 lg:mt-[clamp(0.25rem,1.6vh,1.25rem)] items-center gap-2.5 text-mute transition-colors hover:text-ink">
-              Fit, materials and care
-              <Icon name="arrowR" className="h-3.5 w-3.5 rotate-90 transition-transform duration-300 group-hover:translate-y-0.5" />
+              {t('Fit, materials and care')}
+              <Icon name="arrowR" className="h-3.5 w-3.5 rotate-90 rtl:-rotate-90 transition-transform duration-300 group-hover:translate-y-0.5" />
             </a>
           </div>
         </div>
@@ -336,7 +347,7 @@ export function ProductPanel({
       <div
         inert={!bar}
         role="region"
-        aria-label="Quick add to bag"
+        aria-label={t('Quick add to bag')}
         className={cn(
           'fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bone/95 backdrop-blur-md transition-transform duration-500 ease-[cubic-bezier(.16,1,.3,1)] lg:hidden',
           bar ? 'translate-y-0' : 'translate-y-full',
@@ -351,7 +362,7 @@ export function ProductPanel({
             <p className="mt-1 flex min-w-0 items-baseline gap-1.5 text-xs text-mute">
               <Price amount={product.price} compareAt={product.compareAt} size="xs" className="shrink-0 text-ink" />
               <span aria-hidden>·</span>
-              <span className="truncate">{colour}{size && !single ? `, ${size}` : ''}</span>
+              <span className="truncate">{colourName}{size && !single ? `${t(', ')}${size}` : ''}</span>
             </p>
           </div>
           <button
@@ -359,7 +370,7 @@ export function ProductPanel({
             onClick={() => (size && !colourSold ? commit('panel') : openSheet())}
             className={cn('btn h-12 min-h-12 shrink-0 px-5', colourSold ? 'btn-ghost' : 'btn-solid')}
           >
-            {colourSold ? 'Choose colour' : !size ? 'Select size' : added ? 'Added' : 'Add to bag'}
+            {t(colourSold ? 'Choose colour' : !size ? 'Select size' : added ? 'Added' : 'Add to bag')}
           </button>
         </div>
       </div>
@@ -382,7 +393,7 @@ export function ProductPanel({
               <h2 id={sheetTitle} className="text-[0.9375rem] font-medium leading-snug">{product.name}</h2>
               <Price amount={product.price} compareAt={product.compareAt} className="mt-1" />
             </div>
-            <button type="button" onClick={() => closeSheet()} className="icon-btn m-0 -mr-2.5 -mt-1.5" aria-label="Close">
+            <button type="button" onClick={() => closeSheet()} className="icon-btn m-0 -me-2.5 -mt-1.5" aria-label={t('Close')}>
               <Icon name="close" />
             </button>
           </div>
@@ -397,7 +408,7 @@ export function ProductPanel({
                 sizes={product.sizes}
                 size={size}
                 colour={colour}
-                system={system === 'apparel' ? null : SIZE_SYSTEM_LABEL[system]}
+                system={system === 'apparel' ? null : t(SIZE_SYSTEM_LABEL[system])}
                 unavailable={unavailable}
                 low={low}
                 error={error}
@@ -407,7 +418,7 @@ export function ProductPanel({
           </div>
 
           <p className={cn('mt-3 min-h-5 text-xs', error ? 'text-oxide' : 'text-mute')} aria-live="polite">
-            {error ? 'Choose a size to continue.' : availability}
+            {error ? t('Choose a size to continue.') : availability}
             {!error && lowNote ? <LowNote text={lowNote} /> : null}
           </p>
 
@@ -417,11 +428,11 @@ export function ProductPanel({
             disabled={blocked}
             className="btn btn-solid mt-4 h-14 w-full justify-between px-5"
           >
-            <span>{blocked ? 'Sold out' : 'Add to bag'}</span>
+            <span>{t(blocked ? 'Sold out' : 'Add to bag')}</span>
             {!blocked ? <Price amount={product.price} className="text-bone" /> : null}
           </button>
           <p className="mt-3 text-center text-xs text-mute">
-            Free Gulf delivery over {FREE_SHIPPING.toLocaleString('en')} SAR · Returns within 30 days
+            {freeLine} · {t('Returns within 30 days')}
           </p>
         </div>
       </dialog>
@@ -434,11 +445,12 @@ function Colours({
   product, colour, onPick, isOut,
 }: { product: Product; colour: string; onPick: (c: string) => void; isOut: (c: string, s: string) => boolean }) {
   const id = useId();
+  const t = useT();
   return (
     <div>
       <p id={id} className="label-sm text-mute">
-        Colour
-        <span className="sr-only">, {colour} selected</span>
+        {t('Colour')}
+        <span className="sr-only">{t(', {colour} selected', { colour: t(colour) })}</span>
       </p>
       <div role="group" aria-labelledby={id} className="mt-3 flex flex-wrap gap-2">
         {product.colours.map((c) => {
@@ -451,14 +463,14 @@ function Colours({
               onClick={() => onPick(c.name)}
               aria-pressed={on}
               className={cn(
-                'inline-flex h-11 items-center gap-2.5 border pl-3 pr-4 text-[0.8125rem] transition-colors duration-200',
+                'inline-flex h-11 items-center gap-2.5 border ps-3 pe-4 text-[0.8125rem] transition-colors duration-200',
                 on ? 'border-ink' : 'border-line hover:border-line-2',
                 gone && 'text-mute',
               )}
             >
               <span aria-hidden className="block h-3.5 w-3.5 ring-1 ring-inset ring-black/15" style={{ background: c.hex }} />
-              <span className={cn(gone && 'line-through')}>{c.name}</span>
-              {gone ? <span className="sr-only">, sold out</span> : null}
+              <span className={cn(gone && 'line-through')}>{t(c.name)}</span>
+              {gone ? <span className="sr-only">{t(', sold out')}</span> : null}
             </button>
           );
         })}
@@ -483,18 +495,19 @@ function Sizes({
   guide?: boolean;
 }) {
   const id = useId();
+  const t = useT();
   const cols = Math.min(sizes.length, 6);
   return (
     <div>
       <div className="flex items-baseline justify-between gap-4">
         <p id={id} className="label-sm text-mute">
-          Size{system ? <span> · {system}</span> : null}
+          {t('Size')}{system ? <span> · {t(system)}</span> : null}
           {size ? <span className="text-ink"> — {size}</span> : null}
         </p>
         {guide ? (
           <Link href="/size-guide" className="label-sm link-quiet inline-flex items-center gap-1.5 text-mute transition-colors hover:text-ink">
             <Icon name="ruler" className="h-3.5 w-3.5" />
-            Size guide
+            {t('Size guide')}
           </Link>
         ) : null}
       </div>
@@ -502,7 +515,7 @@ function Sizes({
         ref={groupRef}
         role="group"
         aria-labelledby={id}
-        className={cn('mt-3 grid border-l border-t transition-colors', error ? 'border-oxide' : 'border-line')}
+        className={cn('mt-3 grid border-s border-t transition-colors', error ? 'border-oxide' : 'border-line')}
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
       >
         {sizes.map((s) => {
@@ -515,9 +528,11 @@ function Sizes({
               disabled={out}
               onClick={() => onPick(s)}
               aria-pressed={on}
-              aria-label={out ? `Size ${s}, unavailable in ${colour}` : `Size ${s}${low(s) ? ', low stock' : ''}`}
+              aria-label={out
+                ? t('Size {size}, unavailable in {colour}', { size: s, colour: t(colour) })
+                : low(s) ? t('Size {size}, low stock', { size: s }) : t('Size {size}', { size: s })}
               className={cn(
-                'label-sm nums relative flex h-12 items-center justify-center border-b border-r transition-colors duration-200',
+                'label-sm nums relative flex h-12 items-center justify-center border-b border-e transition-colors duration-200',
                 error ? 'border-oxide' : 'border-line',
                 out && 'cursor-not-allowed text-stone [background:linear-gradient(to_top_right,transparent_calc(50%-0.5px),var(--color-line)_calc(50%-0.5px),var(--color-line)_calc(50%+0.5px),transparent_calc(50%+0.5px))]',
                 !out && on && 'bg-ink text-bone',
@@ -526,7 +541,7 @@ function Sizes({
             >
               {s}
               {!out && low(s) ? (
-                <span aria-hidden className={cn('absolute right-1.5 top-1.5 block h-1 w-1', on ? 'bg-bone' : 'bg-oxide')} />
+                <span aria-hidden className={cn('absolute end-1.5 top-1.5 block h-1 w-1', on ? 'bg-bone' : 'bg-oxide')} />
               ) : null}
             </button>
           );
@@ -536,14 +551,16 @@ function Sizes({
   );
 }
 
-/** "XL", "S and XL", "S, M and XL". */
-const listOf = (xs: string[]) =>
-  xs.length < 2 ? (xs[0] ?? '') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+/** "XL", "S and XL", "S, M and XL" (Arabic: "S وXL", "S، M وXL"). */
+const listOf = (xs: string[], t: T) =>
+  xs.length < 2
+    ? (xs[0] ?? '')
+    : t('{list} and {last}', { list: xs.slice(0, -1).join(t(', ')), last: xs[xs.length - 1] });
 
 /** The legend for the low-stock mark on the size grid, drawn in the same oxide square. */
 function LowNote({ text }: { text: string }) {
   return (
-    <span className="ml-2 inline-flex items-baseline gap-1.5 whitespace-nowrap">
+    <span className="ms-2 inline-flex items-baseline gap-1.5 whitespace-nowrap">
       <span aria-hidden className="block h-1 w-1 shrink-0 -translate-y-px self-center bg-oxide" />
       {text}
     </span>

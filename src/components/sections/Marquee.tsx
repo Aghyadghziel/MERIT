@@ -2,6 +2,7 @@
 
 import { useLayoutEffect, useRef } from 'react';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { useT } from '@/i18n/client';
 import { reduced, setupGsap } from '@/lib/gsap';
 
 /**
@@ -18,6 +19,7 @@ const WORDS = ['Foundation', 'Autumn Winter 2026', 'Drawn in Riyadh', 'Made in s
  * animation laid on top of it. Screen readers get the line once.
  */
 export function Marquee() {
+  const t = useT();
   const root = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
 
@@ -39,13 +41,16 @@ export function Marquee() {
     let target = window.scrollY * RATE;
     let current = target;
     const place = gsap.quickSetter(el, 'x', 'px');
+    // In Arabic the band hangs from the right edge and reads leftward, so it
+    // travels the other way: new words arrive from the end of the line.
+    const dir = getComputedStyle(el).direction === 'rtl' ? 1 : -1;
 
     const tick = () => {
       target = window.scrollY * RATE;
       if (!visible) { current = target; return; }
       current += (target - current) * 0.085;
       if (Math.abs(target - current) < 0.05) current = target;
-      place(-(((current % half) + half) % half));
+      place(dir * (((current % half) + half) % half));
     };
     gsap.ticker.add(tick);
     tick();
@@ -59,10 +64,10 @@ export function Marquee() {
   }, []);
 
   const run = (hidden: boolean) => (
-    <div className="flex shrink-0 items-center gap-[clamp(1.5rem,3vw,3.25rem)] pr-[clamp(1.5rem,3vw,3.25rem)]" aria-hidden={hidden || undefined}>
+    <div className="flex shrink-0 items-center gap-[clamp(1.5rem,3vw,3.25rem)] pe-[clamp(1.5rem,3vw,3.25rem)]" aria-hidden={hidden || undefined}>
       {WORDS.map((w) => (
         <span key={w} className="flex items-center gap-[clamp(1.5rem,3vw,3.25rem)]">
-          <span className="whitespace-nowrap text-[clamp(2.25rem,1rem+4.4vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]">{w}</span>
+          <span className="whitespace-nowrap text-[clamp(2.25rem,1rem+4.4vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]">{t(w)}</span>
           <Wordmark symbol className="h-[clamp(1.25rem,0.8rem+1.9vw,3rem)] w-auto shrink-0 text-stone" />
         </span>
       ))}
@@ -72,7 +77,7 @@ export function Marquee() {
   return (
     <div ref={root} className="on-ink overflow-hidden bg-ink py-[clamp(1.4rem,1rem+1.6vw,2.5rem)] text-bone">
       {/* The band is decoration; its line is read once, as plain text, with no landmark around it. */}
-      <p className="sr-only">Foundation, Autumn Winter 2026. Drawn in Riyadh, made in small counts, re-issued, not replaced.</p>
+      <p className="sr-only">{t('Foundation, Autumn Winter 2026. Drawn in Riyadh, made in small counts, re-issued, not replaced.')}</p>
       <div ref={track} className="flex w-max will-change-transform" aria-hidden>
         {run(false)}
         {run(true)}

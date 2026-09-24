@@ -98,23 +98,57 @@ const INK: Record<string, [left: number, right: number]> = {
 };
 
 /**
- * Size and optical offset for a poster word: the first stroke on the column's
- * left edge and the last on its right, with nothing to measure after load.
- * An unmeasured word falls back to its advances.
+ * The same, for the Arabic words that stand as posters, in IBM Plex Sans
+ * Arabic at 600 (Arabic is never tracked): where the first stroke starts and
+ * the last one ends, measured from the right, since the word runs that way.
  */
-export function posterFit(text: string, cap = '38svh'): { fontSize: string; marginLeft: string } {
-  const ink = INK[text.toUpperCase()];
-  if (!ink) return { fontSize: posterSize(text, cap), marginLeft: '0' };
+const INK_AR: Record<string, [start: number, end: number]> = {
+  // The page names, as src/i18n/ar/editorial.ts gives them for Collections and Editorial.
+  'المجموعات': [0.064, 4.492],
+  'المجلة': [0.064, 2.575],
+};
+
+const ARABIC = /[\u0600-\u06FF]/;
+export const isArabic = (text: string) => ARABIC.test(text);
+
+/**
+ * Size and optical offset for a poster word: the first stroke on the column's
+ * starting edge and the last on its far edge, with nothing to measure after
+ * load. A Latin word (a collection name) is always set left to right, even on
+ * an Arabic page; an Arabic word right to left. An unmeasured word falls back
+ * to its advances.
+ */
+export function posterFit(
+  text: string,
+  cap = '38svh',
+): { fontSize: string; flatSize: string; marginInlineStart: string; dir: 'ltr' | 'rtl' } {
+  const arabic = isArabic(text);
+  const dir = arabic ? 'rtl' : 'ltr';
+  const size = (em: number) => `min(calc(100cqi / ${em.toFixed(4)}), ${cap})`;
+  // Arabic pages never track (letters must join), and that rule reaches a
+  // Latin name set on them too: without its -0.055em after every letter but
+  // the last, the same word runs that much wider, so it gets its own size.
+  const untrack = arabic ? 0 : TRACK * Math.max(0, [...text].length - 1);
+  const ink = arabic ? INK_AR[text] : INK[text.toUpperCase()];
+  if (!ink) {
+    // Arabic runs narrower per character than the Latin capitals.
+    const em = arabic
+      ? [...text].length * 0.5
+      : [...text.toUpperCase()].reduce((w, c) => w + (EM[c] ?? 0.62), 0) * 1.012;
+    return { fontSize: size(em), flatSize: size(em + untrack), marginInlineStart: '0', dir };
+  }
   const [left, right] = ink;
-  return {
-    fontSize: `min(calc(100cqi / ${((right - left) * 1.002).toFixed(4)}), ${cap})`,
-    marginLeft: `-${left}em`,
-  };
+  const em = (right - left) * 1.002;
+  return { fontSize: size(em), flatSize: size(em + untrack), marginInlineStart: `-${left}em`, dir };
 }
+
+/** The display tracking the Latin measurements above include. */
+const TRACK = 0.055;
 
 // ─── Text ──────────────────────────────────────────────────────────────────
 
-export const sentences = (text: string) => text.split(/(?<=[.!?])\s+(?=[A-Z])/).map((s) => s.trim()).filter(Boolean);
+/** Whole sentences: split after a full stop that a capital, or an Arabic letter, follows. */
+export const sentences = (text: string) => text.split(/(?<=[.!?؟])\s+(?=[A-Z\u0600-\u06FF])/).map((s) => s.trim()).filter(Boolean);
 
 /** Chosen lines, each a verbatim sentence of the story it belongs to. */
 const QUOTES: Record<string, string> = {
@@ -129,9 +163,8 @@ const QUOTES: Record<string, string> = {
  * word for word in the body; otherwise the shortest whole sentence stands in,
  * so the quote can never say something the story does not.
  */
-export function pullQuote(story: Story): string | null {
+export function pullQuote(story: Story, chosen: string | null = QUOTES[story.slug] ?? null): string | null {
   const body = story.body.join(' ');
-  const chosen = QUOTES[story.slug];
   if (chosen && body.includes(chosen)) return chosen;
   const pool = story.body.flatMap(sentences).filter((s) => s.length >= 24 && s.length <= 110);
   return pool.sort((a, b) => a.length - b.length)[0] ?? null;
@@ -215,12 +248,17 @@ export const storyIndex = (slug: string) => stories.findIndex((s) => s.slug === 
 export const pad = (n: number) => String(n).padStart(2, '0');
 
 /**
- * A collection's season as every page prints it: "Autumn Winter 2026",
+ * A collection's season as every page prints it (pass t() to print it in the
+ * reader's language): "Autumn Winter 2026",
  * "Runway 2026", and "Permanent" alone, since a permanent range has no year.
  */
-export const collectionSeason = (c: { season: string; year: number }) =>
-  c.season === 'Permanent' ? c.season : `${c.season} ${c.year}`;
+export const collectionSeason = (c: { season: string; year: number }, t: (s: string) => string = same) =>
+  c.season === 'Permanent' ? t(c.season) : `${t(c.season)} ${c.year}`;
 
 /** "Autumn Winter 2026", or just "2026" where the season repeats the kicker. */
-export const seasonOf = (s: { season: string; year: number; kicker?: string }) =>
-  s.season === s.kicker ? String(s.year) : `${s.season} ${s.year}`;
+export const seasonOf = (s: { season: string; year: number; kicker?: string }, t: (s: string) => string = same) =>
+  s.season === s.kicker ? String(s.year) : `${t(s.season)} ${s.year}`;
+
+function same(s: string) {
+  return s;
+}

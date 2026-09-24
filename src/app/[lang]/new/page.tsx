@@ -3,30 +3,37 @@ import type { ListingStory } from '@/components/commerce/Listing';
 import { ListingPage } from '@/components/commerce/ListingPage';
 import { alt } from '@/components/editorial/data';
 import { getStory, isSoldOut, products } from '@/lib/catalog';
+import { localePath } from '@/i18n/config';
+import type { T } from '@/i18n/dictionary';
+import { getLocale, getT } from '@/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'New arrivals',
-  description: 'This season at MERIT: Foundation, Autumn Winter 2026, and what is made for sale from Runway 01.',
-  alternates: { canonical: '/new' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getT();
+  return {
+    title: t('New arrivals'),
+    description: t('This season at MERIT: Foundation, Autumn Winter 2026, and what is made for sale from Runway 01.'),
+    alternates: { canonical: localePath('/new', locale), languages: { en: '/new', ar: '/ar/new' } },
+  };
+}
 
 /**
  * A story from the catalogue, as a tile in the grid. Every word is the
  * story's own; the season is left out where it only repeats the kicker.
  */
-function tile(slug: string, image: string, wide?: string, crop?: string): ListingStory {
+function tile(t: T, slug: string, image: string, wide?: string, crop?: string): ListingStory {
   const story = getStory(slug)!;
-  const when = story.season === story.kicker ? `${story.year}` : `${story.season} ${story.year}`;
+  const when = story.season === story.kicker ? `${story.year}` : `${t(story.season)} ${story.year}`;
   return {
     image,
     wide,
     crop,
-    alt: alt(image),
-    kicker: `${story.kicker} — ${when}`,
-    title: story.title,
-    text: story.standfirst,
+    alt: t(alt(image)),
+    kicker: t('{kicker} — {when}', { kicker: t(story.kicker), when }),
+    title: t(story.title),
+    text: t(story.standfirst),
     href: `/editorial/${story.slug}`,
-    cta: 'Read the story',
+    cta: t('Read the story'),
   };
 }
 
@@ -40,26 +47,27 @@ const pool = products.filter(
 
 const index = products.filter((p) => p.collection === 'index');
 
-export default function NewPage() {
+export default async function NewPage() {
+  const t = await getT();
   return (
     <ListingPage
       pool={pool}
-      eyebrow="This season"
-      title="New arrivals"
-      description="Foundation, Autumn Winter 2026, and what is made for sale from Runway 01. The cloth is heavier than last season, and the colour has been pulled back to four."
+      eyebrow={t('This season')}
+      title={t('New arrivals')}
+      description={t('Foundation, Autumn Winter 2026, and what is made for sale from Runway 01. The cloth is heavier than last season, and the colour has been pulled back to four.')}
       // The Rule Line is the Foundation campaign, and none of its frames is
       // also a product photograph.
       campaign={{
         image: 'campaign-rule-line-wide',
         tall: 'campaign-rule-line',
-        kicker: 'Autumn Winter 2026 — Foundation',
-        alt: alt('campaign-rule-line-wide'),
+        kicker: t('Autumn Winter 2026 — Foundation'),
+        alt: t(alt('campaign-rule-line-wide')),
       }}
       stories={[
-        tile('runway-01-riyadh', 'runway-01', 'runway-01', 'object-[58%_center]'),
-        tile('the-rule-line', 'statement-detail', 'statement-detail'),
+        tile(t, 'runway-01-riyadh', 'runway-01', 'runway-01', 'object-[58%_center]'),
+        tile(t, 'the-rule-line', 'statement-detail', 'statement-detail'),
       ]}
-      next={{ kicker: 'The permanent range', title: 'Index', href: '/collections/index', count: index.length }}
+      next={{ kicker: t('The permanent range'), title: t('Index'), href: '/collections/index', count: index.length }}
     />
   );
 }

@@ -29,7 +29,9 @@ export function FitText({
       // An optical indent (a negative margin in em) pulls the first letter's
       // side bearing onto the margin; the fit has to count it, or the last
       // letter stops short of the other margin.
-      const natural = el.offsetWidth + (parseFloat(getComputedStyle(el).marginLeft) || 0);
+      const cs = getComputedStyle(el);
+      const indent = parseFloat(cs.direction === 'rtl' ? cs.marginRight : cs.marginLeft) || 0;
+      const natural = el.offsetWidth + indent;
       if (natural <= 0) return;
       const size = Math.min((100 * target * 0.995) / natural, window.innerWidth * max);
       el.style.fontSize = `${size.toFixed(2)}px`;

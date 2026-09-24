@@ -2,6 +2,7 @@
 
 import { useStore } from '@/components/providers/Store';
 import { Icon } from '@/components/ui/Icon';
+import { useT } from '@/i18n/client';
 import { CURRENCIES, currencyCodes } from '@/lib/format';
 
 /**
@@ -11,9 +12,10 @@ import { CURRENCIES, currencyCodes } from '@/lib/format';
  */
 export function CurrencySelect({ id = 'currency' }: { id?: string }) {
   const { currency, setCurrency, ready } = useStore();
+  const t = useT();
   return (
     <label className="relative flex items-center" htmlFor={id}>
-      <span className="sr-only">Currency</span>
+      <span className="sr-only">{t('Currency')}</span>
       <select
         id={id}
         className="label select-quiet"
@@ -22,11 +24,11 @@ export function CurrencySelect({ id = 'currency' }: { id?: string }) {
       >
         {currencyCodes.map((code) => (
           <option key={code} value={code}>
-            {code} — {CURRENCIES[code].name}
+            {code} — {t(CURRENCIES[code].name)}
           </option>
         ))}
       </select>
-      <Icon name="chevD" className="pointer-events-none absolute right-0 h-3.5 w-3.5" />
+      <Icon name="chevD" className="pointer-events-none absolute end-0 h-3.5 w-3.5" />
     </label>
   );
 }

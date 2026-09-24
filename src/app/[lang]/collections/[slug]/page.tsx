@@ -15,21 +15,31 @@ import { PullQuote } from '@/components/editorial/PullQuote';
 import { Stage } from '@/components/editorial/Stage';
 import { Icon } from '@/components/ui/Icon';
 import { collections, getCollection, products } from '@/lib/catalog';
-import { plural } from '@/lib/format';
+import { localePath } from '@/i18n/config';
+import { localizeProduct } from '@/i18n/products';
+import { getLocale, getT } from '@/i18n/server';
+import { count, localizeCollection, localizeStory } from '@/i18n/stories';
 
 export const dynamicParams = false;
 export const generateStaticParams = () => collections.map((c) => ({ slug: c.slug }));
 
-export async function generateMetadata({ params }: PageProps<'/collections/[slug]'>): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<'/[lang]/collections/[slug]'>): Promise<Metadata> {
   const { slug } = await params;
-  const collection = getCollection(slug as never);
-  if (!collection) return {};
+  const found = getCollection(slug as never);
+  if (!found) return {};
+  const locale = await getLocale();
+  const t = await getT();
+  const collection = localizeCollection(found, locale);
+  const title = `${collection.name} — ${collectionSeason(collection, t)}`;
   return {
-    title: `${collection.name} — ${collectionSeason(collection)}`,
+    title,
     description: collection.note,
-    alternates: { canonical: `/collections/${collection.slug}` },
+    alternates: {
+      canonical: localePath(`/collections/${collection.slug}`, locale),
+      languages: { en: `/collections/${collection.slug}`, ar: `/ar/collections/${collection.slug}` },
+    },
     openGraph: {
-      title: `${collection.name} — ${collectionSeason(collection)}`,
+      title,
       description: collection.note,
       images: [{ url: `/img/${collection.image}.webp` }],
     },
@@ -42,24 +52,29 @@ export async function generateMetadata({ params }: PageProps<'/collections/[slug
  * every frame, then every piece with the full filters, the story that goes
  * with it, and the next collection.
  */
-export default async function CollectionPage({ params }: PageProps<'/collections/[slug]'>) {
+export default async function CollectionPage({ params }: PageProps<'/[lang]/collections/[slug]'>) {
   const { slug } = await params;
-  const collection = getCollection(slug as never);
-  if (!collection) notFound();
+  const found = getCollection(slug as never);
+  if (!found) notFound();
+  const locale = await getLocale();
+  const t = await getT();
+  const collection = localizeCollection(found, locale);
 
   const index = collectionIndex(collection.slug);
-  const next = collections[(index + 1) % collections.length];
+  const next = localizeCollection(collections[(index + 1) % collections.length], locale);
   const pool = products.filter((p) => p.collection === collection.slug);
-  const looks = looksFor(collection);
-  const story = storyFor(collection);
-  const categories = [...new Set(pool.map((p) => p.category))];
+  const looks = looksFor(found).map((l) => ({ ...l, product: localizeProduct(l.product, locale) }));
+  // Matched on the English, which names the collection; shown in the reader's language.
+  const matched = storyFor(found);
+  const story = matched ? localizeStory(matched, locale) : undefined;
+  const categories = [...new Set(pool.map((p) => t(p.category)))];
   // The note's closing sentence, lifted out as the pull quote.
   const lines = sentences(collection.note);
   const quote = lines.length > 1 ? lines[lines.length - 1] : null;
   const cover = coverWide(collection);
   // Frames, not looks: "look" is the house's word for a runway or campaign
   // look, and Runway 01 had twenty-four of them.
-  const frames = `${pad(looks.length)} ${looks.length === 1 ? 'frame' : 'frames'}`;
+  const frames = count(locale, looks.length, 'frame', pad(looks.length));
 
   return (
     <>
@@ -77,7 +92,7 @@ export default async function CollectionPage({ params }: PageProps<'/collections
             <ArtImage
               wide={cover}
               tall={collection.image}
-              alt={alt(collection.image)}
+              alt={t(alt(collection.image))}
               // Drawn at whichever of width or height the crop fills first.
               sizes={fills(cover)}
               tallSizes={fills(collection.image)}
@@ -92,21 +107,21 @@ export default async function CollectionPage({ params }: PageProps<'/collections
         <div className="page relative flex h-full flex-col justify-between pb-[calc(var(--gutter)*0.75)] pt-[calc(var(--nav-h)+1.25rem)]">
           <div className="flex items-baseline justify-between gap-6 border-t border-bone/35 pt-4">
             <p className="label">
-              <Link href="/collections" className="link-quiet">Collections</Link>
+              <Link href="/collections" className="link-quiet">{t('Collections')}</Link>
               <span aria-hidden className="mx-2 text-bone/45">/</span>
               <span className="nums">{pad(index + 1)}</span>
-              <span className="sr-only"> of {collections.length}</span>
+              <span className="sr-only"> {t('of {n}', { n: collections.length })}</span>
             </p>
-            <p className="label nums">{collectionSeason(collection)}</p>
+            <p className="label nums">{collectionSeason(collection, t)}</p>
           </div>
 
           <div>
             <div className="mb-6 flex flex-col gap-6 md:mb-8 md:flex-row md:items-end md:justify-between">
               <p className="display-md max-w-[16ch]" data-reveal>{collection.statement}</p>
               <div className="flex shrink-0 items-center gap-6" data-reveal>
-                <span className="label nums text-bone/75">{plural(pool.length, 'piece')}</span>
+                <span className="label nums text-bone/75">{count(locale, pool.length, 'piece')}</span>
                 <a href="#pieces" className="btn btn-solid">
-                  Shop the collection <Icon name="arrowR" className="h-3.5 w-3.5 rotate-90" />
+                  {t('Shop the collection')} <Icon name="arrowR" className="h-3.5 w-3.5 rotate-90 rtl:-rotate-90" />
                 </a>
               </div>
             </div>
@@ -116,11 +131,11 @@ export default async function CollectionPage({ params }: PageProps<'/collections
       </Stage>
 
       {/* ─── The note ───────────────────────────────────────────────── */}
-      <section aria-label="About the collection" className="page grid-page gap-y-10 pb-(--section-sm) pt-(--section)">
+      <section aria-label={t('About the collection')} className="page grid-page gap-y-10 pb-(--section-sm) pt-(--section)">
         <dl className="col-span-4 md:col-span-2 lg:col-span-3">
           {[
-            ['Season', collectionSeason(collection)],
-            ['In this lookbook', frames],
+            [t('Season'), collectionSeason(collection, t)],
+            [t('In this lookbook'), frames],
           ].map(([k, v]) => (
             <div key={k} className="flex items-baseline justify-between gap-4 border-t border-line py-2.5" data-reveal>
               <dt className="label-sm text-mute">{k}</dt>
@@ -128,8 +143,8 @@ export default async function CollectionPage({ params }: PageProps<'/collections
             </div>
           ))}
           <div className="border-t border-line py-2.5" data-reveal>
-            <dt className="label-sm text-mute">In the collection</dt>
-            <dd className="mt-2 text-sm leading-relaxed">{categories.join(', ')}</dd>
+            <dt className="label-sm text-mute">{t('In the collection')}</dt>
+            <dd className="mt-2 text-sm leading-relaxed">{categories.join(locale === 'ar' ? '، ' : ', ')}</dd>
           </div>
         </dl>
         <p
@@ -143,28 +158,28 @@ export default async function CollectionPage({ params }: PageProps<'/collections
       {/* ─── The looks ──────────────────────────────────────────────── */}
       <section aria-labelledby="looks-title" className="pb-(--section)">
         <div className="page mb-10 flex items-baseline justify-between gap-6 border-t border-ink pt-4 md:mb-14">
-          <h2 id="looks-title" className="label">The lookbook</h2>
+          <h2 id="looks-title" className="label">{t('The lookbook')}</h2>
           <p className="label nums text-mute">
-            {frames} · {looks.length === 1 ? 'shop it' : 'shop each one'}
+            {frames} · {t(looks.length === 1 ? 'shop it' : 'shop each one')}
           </p>
         </div>
         <Lookbook
           looks={looks}
-          interlude={quote ? <Interlude quote={quote} detail={collection.detail} name={collection.name} /> : null}
+          interlude={quote ? <Interlude quote={quote} detail={collection.detail} name={collection.name} label={t('From the collection note')} alt={t(alt(collection.detail))} /> : null}
         />
       </section>
 
       {/* ─── Every piece ────────────────────────────────────────────── */}
-      <section id="pieces" aria-label={`Every piece in ${collection.name}`} className="border-t border-ink">
-        <ListingPage pool={pool} eyebrow={`Shop ${collection.name}`} title="The pieces" variant="section" />
+      <section id="pieces" aria-label={t('Every piece in {name}', { name: collection.name })} className="border-t border-ink">
+        <ListingPage pool={pool} eyebrow={t('Shop {name}', { name: collection.name })} title={t('The pieces')} variant="section" />
       </section>
 
       {/* ─── The story that goes with it ────────────────────────────── */}
       {story ? (
         <section aria-labelledby="story-title" className="page pb-(--section)">
           <div className="mb-10 flex items-baseline justify-between gap-6 border-t border-ink pt-4">
-            <p className="label">The story</p>
-            <p className="label nums text-mute">{story.kicker} · {story.readingTime} min</p>
+            <p className="label">{t('The story')}</p>
+            <p className="label nums text-mute">{t(story.kicker)} · {count(locale, story.readingTime, 'min')}</p>
           </div>
           <article className="group relative grid-page items-end gap-y-8">
             <div className="col-span-4 md:col-span-4 lg:col-span-7">
@@ -191,8 +206,8 @@ export default async function CollectionPage({ params }: PageProps<'/collections
               </h2>
               <p className="mt-5 max-w-sm text-[0.9375rem] leading-relaxed text-mute" data-reveal>{story.standfirst}</p>
               <span aria-hidden className="label mt-7 inline-flex items-center gap-2 border-b border-ink pb-1.5">
-                <span>Read the story</span>
-                <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                <span>{t('Read the story')}</span>
+                <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
               </span>
             </div>
           </article>
@@ -202,16 +217,16 @@ export default async function CollectionPage({ params }: PageProps<'/collections
       <NextPanel
         id="next-collection"
         href={`/collections/${next.slug}`}
-        eyebrow="Next collection"
-        position={`${pad(collections.indexOf(next) + 1)} / ${pad(collections.length)}`}
+        eyebrow={t('Next collection')}
+        position={`${pad(((index + 1) % collections.length) + 1)} / ${pad(collections.length)}`}
         title={next.name}
         poster
-        meta={collectionSeason(next)}
+        meta={collectionSeason(next, t)}
         dek={next.statement}
-        cta={`Enter ${next.name}`}
+        cta={t('Enter {name}', { name: next.name })}
         wide={coverWide(next)}
         tall={next.image}
-        alt={alt(next.image)}
+        alt={t(alt(next.image))}
       />
     </>
   );
@@ -228,20 +243,22 @@ const fills = (image: string) => (isWide(image) ? 'max(100vw, 178svh)' : 'max(10
  * The break in the run: the collection's cloth at full height beside the
  * last line of its note, on graphite.
  */
-function Interlude({ quote, detail, name }: { quote: string; detail: string; name: string }) {
+function Interlude({
+  quote, detail, name, label, alt: altText,
+}: { quote: string; detail: string; name: string; label: string; alt: string }) {
   const p = pic(detail);
   return (
     <Stage className="on-ink relative overflow-hidden bg-graphite text-bone">
       <div className="grid lg:grid-cols-12">
         <div className="flex flex-col justify-between gap-12 px-(--gutter) py-(--section) lg:col-span-7">
-          <p className="label text-bone/60">From the collection note</p>
+          <p className="label text-bone/60">{label}</p>
           <PullQuote text={quote} source={name} />
         </div>
         <div className="relative aspect-[16/10] overflow-hidden md:aspect-[2/1] lg:col-span-5 lg:aspect-auto lg:min-h-[44rem]">
           <div data-drift="14" className="absolute inset-x-0 -top-[8%] h-[116%]">
             <Image
               src={p.src}
-              alt={alt(detail)}
+              alt={altText}
               fill
               // The column is taller than it is wide, so the cloth is drawn
               // wider than the column: sized for the height it fills.

@@ -11,8 +11,9 @@ import { useStore } from '@/components/providers/Store';
 import { useUi } from '@/components/providers/Ui';
 import { cn } from '@/lib/cn';
 import { stripLocale } from '@/i18n/config';
+import { useLocale, useT } from '@/i18n/client';
 import { reduced, setupGsap } from '@/lib/gsap';
-import { NAV, type NavItem } from '@/lib/nav';
+import { navFor, type NavItem } from '@/lib/nav';
 
 type Tone = 'none' | 'light' | 'dark';
 
@@ -24,7 +25,7 @@ const TAP =
   'h-11 w-11 shrink-0 items-center justify-center transition-opacity duration-(--dur-fast) ease-(--ease-out) hover:opacity-55';
 type MenuState = { current: string | null; previous: string | null; path: string };
 
-const slug = (label: string) => `menu-${label.toLowerCase()}`;
+const slug = (key: string) => `menu-${key.toLowerCase()}`;
 
 /**
  * Three columns: the menu on the left, the logotype dead centre, the bag on the
@@ -46,6 +47,9 @@ export function Header() {
   const path = stripLocale(pathname);
   const { count, wishlist, ready } = useStore();
   const { open } = useUi();
+  const t = useT();
+  const locale = useLocale();
+  const NAV = navFor(locale);
 
   const [tone, setTone] = useState<Tone>('none');
   const [masthead, setMasthead] = useState(false);
@@ -132,7 +136,7 @@ export function Header() {
   };
   const intend = (item: NavItem) => {
     clearTimers();
-    const target = item.menu ? item.label : null;
+    const target = item.menu ? item.key : null;
     if (menu.current || !target) setOpenMenu(target);
     else openTimer.current = window.setTimeout(() => setOpenMenu(target), 90);
   };
@@ -208,30 +212,30 @@ export function Header() {
               and bag on the right, two a side. Every target is a full 44px
               square and none overlaps its neighbour; the row is pulled out
               by the glyph's inset so the menu glyph sits on the margin. */}
-          <div className="col-start-1 row-start-1 -ml-3 flex items-center justify-self-start lg:hidden">
+          <div className="col-start-1 row-start-1 -ms-3 flex items-center justify-self-start lg:hidden">
             <button
               type="button"
               data-opener="menu"
               className={cn(TAP, 'inline-flex')}
               onClick={() => open('menu')}
-              aria-label="Open menu"
+              aria-label={t('Open menu')}
               aria-haspopup="dialog"
             >
               <Icon name="menu" className="h-5 w-5" />
             </button>
-            <button type="button" data-opener="search" className={cn(TAP, 'inline-flex')} onClick={() => open('search')} aria-label="Search" aria-haspopup="dialog">
+            <button type="button" data-opener="search" className={cn(TAP, 'inline-flex')} onClick={() => open('search')} aria-label={t('Search')} aria-haspopup="dialog">
               <Icon name="search" />
             </button>
           </div>
 
-          <nav aria-label="Primary" className="col-start-1 row-start-1 hidden self-stretch lg:block">
+          <nav aria-label={t('Primary')} className="col-start-1 row-start-1 hidden self-stretch lg:block">
             <ul className="flex h-full items-stretch gap-5 xl:gap-7">
               {NAV.map((item) => {
                 const active = path === item.href || path.startsWith(`${item.href}/`);
-                const isOpen = menu.current === item.label;
+                const isOpen = menu.current === item.key;
                 return (
                   <li
-                    key={item.label}
+                    key={item.key}
                     className="flex items-center"
                     onMouseEnter={() => intend(item)}
                     onBlur={(e) => {
@@ -247,9 +251,9 @@ export function Header() {
                         onKeyDown={(e) => {
                           if (e.key === 'ArrowDown' && item.menu) {
                             e.preventDefault();
-                            setOpenMenu(item.label);
+                            setOpenMenu(item.key);
                             requestAnimationFrame(() =>
-                              document.getElementById(slug(item.label))?.querySelector<HTMLElement>('a[href]')?.focus(),
+                              document.getElementById(slug(item.key))?.querySelector<HTMLElement>('a[href]')?.focus(),
                             );
                           }
                         }}
@@ -258,7 +262,7 @@ export function Header() {
                         <span
                           aria-hidden
                           className={cn(
-                            'absolute inset-x-0 -bottom-px h-px origin-left bg-current transition-transform duration-500 ease-(--ease-expo)',
+                            'absolute inset-x-0 -bottom-px h-px origin-left bg-current rtl:origin-right transition-transform duration-500 ease-(--ease-expo)',
                             active || isOpen ? 'scale-x-100' : 'scale-x-0',
                           )}
                         />
@@ -272,16 +276,16 @@ export function Header() {
                            in a 20px gap. */
                         <button
                           type="button"
-                          data-toggle={item.label}
+                          data-toggle={item.key}
                           className={cn(
-                            'pointer-events-none absolute -right-[1.125rem] top-1/2 flex h-6 w-3.5 -translate-y-1/2 items-center justify-center opacity-0',
+                            'pointer-events-none absolute -end-[1.125rem] top-1/2 flex h-6 w-3.5 -translate-y-1/2 items-center justify-center opacity-0',
                             'focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:outline-none!',
                             dark ? 'focus-visible:bg-bone focus-visible:text-ink' : 'focus-visible:bg-ink focus-visible:text-bone',
                           )}
                           aria-expanded={isOpen}
-                          aria-controls={slug(item.label)}
-                          aria-label={`${item.label} menu`}
-                          onClick={() => setOpenMenu(isOpen ? null : item.label)}
+                          aria-controls={slug(item.key)}
+                          aria-label={t('{label} menu', { label: item.label })}
+                          onClick={() => setOpenMenu(isOpen ? null : item.key)}
                         >
                           <Icon name={isOpen ? 'chevU' : 'chevD'} className="h-3 w-3" />
                         </button>
@@ -291,9 +295,9 @@ export function Header() {
                     {item.menu ? (
                       <MegaMenu
                         item={item as NavItem & { menu: NonNullable<NavItem['menu']> }}
-                        id={slug(item.label)}
+                        id={slug(item.key)}
                         open={isOpen}
-                        switching={isOpen && menu.previous !== null && menu.previous !== item.label}
+                        switching={isOpen && menu.previous !== null && menu.previous !== item.key}
                         handoff={!isOpen && menu.current !== null}
                         onClose={closeMenu}
                       />
@@ -306,11 +310,12 @@ export function Header() {
 
           <Link
             href="/"
+            data-home
             className={cn(
               'col-start-2 row-start-1 flex h-11 shrink-0 items-center transition-[opacity,translate] duration-[560ms] ease-(--ease-expo) hover:opacity-60',
               masthead && clear && 'pointer-events-none translate-y-1.5 opacity-0 focus-visible:pointer-events-auto focus-visible:translate-y-0 focus-visible:opacity-100',
             )}
-            aria-label="MERIT, home"
+            aria-label={t('MERIT, home')}
             onMouseEnter={() => { if (menu.current) scheduleClose(); }}
           >
             <Wordmark className="h-[22px] w-auto md:h-7" />
@@ -323,30 +328,33 @@ export function Header() {
             <button
               type="button"
               data-opener="search"
-              className="label group/nav mr-1 hidden min-h-11 items-center px-2 lg:flex"
+              className="label group/nav me-1 hidden min-h-11 items-center px-2 lg:flex"
               onClick={() => open('search')}
               aria-haspopup="dialog"
             >
-              <Roll text="Search" />
+              <Roll text={t('Search')} />
             </button>
-            <LanguageSwitch className="me-1 hidden px-2 lg:inline-flex" />
-            <Link href="/account" className={cn(TAP, 'hidden sm:inline-flex')} aria-label="Account">
+            {/* Phones and tablets switch language from the menu. max-lg, not
+                hidden: the switch sets its own inline-flex, and cn() does not
+                merge, so a plain hidden could lose to it. */}
+            <LanguageSwitch className="me-1 px-2 max-lg:hidden" />
+            <Link href="/account" className={cn(TAP, 'hidden sm:inline-flex')} aria-label={t('Account')}>
               <Icon name="account" />
             </Link>
             {/* Under 360px there is no room for four targets; the wishlist is
                 one tap away in the menu, with its count. */}
-            <Link href="/wishlist" className={cn(TAP, 'inline-flex max-[359px]:hidden')} aria-label={`Wishlist, ${ready ? wishlist.length : 0} saved`}>
+            <Link href="/wishlist" className={cn(TAP, 'inline-flex max-[359px]:hidden')} aria-label={t('Wishlist, {n} saved', { n: ready ? wishlist.length : 0 })}>
               <Icon name="heart" filled={ready && wishlist.length > 0} />
             </Link>
             <button
               type="button"
               data-opener="cart"
-              className="label group/nav nums flex min-h-11 shrink-0 items-center gap-2 pl-2"
+              className="label group/nav nums flex min-h-11 shrink-0 items-center gap-2 ps-2"
               onClick={() => open('cart')}
               aria-haspopup="dialog"
-              aria-label={`Shopping bag, ${ready ? count : 0} ${count === 1 ? 'item' : 'items'}`}
+              aria-label={t(ready && count === 1 ? 'Shopping bag, 1 item' : 'Shopping bag, {n} items', { n: ready ? count : 0 })}
             >
-              <span className="hidden sm:inline"><Roll text="Bag" /></span>
+              <span className="hidden sm:inline"><Roll text={t('Bag')} /></span>
               <Icon name="bag" className="h-[18px] w-[18px] sm:hidden" />
               <span
                 ref={bagCount}
@@ -417,6 +425,8 @@ function RouteLine() {
     const el = line.current;
     if (!el) return;
     const { gsap } = setupGsap();
+    // The line grows the way the page reads.
+    if (document.documentElement.dir === 'rtl') gsap.set(el, { transformOrigin: '100% 50%' });
 
     const start = () => {
       running.current = true;

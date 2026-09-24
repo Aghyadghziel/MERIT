@@ -129,18 +129,22 @@ export function countActive(f: Filters) {
 
 export type Chip = { group: keyof Filters; value: string; label: string };
 
-export function chips(f: Filters): Chip[] {
+/**
+ * The active filters as removable chips. Labels are English unless a
+ * translate function is passed; the values (and so the URL) never change.
+ */
+export function chips(f: Filters, t: (s: string) => string = (s) => s): Chip[] {
   const out: Chip[] = [];
   const label = (group: keyof Filters, value: string) => {
-    if (group === 'price') return PRICE_BANDS.find((b) => b.key === value)?.label ?? value;
-    if (group === 'collection') return collections.find((c) => c.slug === value)?.name ?? value;
-    if (group === 'fit') return FIT_LABELS[value] ?? value;
-    if (group === 'availability') return value === 'in-stock' ? 'In stock' : 'On sale';
+    if (group === 'price') return t(PRICE_BANDS.find((b) => b.key === value)?.label ?? value);
+    if (group === 'collection') return t(collections.find((c) => c.slug === value)?.name ?? value);
+    if (group === 'fit') return t(FIT_LABELS[value] ?? value);
+    if (group === 'availability') return t(value === 'in-stock' ? 'In stock' : 'On sale');
     if (group === 'size') {
       const [system, label] = value.split(':');
-      return system === 'one' ? 'One size' : `${SIZE_SYSTEM_LABEL[system as SizeSystem]} ${label}`;
+      return system === 'one' ? t('One size') : `${t(SIZE_SYSTEM_LABEL[system as SizeSystem])} ${label}`;
     }
-    return value;
+    return t(value);
   };
   (Object.keys(f) as (keyof Filters)[]).forEach((group) => {
     f[group].forEach((value) => out.push({ group, value, label: label(group, value) }));

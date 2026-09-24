@@ -9,6 +9,8 @@
  * Each sheet is 400 × 500, the 4:5 of the photographs beside it.
  */
 
+import { useLocale, useT } from '@/i18n/client';
+
 const INK = 'var(--color-ink)';
 const MUTE = 'var(--color-mute)';
 
@@ -24,6 +26,9 @@ function G({ d, w = 1, c = MUTE, dash = '5 4' }: { d: string; w?: number; c?: st
 
 /** A pattern label: small, uppercase, tracked, in the secondary ink. */
 function T({ x, y, children, anchor = 'start', rotate }: { x: number; y: number; children: string; anchor?: 'start' | 'middle' | 'end'; rotate?: number }) {
+  const t = useT();
+  // Arabic has no capitals to carry a small label, so it is set a size up.
+  const size = useLocale() === 'ar' ? 11 : 9.5;
   return (
     <text
       className="mk-f"
@@ -32,9 +37,9 @@ function T({ x, y, children, anchor = 'start', rotate }: { x: number; y: number;
       textAnchor={anchor}
       transform={rotate ? `rotate(${rotate} ${x} ${y})` : undefined}
       fill={MUTE}
-      style={{ font: '600 9.5px var(--font-sans), system-ui, sans-serif', letterSpacing: '0.14em', textTransform: 'uppercase' }}
+      style={{ font: `600 ${size}px var(--font-sans), system-ui, sans-serif`, letterSpacing: '0.14em', textTransform: 'uppercase' }}
     >
-      {children}
+      {t(children)}
     </text>
   );
 }
@@ -44,9 +49,14 @@ function Dot({ x, y }: { x: number; y: number }) {
   return <circle className="mk-f" cx={x} cy={y} r={2.4} fill={INK} />;
 }
 
+/**
+ * A sheet is a drawing: it keeps its layout in Arabic (direction ltr, so a
+ * label anchored at its start still starts at its x), only the words change.
+ */
 function Sheet({ label, children }: { label: string; children: React.ReactNode }) {
+  const t = useT();
   return (
-    <svg viewBox="0 0 400 500" role="img" aria-label={label} className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
+    <svg viewBox="0 0 400 500" role="img" aria-label={t(label)} direction="ltr" className="absolute inset-0 h-full w-full" preserveAspectRatio="xMidYMid meet">
       {children}
     </svg>
   );

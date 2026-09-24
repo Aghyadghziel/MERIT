@@ -21,6 +21,10 @@ const arabic = IBM_Plex_Sans_Arabic({
   weight: ['400', '500', '600', '700'],
   variable: '--font-arabic',
   display: 'swap',
+  // No metric-matched Arial fallback: on Arabic pages this face comes first
+  // (it only covers Arabic code points), and an adjusted Arial in the stack
+  // would catch the Latin runs before Inter Tight.
+  adjustFontFallback: false,
 });
 
 export const fontVariables = `${grotesk.variable} ${arabic.variable}`;

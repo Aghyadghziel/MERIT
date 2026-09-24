@@ -64,7 +64,7 @@ export function SectionHead({
       {link ? (
         <Link href={link.href} className="label group inline-flex min-h-11 shrink-0 items-center gap-2 -my-3.5 hover:opacity-60">
           {link.label}
-          <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
         </Link>
       ) : note ? (
         <p className="label-sm nums shrink-0 text-mute [.on-ink_&]:text-mute-ink">{note}</p>

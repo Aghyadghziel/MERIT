@@ -10,7 +10,9 @@ import { Icon } from '@/components/ui/Icon';
 import type { Product } from '@/lib/catalog';
 import { isSoldOut, products, statusLabel } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
-import { formatPrice, pad2 } from '@/lib/format';
+import { formatPrice, pad2, plural } from '@/lib/format';
+import { useLocale, useT } from '@/i18n/client';
+import { localizeProduct } from '@/i18n/products';
 
 type Props = {
   product: Product;
@@ -71,6 +73,10 @@ export function ProductCard({
 }: Props) {
   const [open, setOpen] = useState(false);
   const { wishlist, ready, currency } = useStore();
+  const locale = useLocale();
+  const t = useT();
+  // The card's words in the reader's language; everything else is the product.
+  const copy = localizeProduct(product, locale);
   const saved = ready && wishlist.includes(product.slug);
   const sold = isSoldOut(product);
   const status = statusLabel(product);
@@ -92,34 +98,34 @@ export function ProductCard({
           <Link
             href={href}
             className={cn(
-              'bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-px',
+              'bg-[linear-gradient(currentColor,currentColor)] bg-[length:0%_1px] bg-left-bottom bg-no-repeat pb-px rtl:bg-right-bottom',
               'transition-[background-size] duration-500 ease-expo group-hover/card:bg-[length:100%_1px] focus-visible:bg-[length:100%_1px]',
               "after:absolute after:inset-0 after:content-['']",
             )}
           >
-            {product.name}
+            {copy.name}
           </Link>
         </h3>
 
-        <p className="nums text-[0.8125rem] leading-[1.3] @min-[17rem]:col-start-2 @min-[17rem]:row-start-1 @min-[17rem]:text-right @min-[17rem]:text-sm @min-[30rem]:text-base">
-          <span className={cn(product.compareAt ? 'text-oxide' : null)}>{formatPrice(product.price, code)}</span>
+        <p className="nums text-[0.8125rem] leading-[1.3] @min-[17rem]:col-start-2 @min-[17rem]:row-start-1 @min-[17rem]:text-end @min-[17rem]:text-sm @min-[30rem]:text-base">
+          <span className={cn(product.compareAt ? 'text-oxide' : null)}>{formatPrice(product.price, code, locale)}</span>
           {product.compareAt ? (
-            <span className="ml-2 text-mute line-through">
-              <span className="sr-only">Was </span>
-              {formatPrice(product.compareAt, code)}
+            <span className="ms-2 text-mute line-through">
+              <span className="sr-only">{t('Was')} </span>
+              {formatPrice(product.compareAt, code, locale)}
             </span>
           ) : null}
         </p>
 
         <p className="label-sm hidden text-mute @min-[17rem]:col-start-1 @min-[17rem]:row-start-2 @min-[17rem]:block">
           {index !== undefined ? <span className="nums">{pad2(index + 1)} — </span> : null}
-          {product.category}
+          {t(product.category)}
         </p>
 
         <Swatches product={product} />
 
         <p className="mt-1.5 hidden max-w-[44ch] text-sm leading-relaxed text-mute @min-[30rem]:col-span-2 @min-[30rem]:block">
-          {product.summary}
+          {copy.summary}
         </p>
       </div>
 
@@ -175,7 +181,7 @@ export function ProductCard({
                 status.tone === 'mute' && 'text-mute',
               )}
             >
-              {status.text}
+              {t(status.text)}
             </span>
           ) : <span />}
           <span
@@ -186,13 +192,13 @@ export function ProductCard({
           >
             <WishButton
               slug={product.slug}
-              name={product.name}
+              name={copy.name}
               className="relative isolate before:absolute before:inset-[7px] before:-z-10 before:bg-bone/90 before:content-['']"
             />
           </span>
         </div>
 
-        {sold ? null : <QuickAdd product={product} open={open} setOpen={setOpen} />}
+        {sold ? null : <QuickAdd product={product} name={copy.name} open={open} setOpen={setOpen} />}
       </div>
     </article>
   );
@@ -201,11 +207,15 @@ export function ProductCard({
 /** Small squares, not circles: the grid has no curves anywhere else. */
 function Swatches({ product }: { product: Product }) {
   const { colours } = product;
+  const t = useT();
+  const locale = useLocale();
+  const names = colours.map((c) => t(c.name)).join(t(', '));
   return (
     <span className="mt-1 flex items-center gap-1.5 @min-[17rem]:col-start-2 @min-[17rem]:row-start-2 @min-[17rem]:mt-0 @min-[17rem]:justify-self-end">
       <span className="sr-only">
-        {colours.length === 1 ? 'One colour: ' : `${colours.length} colours: `}
-        {colours.map((c) => c.name).join(', ')}
+        {colours.length === 1
+          ? t('One colour: {names}', { names })
+          : t('{n} colours: {names}', { n: colours.length, names })}
       </span>
       {colours.map((c) => (
         <span
@@ -216,8 +226,8 @@ function Swatches({ product }: { product: Product }) {
         />
       ))}
       {colours.length > 1 ? (
-        <span aria-hidden className="label-sm nums ml-1 hidden text-mute @min-[30rem]:inline">
-          {colours.length} colours
+        <span aria-hidden className="label-sm nums ms-1 hidden text-mute @min-[30rem]:inline">
+          {plural(colours.length, 'colour', 'colours', locale)}
         </span>
       ) : null}
     </span>
@@ -233,11 +243,13 @@ function Swatches({ product }: { product: Product }) {
  * the drawer opening is the confirmation.
  */
 function QuickAdd({
-  product, open, setOpen,
-}: { product: Product; open: boolean; setOpen: (v: boolean) => void }) {
+  product, name, open, setOpen,
+}: { product: Product; name: string; open: boolean; setOpen: (v: boolean) => void }) {
   const { add } = useStore();
+  const t = useT();
   const { open: openOverlay } = useUi();
   const colour = product.colours[0];
+  const colourName = t(colour.name);
   const single = product.sizes.length === 1;
   const barId = useId();
   const toggle = useRef<HTMLButtonElement>(null);
@@ -276,7 +288,7 @@ function QuickAdd({
         ref={bar}
         id={barId}
         role="group"
-        aria-label={`Sizes for ${product.name}`}
+        aria-label={t('Sizes for {name}', { name })}
         className={cn(
           'bg-bone transition-[opacity,transform] duration-300 ease-expo',
           'pointer-events-none translate-y-2 opacity-0',
@@ -285,16 +297,16 @@ function QuickAdd({
           open && 'pointer-events-auto translate-y-0 opacity-100',
         )}
       >
-        <div className="flex min-h-8 items-center justify-between gap-2 border-b border-line pl-2.5 pr-1 @min-[14rem]:pl-3">
+        <div className="flex min-h-8 items-center justify-between gap-2 border-b border-line ps-2.5 pe-1 @min-[14rem]:ps-3">
           <p className="label-sm truncate text-mute">
-            <span className="hidden @min-[14rem]:inline">Quick add — </span>
-            {colour.name}
+            <span className="hidden @min-[14rem]:inline">{t('Quick add')} — </span>
+            {colourName}
           </p>
           {/* The bar's own way out, once it has been opened by the plus. */}
           <button
             type="button"
             onClick={hide}
-            aria-label="Hide sizes"
+            aria-label={t('Hide sizes')}
             tabIndex={open ? 0 : -1}
             className={cn('-my-1 h-9 w-9 items-center justify-center', open ? 'flex' : 'hidden')}
           >
@@ -308,9 +320,9 @@ function QuickAdd({
             tabIndex={open ? 0 : -1}
             className="label-sm flex min-h-11 w-full items-center justify-center gap-2 transition-colors hover:bg-ink hover:text-bone focus-visible:-outline-offset-2"
             onClick={() => addSize(product.sizes[0])}
-            aria-label={`Add ${product.name}, ${colour.name}, to bag`}
+            aria-label={t('Add {name}, {colour}, to bag', { name, colour: colourName })}
           >
-            Add to bag
+            {t('Add to bag')}
             <Icon name="plus" className="h-3 w-3" />
           </button>
         ) : (
@@ -325,7 +337,9 @@ function QuickAdd({
                   disabled={out}
                   tabIndex={open ? 0 : -1}
                   onClick={() => addSize(size)}
-                  aria-label={out ? `${size}, unavailable in ${colour.name}` : `Add ${product.name}, ${colour.name}, size ${size} to bag`}
+                  aria-label={out
+                    ? t('{size}, unavailable in {colour}', { size: t(size), colour: colourName })
+                    : t('Add {name}, {colour}, size {size} to bag', { name, colour: colourName, size: t(size) })}
                   className={cn(
                     'label-sm nums min-h-11 flex-1 px-1 text-center transition-colors duration-200 focus-visible:-outline-offset-2',
                     out ? 'cursor-not-allowed text-stone line-through' : 'hover:bg-ink hover:text-bone',
@@ -348,9 +362,9 @@ function QuickAdd({
         tabIndex={open ? -1 : 0}
         aria-expanded={open}
         aria-controls={barId}
-        aria-label={`Quick add: ${product.name}`}
+        aria-label={t('Quick add: {name}', { name })}
         className={cn(
-          'absolute bottom-1 right-1 flex h-11 w-11 items-center justify-center transition-opacity duration-200 focus-visible:-outline-offset-4',
+          'absolute bottom-1 end-1 flex h-11 w-11 items-center justify-center transition-opacity duration-200 focus-visible:-outline-offset-4',
           'before:absolute before:inset-[6px] before:bg-bone/90 before:content-[""]',
           '[@media(hover:hover)]:pointer-events-none [@media(hover:hover)]:opacity-0',
           open

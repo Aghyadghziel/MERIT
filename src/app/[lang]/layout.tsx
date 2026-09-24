@@ -13,7 +13,7 @@ import { BRAND } from '@/lib/brand';
 import { fontVariables } from '@/lib/fonts';
 import { LocaleProvider } from '@/i18n/client';
 import { dirOf, LOCALES } from '@/i18n/config';
-import { getLocale } from '@/i18n/server';
+import { getLocale, getT } from '@/i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   const ar = (await getLocale()) === 'ar';
@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     template: `%s — ${BRAND.name}`,
   },
   description: ar
-    ? 'ميرِت علامة أزياء معاصرة من الرياض. خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة.'
+    ? 'MERIT علامة أزياء معاصرة من الرياض. خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة.'
     : 'MERIT is a contemporary fashion label based in Riyadh. Tailoring, outerwear and knitwear made in small counts, sold directly.',
   applicationName: BRAND.name,
   alternates: { canonical: ar ? '/ar' : '/', languages: { en: '/', ar: '/ar' } },
@@ -39,17 +39,18 @@ export async function generateMetadata(): Promise<Metadata> {
   openGraph: {
     type: 'website',
     siteName: BRAND.name,
-    title: `${BRAND.name} — Contemporary fashion, Riyadh`,
-    description:
-      'Tailoring, outerwear and knitwear made in small counts, sold directly from Riyadh.',
+    title: ar ? `${BRAND.name} — أزياء معاصرة من الرياض` : `${BRAND.name} — Contemporary fashion, Riyadh`,
+    description: ar
+      ? 'خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة من الرياض.'
+      : 'Tailoring, outerwear and knitwear made in small counts, sold directly from Riyadh.',
     url: ar ? '/ar' : '/',
     locale: ar ? 'ar_SA' : 'en_SA',
-    images: [{ url: '/img/campaign-rule-line-wide.webp', width: 2560, height: 1440, alt: 'MERIT Autumn Winter 2026' }],
+    images: [{ url: '/img/campaign-rule-line-wide.webp', width: 2560, height: 1440, alt: ar ? 'MERIT خريف وشتاء 2026' : 'MERIT Autumn Winter 2026' }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${BRAND.name} — Contemporary fashion, Riyadh`,
-    description: 'Tailoring, outerwear and knitwear made in small counts.',
+    title: ar ? `${BRAND.name} — أزياء معاصرة من الرياض` : `${BRAND.name} — Contemporary fashion, Riyadh`,
+    description: ar ? 'خياطة ومعاطف وتريكو تُصنع بكميات قليلة.' : 'Tailoring, outerwear and knitwear made in small counts.',
     images: ['/img/campaign-rule-line-wide.webp'],
   },
   robots: { index: true, follow: true },
@@ -94,6 +95,7 @@ export const dynamicParams = false;
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
+  const t = await getT();
   return (
     // data-scroll-behavior tells Next to switch the smooth scrolling in
     // globals.css off while it resets the scroll on a route change; without
@@ -107,7 +109,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(ORGANISATION) }}
         />
-        <a className="skip-link" href="#main">Skip to content</a>
+        <a className="skip-link" href="#main">{t('Skip to content')}</a>
         <LocaleProvider locale={locale}>
         <StoreProvider>
           <UiProvider>

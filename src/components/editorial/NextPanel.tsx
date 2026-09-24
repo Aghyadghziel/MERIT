@@ -68,7 +68,7 @@ export function NextPanel({ href, eyebrow, position, title, poster, meta, dek, c
             <p className="body-lg max-w-md text-bone/80" data-reveal>{dek}</p>
             <span aria-hidden className="btn btn-solid shrink-0 self-start md:self-auto" data-reveal>
               {cta}
-              <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
             </span>
           </div>
         </div>

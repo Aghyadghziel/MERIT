@@ -28,5 +28,38 @@ export function formatPrice(sar: number, code: CurrencyCode = 'SAR', lang: 'en' 
 
 export const pad2 = (n: number) => String(n).padStart(2, '0');
 
-export const plural = (n: number, one: string, many = `${one}s`) =>
-  `${n} ${n === 1 ? one : many}`;
+/**
+ * Arabic counts take four forms: one and two are words of their own
+ * ("قطعة واحدة", "قطعتان"), 3–10 take the plural, and 0 and 11 up take the
+ * singular after the number. Keyed by the English singular passed to plural().
+ */
+type ArCount = { one: string; two: string; few: string; many: string };
+const AR_COUNT: Record<string, ArCount> = {
+  piece: { one: 'قطعة واحدة', two: 'قطعتان', few: 'قطع', many: 'قطعة' },
+  collection: { one: 'مجموعة واحدة', two: 'مجموعتان', few: 'مجموعات', many: 'مجموعة' },
+  story: { one: 'قصة واحدة', two: 'قصتان', few: 'قصص', many: 'قصة' },
+  colour: { one: 'لون واحد', two: 'لونان', few: 'ألوان', many: 'لونًا' },
+  size: { one: 'مقاس واحد', two: 'مقاسان', few: 'مقاسات', many: 'مقاسًا' },
+  look: { one: 'إطلالة واحدة', two: 'إطلالتان', few: 'إطلالات', many: 'إطلالة' },
+  result: { one: 'نتيجة واحدة', two: 'نتيجتان', few: 'نتائج', many: 'نتيجة' },
+  item: { one: 'قطعة واحدة', two: 'قطعتان', few: 'قطع', many: 'قطعة' },
+  minute: { one: 'دقيقة واحدة', two: 'دقيقتان', few: 'دقائق', many: 'دقيقة' },
+  day: { one: 'يوم واحد', two: 'يومان', few: 'أيام', many: 'يومًا' },
+};
+
+export function pluralAr(n: number, f: ArCount) {
+  const m = n % 100;
+  if (n === 1) return f.one;
+  if (n === 2) return f.two;
+  if (m >= 3 && m <= 10) return `${n} ${f.few}`;
+  return `${n} ${f.many}`;
+}
+
+/**
+ * "3 pieces". Pass the page's language as the fourth argument for Arabic;
+ * a noun without Arabic forms above falls back to the English.
+ */
+export const plural = (n: number, one: string, many = `${one}s`, lang: 'en' | 'ar' = 'en') => {
+  const ar = lang === 'ar' ? AR_COUNT[one] : undefined;
+  return ar ? pluralAr(n, ar) : `${n} ${n === 1 ? one : many}`;
+};

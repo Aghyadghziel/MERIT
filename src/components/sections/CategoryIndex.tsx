@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from '@/i18n/link';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { useLocale, useT } from '@/i18n/client';
 import { isSoldOut, products, type Category, type Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
@@ -58,6 +59,11 @@ const HANG = { gap: 28, lift: 0.62 };
  * the next. On touch, each row carries its picture inline.
  */
 export function CategoryIndex() {
+  const t = useT();
+  const ar = useLocale() === 'ar';
+  /** "06 pieces": Arabic takes the plural only from three to ten. */
+  const pieces = (n: number, padded = true) =>
+    `${padded ? pad(n) : n} ${t((ar ? n >= 3 && n <= 10 : n !== 1) ? 'pieces' : 'piece')}`;
   const [active, setActive] = useState<number | null>(null);
   const [prev, setPrev] = useState<number | null>(null);
   const area = useRef<HTMLDivElement>(null);
@@ -96,6 +102,7 @@ export function CategoryIndex() {
    * right of the word under the point (or of the point, once past the word),
    * or to the left of the point when there is no room on the right. So the
    * picture never covers the word being read and never leaves the page.
+   * In Arabic the words run from the right, so all of that is mirrored.
    */
   const hang = (px: number, py: number, row: number | null) => {
     const f = follow.current;
@@ -105,10 +112,18 @@ export function CategoryIndex() {
     const w = pic.offsetWidth;
     const h = pic.offsetHeight;
     const word = row === null ? null : words.current[row];
-    // The word's right edge, plus the 1.25rem it slides on hover.
-    const end = word ? word.getBoundingClientRect().right - box.getBoundingClientRect().left + 20 : 0;
-    const from = Math.max(px, end) + HANG.gap;
-    f.x(from + w <= box.clientWidth ? from : px - w - HANG.gap);
+    const left = box.getBoundingClientRect().left;
+    if (ar) {
+      // The word's left edge, less the 1.25rem it slides on hover.
+      const end = word ? word.getBoundingClientRect().left - left - 20 : box.clientWidth;
+      const from = Math.min(px, end) - HANG.gap - w;
+      f.x(from >= 0 ? from : px + HANG.gap);
+    } else {
+      // The word's right edge, plus the 1.25rem it slides on hover.
+      const end = word ? word.getBoundingClientRect().right - left + 20 : 0;
+      const from = Math.max(px, end) + HANG.gap;
+      f.x(from + w <= box.clientWidth ? from : px - w - HANG.gap);
+    }
     f.y(Math.max(-h * 0.35, py - h * HANG.lift));
   };
 
@@ -134,7 +149,7 @@ export function CategoryIndex() {
     if (box) {
       const a = box.getBoundingClientRect();
       const b = row.getBoundingClientRect();
-      hang(0, b.top - a.top + b.height / 2, i);
+      hang(ar ? box.clientWidth : 0, b.top - a.top + b.height / 2, i);
     }
     enter(i);
   };
@@ -150,15 +165,15 @@ export function CategoryIndex() {
     <section className="page section-y" aria-labelledby="index-title">
       <div className="grid-page items-end gap-y-6">
         <div className="col-span-4 md:col-span-4 lg:col-span-8">
-          <p className="label text-mute" data-reveal>
-            The shop <span className="nums">— {pad(ROWS.length)} categories</span>, this season and the Index
+          <p className="label nums text-mute" data-reveal>
+            {t('The shop — {n} categories, this season and the {index}', { n: pad(ROWS.length), index: t('Index') })}
           </p>
-          <h2 id="index-title" className="display-lg mt-4" data-reveal>Shop by category</h2>
+          <h2 id="index-title" className="display-lg mt-4" data-reveal>{t('Shop by category')}</h2>
         </div>
         <div className="col-span-4 md:col-span-2 lg:col-span-4 md:justify-self-end">
           <Link href={SEASON.href} className="label group inline-flex min-h-11 items-center gap-3 border-b border-ink" data-reveal>
-            <span>Shop this season <span className="nums">— {pad(SEASON.pool.length)} pieces</span></span>
-            <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+            <span>{t('Shop this season')} <span className="nums">— {pieces(SEASON.pool.length)}</span></span>
+            <Icon name="arrowR" className={cn('h-3.5 w-3.5 transition-transform duration-300', ar ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1')} />
           </Link>
         </div>
       </div>
@@ -181,15 +196,16 @@ export function CategoryIndex() {
                     data-reveal-line
                     className={cn(
                       'min-w-0 flex-1 whitespace-nowrap text-[clamp(2.1rem,0.5rem+7.4vw,9rem)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]',
-                      'transition-[color,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)] md:group-hover:translate-x-5',
+                      'transition-[color,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
+                      ar ? 'md:group-hover:-translate-x-5' : 'md:group-hover:translate-x-5',
                       dim ? 'text-stone' : 'text-ink',
                     )}
                   >
-                    <span className="pr-[0.12em]"><span ref={(n) => { words.current[i] = n; }}>{r.name}</span></span>
+                    <span className="pe-[0.12em]"><span ref={(n) => { words.current[i] = n; }}>{t(r.name)}</span></span>
                   </span>
-                  <span aria-hidden className="label-sm nums hidden shrink-0 text-right text-mute md:block">
-                    {pad(r.count)} pieces
-                    <span className="mt-1.5 block">{r.where}</span>
+                  <span aria-hidden className="label-sm nums hidden shrink-0 text-end text-mute md:block">
+                    {pieces(r.count)}
+                    <span className="mt-1.5 block">{t(r.where)}</span>
                   </span>
                   <span className="hidden h-10 w-10 shrink-0 items-center justify-center border border-ink opacity-0 transition-[opacity,background-color,color] duration-300 group-hover:bg-ink group-hover:text-bone group-hover:opacity-100 group-focus-visible:opacity-100 md:inline-flex" aria-hidden>
                     <Icon name="arrowR" className="h-4 w-4" />
@@ -197,7 +213,7 @@ export function CategoryIndex() {
                   <span className="relative block aspect-[4/5] w-14 shrink-0 overflow-hidden bg-bone-2 md:hidden">
                     <Image src={`/img/${r.img}.webp`} alt="" fill sizes="56px" className="object-cover" />
                   </span>
-                  <span className="sr-only">, {r.count} {r.count === 1 ? 'piece' : 'pieces'}, {r.where === 'Index' ? 'in the Index' : 'this season'}</span>
+                  <span className="sr-only">{t(', {count}, {where}', { count: pieces(r.count, false), where: r.where === 'Index' ? t('in the {index}', { index: t('Index') }) : t('this season') })}</span>
                 </Link>
               </li>
             );
@@ -228,8 +244,8 @@ export function CategoryIndex() {
             ))}
           </div>
           <p className="label-sm nums mt-2 flex justify-between text-ink">
-            <span>{active !== null ? ROWS[active].name : ''}</span>
-            <span className="text-mute">{active !== null ? `${pad(ROWS[active].count)} pieces` : ''}</span>
+            <span>{active !== null ? t(ROWS[active].name) : ''}</span>
+            <span className="text-mute">{active !== null ? pieces(ROWS[active].count) : ''}</span>
           </p>
         </div>
       </div>

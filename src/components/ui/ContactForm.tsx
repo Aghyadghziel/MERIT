@@ -3,6 +3,7 @@
 import Link from '@/i18n/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { useLocale, useT } from '@/i18n/client';
 import { cn } from '@/lib/cn';
 
 type Key = 'name' | 'email' | 'message';
@@ -11,6 +12,15 @@ type Errors = Partial<Record<Key, string>>;
 const SUBJECTS = ['An order', 'Sizing and fit', 'Alterations', 'An appointment', 'Press', 'Something else'];
 const EMPTY = { name: '', email: '', subject: SUBJECTS[0], message: '' };
 const MIN = 10;
+
+/** "12 characters", with the Arabic count agreeing with its number. */
+function characters(n: number, ar: boolean) {
+  if (!ar) return `${n} ${n === 1 ? 'character' : 'characters'}`;
+  if (n === 1) return 'حرف واحد';
+  if (n === 2) return 'حرفان';
+  if (n % 100 >= 3 && n % 100 <= 10) return `${n} أحرف`;
+  return `${n} ${n % 100 >= 11 ? 'حرفًا' : 'حرف'}`;
+}
 
 /**
  * Validated properly, then told the truth: there is no inbox behind this form,
@@ -26,6 +36,8 @@ export function ContactForm() {
   const [values, setValues] = useState(EMPTY);
   const done = useRef<HTMLParagraphElement>(null);
   const form = useRef<HTMLFormElement>(null);
+  const t = useT();
+  const ar = useLocale() === 'ar';
 
   useEffect(() => { if (sent) done.current?.focus(); }, [sent]);
 
@@ -37,9 +49,9 @@ export function ContactForm() {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const next: Errors = {};
-    if (!values.name.trim()) next.name = 'Tell us who you are.';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(values.email.trim())) next.email = 'We need a working email address to reply to.';
-    if (values.message.trim().length < MIN) next.message = 'A sentence or two, so we can answer properly.';
+    if (!values.name.trim()) next.name = t('Tell us who you are.');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(values.email.trim())) next.email = t('We need a working email address to reply to.');
+    if (values.message.trim().length < MIN) next.message = t('A sentence or two, so we can answer properly.');
     setErrors(next);
     const first = (['name', 'email', 'message'] as Key[]).find((k) => next[k]);
     if (first) {
@@ -52,20 +64,19 @@ export function ContactForm() {
   if (sent) {
     return (
       <div className="border-t border-ink pt-8" role="status">
-        <p className="label-sm text-mute">Not sent — concept site</p>
+        <p className="label-sm text-mute">{t('Not sent — concept site')}</p>
         <p ref={done} tabIndex={-1} className="display-lg mt-6 outline-none">
-          Thank you, {values.name.trim().split(/\s+/)[0]}.
+          {t('Thank you, {name}.', { name: values.name.trim().split(/\s+/)[0] })}
         </p>
         <p className="body-lg mt-6 max-w-[46ch] text-ink-3">
-          This is a concept site, so the message was not sent anywhere and no address was stored.
-          On a real MERIT you would have an answer within a working day.
+          {t('This is a concept site, so the message was not sent anywhere and no address was stored. On a real MERIT you would have an answer within a working day.')}
         </p>
         <button
           type="button"
           className="btn btn-ghost mt-10"
           onClick={() => { setSent(false); setValues(EMPTY); setErrors({}); }}
         >
-          Write another
+          {t('Write another')}
         </button>
       </div>
     );
@@ -74,28 +85,28 @@ export function ContactForm() {
   const count = values.message.trim().length;
 
   return (
-    <form ref={form} onSubmit={submit} noValidate aria-label="Write to client care" className="border-t border-ink">
-      <Field n={1} id="contact-name" label="Your name" error={errors.name}>
+    <form ref={form} onSubmit={submit} noValidate aria-label={t('Write to client care')} className="border-t border-ink">
+      <Field n={1} id="contact-name" label={t('Your name')} error={errors.name}>
         <input
-          id="contact-name" value={values.name} onChange={set('name')} autoComplete="name" placeholder="First and last name"
+          id="contact-name" value={values.name} onChange={set('name')} autoComplete="name" placeholder={t('First and last name')}
           aria-invalid={!!errors.name} aria-describedby={errors.name ? 'contact-name-error' : undefined}
           className={INPUT}
         />
       </Field>
 
-      <Field n={2} id="contact-email" label="Email" error={errors.email}>
+      <Field n={2} id="contact-email" label={t('Email')} error={errors.email}>
         <input
-          id="contact-email" type="email" inputMode="email" value={values.email} onChange={set('email')} autoComplete="email" placeholder="you@example.com"
+          id="contact-email" type="email" inputMode="email" dir="ltr" value={values.email} onChange={set('email')} autoComplete="email" placeholder="you@example.com"
           aria-invalid={!!errors.email} aria-describedby={errors.email ? 'contact-email-error' : undefined}
-          className={INPUT}
+          className={cn(INPUT, 'rtl:text-right')}
         />
       </Field>
 
       <fieldset className="border-b border-line py-6 sm:py-7">
-        <legend className="sr-only">What is it about?</legend>
+        <legend className="sr-only">{t('What is it about?')}</legend>
         <div className="grid gap-x-(--gutter) gap-y-4 sm:grid-cols-[7.5rem_minmax(0,1fr)]">
           <p aria-hidden className="label-sm flex items-baseline gap-3 pt-1 text-mute sm:pt-3.5">
-            <span className="nums">03</span>About
+            <span className="nums">03</span>{ar ? 'الموضوع' : 'About'}
           </p>
           <div className="flex flex-wrap gap-2">
             {SUBJECTS.map((s) => (
@@ -112,7 +123,7 @@ export function ContactForm() {
                   onChange={() => setValues((v) => ({ ...v, subject: s }))}
                   className="sr-only"
                 />
-                {s}
+                {t(s)}
               </label>
             ))}
           </div>
@@ -120,12 +131,12 @@ export function ContactForm() {
       </fieldset>
 
       <Field
-        n={4} id="contact-message" label="Message" error={errors.message}
-        hint={<span className={cn('nums', count >= MIN ? 'text-ink' : 'text-mute')}>{count} {count === 1 ? 'character' : 'characters'}</span>}
+        n={4} id="contact-message" label={t('Message')} error={errors.message}
+        hint={<span className={cn('nums', count >= MIN ? 'text-ink' : 'text-mute')}>{characters(count, ar)}</span>}
       >
         <textarea
           id="contact-message" rows={5} value={values.message} onChange={set('message')}
-          placeholder="An order number, a piece, a size — whatever helps us answer."
+          placeholder={t('An order number, a piece, a size — whatever helps us answer.')}
           aria-invalid={!!errors.message}
           aria-describedby={errors.message ? 'contact-message-error' : 'contact-message-hint'}
           className={cn(INPUT, 'resize-y leading-[1.5]')}
@@ -134,11 +145,20 @@ export function ContactForm() {
 
       <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
         <button type="submit" className="btn btn-solid group w-full sm:w-auto">
-          Send message <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+          {t('Send message')} <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
         </button>
-        <p className="max-w-[38ch] text-xs leading-relaxed text-mute sm:text-right">
-          A concept site: this form checks what you write, then tells you plainly that nothing was
-          sent. See the <Link href="/privacy" className="link-rule text-ink">privacy policy</Link>.
+        <p className="max-w-[38ch] text-xs leading-relaxed text-mute sm:text-end">
+          {ar ? (
+            <>
+              موقع تصوّري: يتحقق هذا النموذج مما تكتبه، ثم يخبرك صراحةً بأن شيئًا لم يُرسَل. راجع{' '}
+              <Link href="/privacy" className="link-rule text-ink">سياسة الخصوصية</Link>.
+            </>
+          ) : (
+            <>
+              A concept site: this form checks what you write, then tells you plainly that nothing was
+              sent. See the <Link href="/privacy" className="link-rule text-ink">privacy policy</Link>.
+            </>
+          )}
         </p>
       </div>
     </form>
@@ -185,7 +205,7 @@ function Field({
       <span
         aria-hidden
         className={cn(
-          'absolute inset-x-0 -bottom-px h-0.5 origin-left scale-x-0 bg-ink transition-transform duration-500 ease-(--ease-out) group-focus-within:scale-x-100',
+          'absolute inset-x-0 -bottom-px h-0.5 origin-left scale-x-0 bg-ink rtl:origin-right transition-transform duration-500 ease-(--ease-out) group-focus-within:scale-x-100',
           error && 'bg-oxide',
         )}
       />

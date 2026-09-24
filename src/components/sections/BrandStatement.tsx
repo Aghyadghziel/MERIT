@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from '@/i18n/link';
 import { Fragment, useLayoutEffect, useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { useT } from '@/i18n/client';
+import type { T } from '@/i18n/dictionary';
 import { BRAND } from '@/lib/brand';
 import { reduced, setupGsap } from '@/lib/gsap';
 
@@ -14,15 +16,18 @@ type Token = { word: string } | { img: string; alt: string };
  * sits where the sentence names it: the detail after "things", the room after
  * "Riyadh", the stack after "counts".
  */
-const SENTENCE: Token[] = [
-  ...'A small number of things,'.split(' ').map((word) => ({ word })),
-  { img: 'coat-atrium-2', alt: 'The tied belt of a grey wool coat, close up' },
-  ...'made for a long time. Cut on our own blocks in Riyadh,'.split(' ').map((word) => ({ word })),
-  { img: 'runway-01', alt: 'A model walking a dark runway in a pale draped look' },
-  ...'made in counts we can count,'.split(' ').map((word) => ({ word })),
-  { img: 'knit-baseline-1', alt: 'Folded knitwear stacked in grey, ash and camel' },
-  ...'and re-issued rather than replaced.'.split(' ').map((word) => ({ word })),
-];
+const sentence = (t: T): Token[] => {
+  const words = (s: string) => t(s).split(' ').map((word) => ({ word }));
+  return [
+    ...words('A small number of things,'),
+    { img: 'coat-atrium-2', alt: t('The tied belt of a grey wool coat, close up') },
+    ...words('made for a long time. Cut on our own blocks in Riyadh,'),
+    { img: 'runway-01', alt: t('A model walking a dark runway in a pale draped look') },
+    ...words('made in counts we can count,'),
+    { img: 'knit-baseline-1', alt: t('Folded knitwear stacked in grey, ash and camel') },
+    ...words('and re-issued rather than replaced.'),
+  ];
+};
 
 /**
  * The house in one sentence, on the warm white, set as large as the page will
@@ -31,6 +36,8 @@ const SENTENCE: Token[] = [
  * them. Reduced motion gets the sentence already read.
  */
 export function BrandStatement() {
+  const t = useT();
+  const SENTENCE = sentence(t);
   const root = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -70,8 +77,8 @@ export function BrandStatement() {
     <section ref={root} className="section-y bg-bone" aria-labelledby="statement-title">
       <div className="page">
         <div className="rule-t flex items-baseline justify-between gap-6 pt-4" data-reveal>
-          <h2 id="statement-title" className="label">The house</h2>
-          <p className="label nums text-mute">{BRAND.city}, since {BRAND.founded}</p>
+          <h2 id="statement-title" className="label">{t('The house')}</h2>
+          <p className="label nums text-mute">{t('{city}, since {year}', { city: t(BRAND.city), year: BRAND.founded })}</p>
         </div>
 
         <p data-bs="text" className="mt-[clamp(2.5rem,1.5rem+4vw,6rem)] text-[clamp(2.15rem,0.85rem+4.6vw,6.6rem)] font-semibold leading-[1.02] tracking-[-0.05em] text-ink">
@@ -94,11 +101,10 @@ export function BrandStatement() {
 
         <div className="mt-[clamp(2.5rem,1.5rem+3vw,4.5rem)] flex flex-wrap items-center gap-x-10 gap-y-5" data-reveal>
           <Link href="/about" className="btn">
-            About the house <Icon name="arrowR" className="h-3.5 w-3.5" />
+            {t('About the house')} <Icon name="arrowR" className="h-3.5 w-3.5" />
           </Link>
           <p className="max-w-[40ch] text-sm text-mute">
-            Two collections a year around a permanent range, Index, cut from the same patterns every
-            year and changed only when something is wrong with it.
+            {t('Two collections a year around a permanent range, {index}, cut from the same patterns every year and changed only when something is wrong with it.', { index: t('Index') })}
           </p>
         </div>
       </div>

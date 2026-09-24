@@ -1,17 +1,21 @@
 'use client';
 
 import { useLayoutEffect, useRef, useState } from 'react';
-import { Amount, LinePrice } from '@/components/commerce/CartView';
+import { Amount, LinePrice, usePieces } from '@/components/commerce/CartView';
 import { FREE_SHIPPING, useStore } from '@/components/providers/Store';
 import { Wordmark } from '@/components/ui/Wordmark';
 import { getProduct } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
-import { plural } from '@/lib/format';
 import { EASE, reduced, setupGsap } from '@/lib/gsap';
+import { useLocale, useT } from '@/i18n/client';
+import type { Locale } from '@/i18n/config';
+import { localizeProduct } from '@/i18n/products';
 
-/** Today in Riyadh, whatever the reader's own clock says. */
-const today = () =>
-  new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Riyadh' }).format(new Date());
+/** Today in Riyadh, whatever the reader's own clock says. Arabic keeps Western digits. */
+const today = (locale: Locale) =>
+  new Intl.DateTimeFormat(locale === 'ar' ? 'ar-SA-u-nu-latn-ca-gregory' : 'en-GB', {
+    day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Riyadh',
+  }).format(new Date());
 
 /**
  * The order that would have been placed, printed as a slip — and every line
@@ -23,7 +27,10 @@ const today = () =>
 export function CheckoutNotice() {
   const { bag, subtotal, count, ready } = useStore();
   const slip = useRef<HTMLDivElement>(null);
-  const [date] = useState(today);
+  const locale = useLocale();
+  const t = useT();
+  const pieces = usePieces();
+  const [date] = useState(() => today(locale));
 
   useLayoutEffect(() => {
     const el = slip.current;
@@ -55,9 +62,9 @@ export function CheckoutNotice() {
           <div className="bg-bone">
             <div className="flex items-start justify-between gap-6 px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pt-[clamp(1.25rem,0.9rem+1.2vw,2rem)]">
               <Wordmark className="h-5 w-auto" />
-              <div className="text-right">
-                <h2 id="slip-title" className="label">Order slip</h2>
-                <p className="label-sm nums mt-1.5 text-mute">{date} · Riyadh</p>
+              <div className="text-end">
+                <h2 id="slip-title" className="label">{t('Order slip')}</h2>
+                <p className="label-sm nums mt-1.5 text-mute">{date} · {t('Riyadh')}</p>
               </div>
             </div>
 
@@ -65,11 +72,12 @@ export function CheckoutNotice() {
 
             <ul className="space-y-4 px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] text-sm">
               {count === 0 ? (
-                <li className="text-mute" data-slip-row>The bag is empty.</li>
+                <li className="text-mute" data-slip-row>{t('The bag is empty.')}</li>
               ) : (
                 bag.map((line) => {
-                  const p = getProduct(line.slug);
-                  if (!p) return null;
+                  const found = getProduct(line.slug);
+                  if (!found) return null;
+                  const p = localizeProduct(found, locale);
                   return (
                     <li
                       key={`${line.slug}-${line.colour}-${line.size}`}
@@ -80,7 +88,7 @@ export function CheckoutNotice() {
                       <span className="min-w-0">
                         <span className="block font-medium leading-snug">{p.name}</span>
                         <span className="label-sm mt-1 block text-mute">
-                          {line.colour} · {line.size}
+                          {t(line.colour)} · {t(line.size)}
                         </span>
                       </span>
                       <LinePrice product={p} qty={line.qty} stack />
@@ -93,25 +101,25 @@ export function CheckoutNotice() {
             <Perforation />
 
             <dl className="space-y-2 px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] text-sm">
-              <SlipRow label={`Subtotal · ${plural(count, 'piece')}`}><Amount value={subtotal} /></SlipRow>
-              <SlipRow label="Delivery">{count === 0 ? '—' : free ? 'Free in the Gulf' : 'Not calculated'}</SlipRow>
+              <SlipRow label={`${t('Subtotal')} · ${pieces(count)}`}><Amount value={subtotal} /></SlipRow>
+              <SlipRow label={t('Delivery')}>{count === 0 ? '—' : t(free ? 'Free in the Gulf' : 'Not calculated')}</SlipRow>
             </dl>
 
             <div className="mx-[clamp(1.25rem,0.9rem+1.2vw,2rem)] mt-5 border-t-2 border-ink" />
 
             <dl className="space-y-2 px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pt-5 text-sm">
-              <SlipRow label="Order number">Not issued</SlipRow>
-              <SlipRow label="Payment">Not connected</SlipRow>
-              <SlipRow label="Shipping">Not scheduled</SlipRow>
+              <SlipRow label={t('Order number')}>{t('Not issued')}</SlipRow>
+              <SlipRow label={t('Payment')}>{t('Not connected')}</SlipRow>
+              <SlipRow label={t('Shipping')}>{t('Not scheduled')}</SlipRow>
             </dl>
 
             <div className="px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pb-[clamp(1.5rem,1rem+1.4vw,2.25rem)] pt-7" data-slip-row>
-              <p className="label">Charged</p>
+              <p className="label">{t('Charged')}</p>
               <p className="mt-3 text-[clamp(3.25rem,2.2rem+3.2vw,5.5rem)] font-semibold leading-[0.84] tracking-[-0.06em]">
                 <Amount value={0} />
               </p>
               <p className="mt-4 text-xs text-mute">
-                Kept for reference only. Your bag has not been changed.
+                {t('Kept for reference only. Your bag has not been changed.')}
               </p>
             </div>
           </div>
@@ -135,7 +143,7 @@ function SlipRow({ label, children }: { label: string; children: React.ReactNode
   return (
     <div className="flex items-baseline justify-between gap-4" data-slip-row>
       <dt className="text-mute">{label}</dt>
-      <dd className="text-right">{children}</dd>
+      <dd className="text-end">{children}</dd>
     </div>
   );
 }

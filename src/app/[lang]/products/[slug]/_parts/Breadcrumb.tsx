@@ -1,4 +1,5 @@
 import Link from '@/i18n/link';
+import { getT } from '@/i18n/server';
 
 export type Crumb = { name: string; href: string };
 
@@ -6,10 +7,11 @@ export type Crumb = { name: string; href: string };
  * The trail to the piece. The last step is the page itself, and the heading
  * right under it already says its name, so it is kept for assistive tech only.
  */
-export function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
+export async function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
+  const t = await getT();
   const last = crumbs.length - 1;
   return (
-    <nav aria-label="Breadcrumb" className="mb-7 lg:mb-[clamp(1.25rem,3.6vh,2.25rem)]">
+    <nav aria-label={t('Breadcrumb')} className="mb-7 lg:mb-[clamp(1.25rem,3.6vh,2.25rem)]">
       <ol className="label-sm flex flex-wrap items-center text-mute">
         {crumbs.map((c, i) =>
           i === last ? (

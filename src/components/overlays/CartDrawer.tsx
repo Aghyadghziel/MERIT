@@ -3,14 +3,16 @@
 import Image from 'next/image';
 import Link from '@/i18n/link';
 import { useCallback, useRef } from 'react';
-import { DeliveryRule, LinePrice, RollingAmount, Stepper, Tally, lineKey, useBagActions } from '@/components/commerce/CartView';
+import { DeliveryRule, LinePrice, RollingAmount, Stepper, Tally, lineKey, useBagActions, usePieces } from '@/components/commerce/CartView';
 import { Panel } from '@/components/overlays/Panel';
 import { FREE_SHIPPING, useStore, type Line } from '@/components/providers/Store';
 import { useUi } from '@/components/providers/Ui';
 import { Icon } from '@/components/ui/Icon';
 import { Wordmark } from '@/components/ui/Wordmark';
 import { getProduct, isSoldOut, related } from '@/lib/catalog';
-import { formatPrice, pad2, plural } from '@/lib/format';
+import { formatPrice, pad2 } from '@/lib/format';
+import { useLocale, useT } from '@/i18n/client';
+import { localizeProduct } from '@/i18n/products';
 
 /** Where an empty bag sends you: the shop, read as an index. */
 const START = [
@@ -31,11 +33,17 @@ export function CartDrawer() {
   const heading = useRef<HTMLHeadingElement>(null);
   const isOpen = overlay === 'cart';
   const code = ready ? currency : 'SAR';
+  const t = useT();
+  const locale = useLocale();
+  const pieces = usePieces();
 
   // Two pieces near the one added last, for a bag with room to spare.
   const last = bag.length > 0 && bag.length < 3 ? getProduct(bag[bag.length - 1].slug) : undefined;
   const pairs = last
-    ? related(last, 8).filter((r) => !isSoldOut(r) && !bag.some((l) => l.slug === r.slug)).slice(0, 2)
+    ? related(last, 8)
+      .filter((r) => !isSoldOut(r) && !bag.some((l) => l.slug === r.slug))
+      .slice(0, 2)
+      .map((r) => localizeProduct(r, locale))
     : [];
 
   const refocus = useCallback(() => {
@@ -44,7 +52,7 @@ export function CartDrawer() {
   const { drop, step } = useBagActions(refocus);
 
   return (
-    <Panel open={isOpen} onClose={close} label="Shopping bag" from="right">
+    <Panel open={isOpen} onClose={close} label={t('Shopping bag')} from="right">
       <div className="flex h-16 shrink-0 items-center justify-between gap-4 border-b border-line px-(--gutter) md:h-[4.5rem]">
         <h2 ref={heading} tabIndex={-1} className="flex items-baseline gap-3" style={{ outline: 'none' }}>
           {/* The title rises out of its own mask as the panel opens. The
@@ -53,12 +61,12 @@ export function CartDrawer() {
             className="inline-block overflow-hidden text-[1.625rem] font-semibold leading-none tracking-[-0.045em]"
             style={{ paddingBottom: '0.2em', marginBottom: '-0.2em' }}
           >
-            <span data-panel-line className="inline-block">Bag</span>
+            <span data-panel-line className="inline-block">{t('Bag')}</span>
           </span>
           <Tally value={ready ? count : 0} className="label text-mute" />
-          <span className="sr-only">{plural(ready ? count : 0, 'piece')}</span>
+          <span className="sr-only">{pieces(ready ? count : 0)}</span>
         </h2>
-        <button type="button" className="icon-btn" onClick={close} aria-label="Close bag">
+        <button type="button" className="icon-btn" onClick={close} aria-label={t('Close bag')}>
           <Icon name="close" />
         </button>
       </div>
@@ -66,23 +74,23 @@ export function CartDrawer() {
       {!ready || count === 0 ? (
         <div className="no-bar flex flex-1 flex-col overflow-y-auto">
           <div className="px-(--gutter) pt-10" data-panel-item>
-            <p className="display-md max-w-[12ch]">Nothing in the bag yet.</p>
+            <p className="display-md max-w-[12ch]">{t('Nothing in the bag yet.')}</p>
             <p className="mt-4 max-w-xs text-sm text-mute">
-              Pieces you add stay here, in this browser, until you take them out.
+              {t('Pieces you add stay here, in this browser, until you take them out.')}
             </p>
           </div>
 
-          <nav aria-label="Start shopping" className="mt-10 px-(--gutter)">
-            <p className="label-sm text-mute" data-panel-item>Start with</p>
+          <nav aria-label={t('Start shopping')} className="mt-10 px-(--gutter)">
+            <p className="label-sm text-mute" data-panel-item>{t('Start with')}</p>
             <ul className="mt-3">
               {START.map((s, i) => (
                 <li key={s.href} className="border-t border-ink last:border-b" data-panel-item>
                   <Link href={s.href} onClick={close} className="group flex min-h-16 items-center gap-4 py-3">
                     <span className="label-sm nums w-5 shrink-0 text-mute">{pad2(i + 1)}</span>
-                    <span className="min-w-0 flex-1 truncate text-[clamp(1.75rem,1.35rem+1.4vw,2.375rem)] font-semibold uppercase leading-[0.9] tracking-[-0.05em] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-2">
-                      {s.label}
+                    <span className="min-w-0 flex-1 truncate text-[clamp(1.75rem,1.35rem+1.4vw,2.375rem)] font-semibold uppercase leading-[0.9] tracking-[-0.05em] transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)] group-hover:translate-x-2 rtl:group-hover:-translate-x-2">
+                      {t(s.label)}
                     </span>
-                    <Icon name="arrowR" className="h-4 w-4 shrink-0 text-mute transition duration-300 group-hover:translate-x-0.5 group-hover:text-ink" />
+                    <Icon name="arrowR" className="h-4 w-4 shrink-0 text-mute transition duration-300 group-hover:translate-x-0.5 group-hover:text-ink rtl:group-hover:-translate-x-0.5" />
                   </Link>
                 </li>
               ))}
@@ -98,9 +106,9 @@ export function CartDrawer() {
             >
               <span className="flex items-center gap-2.5">
                 <Icon name="heart" className="h-4 w-4" />
-                {plural(wishlist.length, 'piece')} in your wishlist
+                {t('{pieces} in your wishlist', { pieces: pieces(wishlist.length) })}
               </span>
-              <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+              <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
             </Link>
           ) : null}
 
@@ -124,7 +132,7 @@ export function CartDrawer() {
 
             {pairs.length > 0 ? (
               <section aria-labelledby="drawer-pairs" className="border-t border-line pb-8 pt-5" data-panel-item>
-                <h3 id="drawer-pairs" className="label-sm text-mute">You may also like</h3>
+                <h3 id="drawer-pairs" className="label-sm text-mute">{t('You may also like')}</h3>
                 <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-6">
                   {pairs.map((p) => (
                     <li key={p.slug}>
@@ -152,31 +160,32 @@ export function CartDrawer() {
           <div className="on-ink shrink-0 bg-ink px-(--gutter) pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-5 text-bone">
             <div className="flex items-end justify-between gap-4" data-panel-item>
               <div>
-                <p className="label">Subtotal</p>
-                <p className="label-sm mt-1.5 text-mute-ink">{plural(count, 'piece')}</p>
+                <p className="label">{t('Subtotal')}</p>
+                <p className="label-sm mt-1.5 text-mute-ink">{pieces(count)}</p>
               </div>
               <RollingAmount value={subtotal} className="text-[2rem] font-semibold leading-[0.9] tracking-[-0.045em]" />
             </div>
             <p className="mt-3 text-xs leading-relaxed text-mute-ink" data-panel-item>
-              Free Gulf delivery over {formatPrice(FREE_SHIPPING, code)}. A concept store: checkout
-              explains, nothing is charged.
+              {t('Free Gulf delivery over {amount}. A concept store: checkout explains, nothing is charged.', {
+                amount: formatPrice(FREE_SHIPPING, code, locale),
+              })}
             </p>
 
             <div className="mt-5" data-panel-item>
               <Link href="/checkout" onClick={close} className="btn btn-solid group w-full justify-between px-5">
-                <span>Checkout</span>
-                <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                <span>{t('Checkout')}</span>
+                <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
               </Link>
               <div className="mt-1.5 flex items-center justify-between gap-4">
                 <Link href="/cart" onClick={close} className="label inline-flex min-h-11 items-center">
-                  <span className="link-rule">View bag</span>
+                  <span className="link-rule">{t('View bag')}</span>
                 </Link>
                 <button
                   type="button"
                   onClick={close}
                   className="label inline-flex min-h-11 items-center text-mute-ink transition-colors hover:text-bone"
                 >
-                  Continue shopping
+                  {t('Continue shopping')}
                 </button>
               </div>
             </div>
@@ -196,8 +205,11 @@ function DrawerRow({
   onNavigate: () => void;
 }) {
   const row = useRef<HTMLLIElement>(null);
-  const p = getProduct(line.slug);
-  if (!p) return null;
+  const t = useT();
+  const locale = useLocale();
+  const found = getProduct(line.slug);
+  if (!found) return null;
+  const p = localizeProduct(found, locale);
   const key = lineKey(line);
   const href = `/products/${p.slug}`;
 
@@ -223,7 +235,7 @@ function DrawerRow({
               <Link href={href} onClick={onNavigate} className="link-quiet">{p.name}</Link>
             </h3>
             <p className="label-sm mt-1.5 text-mute">
-              {line.colour} · {line.size === 'One size' ? 'One size' : `Size ${line.size}`}
+              {t(line.colour)} · {line.size === 'One size' ? t('One size') : t('Size {size}', { size: line.size })}
             </p>
           </div>
           <LinePrice product={p} qty={line.qty} stack className="shrink-0 text-sm" />
@@ -235,9 +247,9 @@ function DrawerRow({
             type="button"
             className="label-sm inline-flex min-h-11 items-center text-mute transition-colors hover:text-ink"
             onClick={() => onDrop(key, row.current)}
-            aria-label={`Remove ${p.name} from your bag`}
+            aria-label={t('Remove {name} from your bag', { name: p.name })}
           >
-            Remove
+            {t('Remove')}
           </button>
         </div>
       </div>

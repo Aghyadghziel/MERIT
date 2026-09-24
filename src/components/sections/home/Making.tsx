@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from '@/i18n/link';
 import { useLayoutEffect, useRef, type CSSProperties } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { useT } from '@/i18n/client';
 import { getStory } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { setupGsap, type ScrollTrigger as ST } from '@/lib/gsap';
@@ -140,6 +141,7 @@ const CSS = `
  * so the section works as a plain carousel rather than depending on the pin.
  */
 export function Making() {
+  const t = useT();
   const root = useRef<HTMLElement>(null);
   const story = getStory('on-making-the-basted-jacket');
 
@@ -157,13 +159,20 @@ export function Making() {
     const stages = panels.filter((p) => p.dataset.stage);
     const [prevBtn, nextBtn] = q('[data-mk="nav"]') as HTMLButtonElement[];
 
-    // Shared by both modes: where the strip is, and what that means.
+    // Shared by both modes: where the strip is, and what that means. Every
+    // distance is measured along the reading direction: from the left edge
+    // in English, from the right edge in Arabic, where the strip starts at
+    // the right and travels leftward (and the page's sideways scroll is
+    // negative).
+    const rtl = getComputedStyle(track).direction === 'rtl';
+    const sign = rtl ? 1 : -1;
     let pinned: ST | null = null;
     let tween: gsap.core.Tween | null = null;
     const dist = () => Math.max(0, track.offsetWidth - viewport.clientWidth);
-    const offset = () => (tween ? -Number(gsap.getProperty(track, 'x')) : viewport.scrollLeft);
+    const offset = () => (tween ? sign * Number(gsap.getProperty(track, 'x')) : Math.abs(viewport.scrollLeft));
+    const along = (p: HTMLElement) => (rtl ? track.offsetWidth - p.offsetLeft - p.offsetWidth : p.offsetLeft);
     const centred = (p: HTMLElement) =>
-      gsap.utils.clamp(0, dist(), p.offsetLeft - (viewport.clientWidth - p.offsetWidth) / 2);
+      gsap.utils.clamp(0, dist(), along(p) - (viewport.clientWidth - p.offsetWidth) / 2);
 
     // The arrows are never `disabled`: a disabled button drops the focus it
     // holds. At either end they say so and do nothing.
@@ -175,8 +184,8 @@ export function Making() {
       const mid = o + viewport.clientWidth / 2;
       let best = 0;
       stages.forEach((p, i) => {
-        const a = Math.abs(p.offsetLeft + p.offsetWidth / 2 - mid);
-        const b = Math.abs(stages[best].offsetLeft + stages[best].offsetWidth / 2 - mid);
+        const a = Math.abs(along(p) + p.offsetWidth / 2 - mid);
+        const b = Math.abs(along(stages[best]) + stages[best].offsetWidth / 2 - mid);
         if (a < b) best = i;
       });
       count.textContent = pad(best + 1);
@@ -189,7 +198,7 @@ export function Making() {
         const d = dist() || 1;
         window.scrollTo({ top: pinned.start + (target / d) * (pinned.end - pinned.start), behavior: 'smooth' });
       } else {
-        viewport.scrollTo({ left: target, behavior: 'smooth' });
+        viewport.scrollTo({ left: rtl ? -target : target, behavior: 'smooth' });
       }
     };
     const step = (dir: 1 | -1) => {
@@ -213,7 +222,7 @@ export function Making() {
       gsap.set(viewport, { overflow: 'hidden', scrollSnapType: 'none' });
 
       tween = gsap.to(track, {
-        x: () => -dist(),
+        x: () => sign * dist(),
         ease: 'none',
         onUpdate: update,
         scrollTrigger: {
@@ -230,9 +239,12 @@ export function Making() {
 
       // Each photograph drifts inside its frame as it crosses the room.
       q('[data-mk="drift"]').forEach((img) => {
-        gsap.fromTo(img, { xPercent: -5 }, {
-          xPercent: 5, ease: 'none',
-          scrollTrigger: { trigger: img.parentElement, containerAnimation: tween!, start: 'left right', end: 'right left', scrub: true },
+        gsap.fromTo(img, { xPercent: 5 * sign }, {
+          xPercent: -5 * sign, ease: 'none',
+          scrollTrigger: {
+            trigger: img.parentElement, containerAnimation: tween!, scrub: true,
+            start: rtl ? 'right left' : 'left right', end: rtl ? 'left right' : 'right left',
+          },
         });
       });
 
@@ -245,7 +257,7 @@ export function Making() {
         gsap.set(after, { opacity: 0 });
         gsap.timeline({
           defaults: { ease: 'none' },
-          scrollTrigger: { trigger: sheet, containerAnimation: tween!, start: 'left 92%', end: 'center 50%', scrub: true },
+          scrollTrigger: { trigger: sheet, containerAnimation: tween!, start: rtl ? 'right 8%' : 'left 92%', end: 'center 50%', scrub: true },
         })
           .to(strokes, { strokeDashoffset: 0, duration: 1, stagger: { amount: 0.6 } }, 0)
           .to(after, { opacity: 1, duration: 0.4, stagger: { amount: 0.3 } }, 0.9);
@@ -287,22 +299,22 @@ export function Making() {
           data-mk="viewport"
           role="region"
           tabIndex={0}
-          aria-label="The making, six stages. Scroll sideways."
+          aria-label={t('The making, six stages. Scroll sideways.')}
           className="no-bar min-h-0 flex-1 snap-x snap-mandatory scroll-px-(--gutter) overflow-x-auto overflow-y-hidden overscroll-x-contain focus-visible:outline-offset-[-4px]"
         >
           <div data-mk="track" className="mk-track relative flex h-full w-max items-center px-(--gutter)">
             {/* Intro */}
             <div data-mk="panel" className="mk-intro flex shrink-0 snap-start flex-col justify-center">
-              <p className="label text-mute-ink">The making — {pad(STAGES.length)} stages</p>
+              <p className="label text-mute-ink">{t('The making — {n} stages', { n: pad(STAGES.length) })}</p>
               <h2 id="making-title" className="mk-title mt-5 font-semibold leading-[0.86] tracking-[-0.055em]">
-                How a jacket is made.
+                {t('How a jacket is made.')}
               </h2>
               <p className="mt-5 max-w-[34ch] text-mute-ink md:mt-7 md:text-[1.0625rem] md:leading-relaxed">
-                The Rule jacket, from the cloth to the rail, in the order it happens.
+                {t('The Rule jacket, from the cloth to the rail, in the order it happens.')}
               </p>
               <p className="label-sm mt-7 inline-flex items-center gap-3 text-bone/80 md:mt-10" aria-hidden>
-                <span className="motion-reduce:hidden">Keep scrolling</span>
-                <span className="motion-safe:hidden">Swipe, or use the arrows</span>
+                <span className="motion-reduce:hidden">{t('Keep scrolling')}</span>
+                <span className="motion-safe:hidden">{t('Swipe, or use the arrows')}</span>
                 <Icon name="arrowR" className="h-3.5 w-3.5" />
               </p>
             </div>
@@ -328,7 +340,7 @@ export function Making() {
                       <Drawing />
                     ) : 'img' in s ? (
                       <div data-mk="drift" className="absolute inset-y-0 -inset-x-[7%]">
-                        <Image src={`/img/${s.img}.webp`} alt={s.alt} fill className="object-cover"
+                        <Image src={`/img/${s.img}.webp`} alt={t(s.alt)} fill className="object-cover"
                           sizes="(min-width:768px) 32vw, 82vw" />
                       </div>
                     ) : null}
@@ -336,8 +348,8 @@ export function Making() {
                   <div className="mk-cap grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-2">
                     <span className="label-sm nums pt-[0.3rem] text-mute-ink">{pad(i + 1)}</span>
                     <div>
-                      <h3 id={`making-stage-${i}`} className="display-sm font-semibold">{s.title}</h3>
-                      <p className="mt-2 text-[0.8125rem] leading-[1.55] text-mute-ink md:text-sm">{s.text}</p>
+                      <h3 id={`making-stage-${i}`} className="display-sm font-semibold">{t(s.title)}</h3>
+                      <p className="mt-2 text-[0.8125rem] leading-[1.55] text-mute-ink md:text-sm">{t(s.text)}</p>
                     </div>
                   </div>
                 </article>
@@ -347,17 +359,17 @@ export function Making() {
             {/* Outro: where to read the whole of it, and the jacket itself. */}
             <div data-mk="panel" className="mk-outro flex shrink-0 snap-start flex-col justify-center">
               <div className="mk-outro-pic relative aspect-[16/10] overflow-hidden bg-ink-2">
-                <Image src="/img/manifesto-rail.webp" alt="Empty white hangers on a rail" fill className="object-cover" sizes="(min-width:768px) 34vw, 80vw" />
+                <Image src="/img/manifesto-rail.webp" alt={t('Empty white hangers on a rail')} fill className="object-cover" sizes="(min-width:768px) 34vw, 80vw" />
               </div>
               <p className="label-sm mt-6 text-mute-ink">
-                {story?.kicker ?? 'Atelier'} <span className="nums">— {story?.readingTime ?? 6} min read</span>
+                {t(story?.kicker ?? 'Atelier')} <span className="nums">— {t('{n} min read', { n: story?.readingTime ?? 6 })}</span>
               </p>
-              <h3 className="display-md mt-3">{story?.title ?? 'On Making: The Basted Jacket'}</h3>
+              <h3 className="display-md mt-3">{t(story?.title ?? 'On Making: The Basted Jacket')}</h3>
               <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-4">
                 <Link href="/editorial/on-making-the-basted-jacket" className="btn btn-solid">
-                  Read the story <Icon name="arrowR" className="h-3.5 w-3.5" />
+                  {t('Read the story')} <Icon name="arrowR" className="h-3.5 w-3.5" />
                 </Link>
-                <Link href="/products/rule-two-button-jacket" className="link-rule label">Shop the Rule jacket</Link>
+                <Link href="/products/rule-two-button-jacket" className="link-rule label">{t('Shop the Rule jacket')}</Link>
               </div>
             </div>
           </div>
@@ -369,13 +381,13 @@ export function Making() {
             <span data-mk="count">01</span> <span className="text-mute-ink">/ {pad(STAGES.length)}</span>
           </span>
           <span className="relative h-px flex-1 bg-line-ink-2" aria-hidden>
-            <span data-mk="bar" className="absolute inset-0 origin-left bg-bone" style={{ transform: 'scaleX(0)' }} />
+            <span data-mk="bar" className="absolute inset-0 origin-left bg-bone rtl:origin-right" style={{ transform: 'scaleX(0)' }} />
           </span>
-          <span className="flex shrink-0 items-center gap-5 pr-2">
-            <button type="button" data-mk="nav" aria-label="Previous stage" aria-disabled="true" className="icon-btn aria-disabled:cursor-default aria-disabled:opacity-30">
+          <span className="flex shrink-0 items-center gap-5 pe-2">
+            <button type="button" data-mk="nav" aria-label={t('Previous stage')} aria-disabled="true" className="icon-btn aria-disabled:cursor-default aria-disabled:opacity-30">
               <Icon name="arrowL" className="h-4 w-4" />
             </button>
-            <button type="button" data-mk="nav" aria-label="Next stage" className="icon-btn aria-disabled:cursor-default aria-disabled:opacity-30">
+            <button type="button" data-mk="nav" aria-label={t('Next stage')} className="icon-btn aria-disabled:cursor-default aria-disabled:opacity-30">
               <Icon name="arrowR" className="h-4 w-4" />
             </button>
           </span>

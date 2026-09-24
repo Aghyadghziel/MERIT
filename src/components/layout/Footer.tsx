@@ -2,6 +2,7 @@
 
 import Link from '@/i18n/link';
 import { LanguageSwitch } from '@/i18n/LanguageSwitch';
+import { useT } from '@/i18n/client';
 import { useSyncExternalStore } from 'react';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Newsletter } from '@/components/sections/Newsletter';
@@ -26,10 +27,11 @@ const readClock = () => riyadhTime.format(new Date());
 const serverClock = () => '';
 
 function RiyadhClock() {
+  const t = useT();
   const time = useSyncExternalStore(subscribeClock, readClock, serverClock);
   return (
     <span className="nums">
-      {BRAND.city} <span className="text-bone">{time || '--:--'}</span> <span className="sr-only">local time</span>
+      {t(BRAND.city)} <span className="text-bone" dir="ltr">{time || '--:--'}</span> <span className="sr-only">{t('local time')}</span>
     </span>
   );
 }
@@ -42,21 +44,22 @@ function RiyadhClock() {
  * the letter and the small print follow.
  */
 export function Footer() {
+  const t = useT();
   const toTop = () => {
     window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
-    document.querySelector<HTMLElement>('header a[href="/"]')?.focus({ preventScroll: true });
+    document.querySelector<HTMLElement>('header a[data-home]')?.focus({ preventScroll: true });
   };
 
   return (
     <footer className="on-ink relative bg-ink text-bone">
       <div className="page pb-8 pt-10 md:pb-10 md:pt-12">
         <div className="flex items-center justify-between">
-          <p className="label-sm text-bone/60">{BRAND.city} — since {BRAND.founded}</p>
-          <p className="label-sm text-bone/60">Autumn Winter 2026</p>
+          <p className="label-sm nums text-bone/60">{t('{city} — since {year}', { city: t(BRAND.city), year: BRAND.founded })}</p>
+          <p className="label-sm nums text-bone/60">{t('Autumn Winter 2026')}</p>
         </div>
         <LiquidLogo className="mx-auto mt-4 w-full md:mt-6" />
         <p className="mt-4 text-[clamp(1.05rem,0.95rem+0.5vw,1.3rem)] font-semibold leading-tight tracking-[-0.03em] md:mt-6">
-          Quiet structure, expressive movement.
+          {t(BRAND.line)}
         </p>
       </div>
 
@@ -67,13 +70,13 @@ export function Footer() {
       <div className="page border-t border-line-ink">
         <div className="grid-page gap-y-10 py-10 md:py-12">
           {FOOTER.map((group) => (
-            <nav key={group.title} aria-label={group.title} className="col-span-2 md:col-span-3 lg:col-span-2">
-              <p className="label-sm text-mute-ink">{group.title}</p>
+            <nav key={group.title} aria-label={t(group.title)} className="col-span-2 md:col-span-3 lg:col-span-2">
+              <p className="label-sm text-mute-ink">{t(group.title)}</p>
               <ul className="mt-4 space-y-0.5">
                 {group.links.map((l) => (
                   <li key={l.label}>
                     <Link href={l.href} className="link-quiet inline-flex min-h-8 items-center text-[0.9375rem]">
-                      {l.label}
+                      {t(l.label)}
                     </Link>
                   </li>
                 ))}
@@ -82,19 +85,19 @@ export function Footer() {
           ))}
 
           <div className="col-span-4 md:col-span-6 lg:col-span-3 lg:col-start-10">
-            <p className="label-sm text-mute-ink">Stores</p>
+            <p className="label-sm text-mute-ink">{t('Stores')}</p>
             <address className="mt-5 space-y-4 text-[0.9375rem] not-italic leading-snug">
               <span className="block">
-                <span className="block">Riyadh — Flagship</span>
-                <span className="block text-mute-ink">Al Urubah Road, Al Olaya</span>
+                <span className="block">{t('Riyadh — Flagship')}</span>
+                <span className="block text-mute-ink">{t('Al Urubah Road, Al Olaya')}</span>
               </span>
               <span className="block">
-                <span className="block">Jeddah — Atelier</span>
-                <span className="block text-mute-ink">Al Rawdah District, by appointment</span>
+                <span className="block">{t('Jeddah — Atelier')}</span>
+                <span className="block text-mute-ink">{t('Al Rawdah District, by appointment')}</span>
               </span>
             </address>
             <Link href="/stores" className="label link-arrow mt-6 min-h-11">
-              All stores
+              {t('All stores')}
               <Icon name="arrowR" className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -107,9 +110,9 @@ export function Footer() {
             {/* No social link: MERIT is a concept and owns no account, so a
                 handle here would send people to whoever does. */}
             <li>
-              <a href={`mailto:${BRAND.email}`} className="link-quiet inline-flex min-h-11 items-center">{BRAND.email}</a>
+              <a href={`mailto:${BRAND.email}`} className="link-quiet inline-flex min-h-11 items-center" dir="ltr">{BRAND.email}</a>
             </li>
-            <li className="nums text-mute-ink">{BRAND.phone}</li>
+            <li className="nums text-mute-ink" dir="ltr">{BRAND.phone}</li>
           </ul>
 
           <div className="grid grid-cols-2 items-center gap-x-(--gutter) gap-y-3 lg:flex lg:gap-x-9">
@@ -120,7 +123,7 @@ export function Footer() {
               <LanguageSwitch />
             </div>
             <button type="button" onClick={toTop} className="label group/top col-span-2 flex min-h-11 items-center gap-2 justify-self-start">
-              Back to top
+              {t('Back to top')}
               <Icon name="arrowUp" className="h-3.5 w-3.5 transition-transform duration-500 ease-(--ease-expo) group-hover/top:-translate-y-1" />
             </button>
           </div>
@@ -130,13 +133,12 @@ export function Footer() {
       <div className="page border-t border-line-ink">
         <div className="grid-page gap-y-3 py-5 text-xs leading-relaxed text-mute-ink">
           <p className="col-span-4 md:col-span-3 lg:col-span-4">
-            © {new Date().getFullYear()} {BRAND.legal}. {BRAND.city}, {BRAND.country}.
+            © {new Date().getFullYear()} {BRAND.legal}. {t('{city}, {country}.', { city: t(BRAND.city), country: t(BRAND.country) })}
           </p>
           <p className="col-span-4 max-w-lg md:col-span-3 lg:col-span-5">
-            A concept site. {BRAND.name} is not a real company: the garments, prices, stock and
-            stores here are invented, and nothing can be bought.
+            {t('A concept site. {name} is not a real company: the garments, prices, stock and stores here are invented, and nothing can be bought.', { name: BRAND.name })}
           </p>
-          <p className="label-sm col-span-4 md:col-span-6 lg:col-span-3 lg:text-right">
+          <p className="label-sm col-span-4 md:col-span-6 lg:col-span-3 lg:text-end">
             <RiyadhClock />
           </p>
         </div>

@@ -10,13 +10,22 @@ import { Price } from '@/components/commerce/Price';
 import { Icon } from '@/components/ui/Icon';
 import { collections, products, type Collection } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
-import { plural } from '@/lib/format';
+import type { Locale } from '@/i18n/config';
+import { localePath } from '@/i18n/config';
+import type { T } from '@/i18n/dictionary';
+import { localizeProduct } from '@/i18n/products';
+import { getLocale, getT } from '@/i18n/server';
+import { count, localizeCollection } from '@/i18n/stories';
 
-export const metadata: Metadata = {
-  title: 'Collections',
-  description: 'Foundation, Atrium, Index and Runway 01 — the four MERIT collections, seasonal and permanent.',
-  alternates: { canonical: '/collections' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getT();
+  return {
+    title: t('Collections'),
+    description: t('Foundation, Atrium, Index and Runway 01 — the four MERIT collections, seasonal and permanent.'),
+    alternates: { canonical: localePath('/collections', locale), languages: { en: '/collections', ar: '/ar/collections' } },
+  };
+}
 
 /** Each chapter is its own room: black, warm white, stone, graphite. */
 const ROOM: Record<string, { bg: string; dark: boolean }> = {
@@ -32,7 +41,9 @@ const ROOM: Record<string, { bg: string; dark: boolean }> = {
  * and the next slides over it — so the four read as pages turned, not rows
  * scrolled past.
  */
-export default function CollectionsPage() {
+export default async function CollectionsPage() {
+  const locale = await getLocale();
+  const t = await getT();
   const seasons = collections.filter((c) => c.season !== 'Permanent' && c.season !== 'Runway').length;
 
   return (
@@ -40,33 +51,33 @@ export default function CollectionsPage() {
       {/* ─── Masthead ─────────────────────────────────────────────────── */}
       <header className="page pt-(--nav-h)">
         <div className="mt-8 flex items-baseline justify-between gap-6 border-b border-ink pb-3 md:mt-12">
-          <p className="label" data-reveal>Seasonal and permanent</p>
-          <p className="label nums" data-reveal>{pad(collections.length)} collections</p>
+          <p className="label" data-reveal>{t('Seasonal and permanent')}</p>
+          <p className="label nums" data-reveal>{count(locale, collections.length, 'collection', pad(collections.length))}</p>
         </div>
-        <Poster as="h1" text="Collections" cap="34svh" className="mt-3 md:mt-5" />
+        <Poster as="h1" text={t('Collections')} cap="34svh" className="mt-3 md:mt-5" />
 
         <div className="grid-page mt-5 gap-y-10 border-t border-ink pb-(--section-sm) pt-5 md:mt-7">
           <p
             className="col-span-4 md:col-span-3 lg:col-span-5 text-[clamp(1.5rem,1rem+1.9vw,2.75rem)] font-semibold leading-[1.02] tracking-[-0.04em] [text-wrap:balance]"
             data-reveal
           >
-            {seasons === 2 ? 'Two seasons, one permanent range, and the archive.' : 'The seasons, the permanent range, and the archive.'}
+            {t(seasons === 2 ? 'Two seasons, one permanent range, and the archive.' : 'The seasons, the permanent range, and the archive.')}
           </p>
 
-          <nav aria-label="Collections" className="col-span-4 md:col-span-3 lg:col-span-6 lg:col-start-7">
-            <p className="label-sm text-mute" data-reveal>Contents</p>
+          <nav aria-label={t('Collections')} className="col-span-4 md:col-span-3 lg:col-span-6 lg:col-start-7">
+            <p className="label-sm text-mute" data-reveal>{t('Contents')}</p>
             <ol className="mt-3">
               {collections.map((c, i) => (
                 <li key={c.slug} className="border-t border-line last:border-b" data-reveal>
                   <a href={`#${c.slug}`} className="group flex min-h-12 items-center gap-4 py-2.5">
                     <span className="label-sm nums w-6 shrink-0 text-mute">{pad(i + 1)}</span>
-                    <span className="flex-1 text-[0.9375rem] font-medium leading-snug transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:group-hover:translate-x-1.5">
+                    <span className="flex-1 text-[0.9375rem] font-medium leading-snug transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:group-hover:translate-x-1.5 rtl:md:group-hover:-translate-x-1.5">
                       {c.name}
                     </span>
                     <span className="label-sm nums hidden shrink-0 text-mute sm:inline">
-                      {collectionSeason(c)} · {count(c)}
+                      {collectionSeason(c, t)} · {pieceCount(c, locale)}
                     </span>
-                    <Icon name="arrowR" className="h-3.5 w-3.5 shrink-0 rotate-90 transition-transform duration-300 group-hover:translate-y-0.5" />
+                    <Icon name="arrowR" className="h-3.5 w-3.5 shrink-0 rotate-90 rtl:-rotate-90 transition-transform duration-300 group-hover:translate-y-0.5" />
                   </a>
                 </li>
               ))}
@@ -79,7 +90,7 @@ export default function CollectionsPage() {
       <ChapterStack>
         {collections.map((c, i) => (
           <Fragment key={c.slug}>
-            <Chapter collection={c} n={i} flip={i % 2 === 1} />
+            <Chapter collection={localizeCollection(c, locale)} n={i} flip={i % 2 === 1} t={t} locale={locale} />
             {/* A held beat: the pinned chapter stays whole for a while before
                 the next one starts to cover it. Only where chapters pin. */}
             {i < collections.length - 1 ? (
@@ -91,10 +102,10 @@ export default function CollectionsPage() {
 
       <div className="page section-y">
         <Link href="/editorial" className="group flex flex-col gap-3 border-y border-ink py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-6 md:py-8">
-          <span className="label text-mute">How they were made and shown</span>
+          <span className="label text-mute">{t('How they were made and shown')}</span>
           <span className="inline-flex items-center justify-between gap-3 whitespace-nowrap text-[clamp(1.5rem,0.9rem+1.4vw,2.25rem)] font-semibold tracking-[-0.035em]">
-            Editorial
-            <Icon name="arrowR" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5" />
+            {t('Editorial')}
+            <Icon name="arrowR" className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1.5 rtl:group-hover:-translate-x-1.5" />
           </span>
         </Link>
       </div>
@@ -102,7 +113,7 @@ export default function CollectionsPage() {
   );
 }
 
-const count = (c: Collection) => plural(products.filter((p) => p.collection === c.slug).length, 'piece');
+const pieceCount = (c: Collection, locale: Locale) => count(locale, products.filter((p) => p.collection === c.slug).length, 'piece');
 
 /**
  * The width a chapter's picture is drawn at. A portrait fills its half of the
@@ -114,10 +125,10 @@ const chapterSizes = (image: string) =>
     ? '(min-width:1024px) max(50vw, 178svh), (min-width:768px) 119vw, 223vw'
     : '(min-width:1024px) max(50vw, 80svh), 100vw';
 
-function Chapter({ collection: c, n, flip }: { collection: Collection; n: number; flip: boolean }) {
+function Chapter({ collection: c, n, flip, t, locale }: { collection: Collection; n: number; flip: boolean; t: T; locale: Locale }) {
   const room = ROOM[c.slug] ?? { bg: 'bg-bone-2', dark: false };
   const href = `/collections/${c.slug}`;
-  const pieces = looksFor(c).slice(0, 3);
+  const pieces = looksFor(c).slice(0, 3).map((l) => ({ ...l, product: localizeProduct(l.product, locale) }));
 
   return (
     <section
@@ -153,7 +164,7 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
               <ArtImage wide={c.image} alt="" sizes={chapterSizes(c.image)} priority={n === 0} />
             </div>
           </div>
-          <span className="label absolute left-(--gutter) top-5 text-bone mix-blend-difference lg:hidden">{pad(n + 1)}</span>
+          <span className="label absolute start-(--gutter) top-5 text-bone mix-blend-difference lg:hidden">{pad(n + 1)}</span>
         </Link>
 
         {/* The words, and a way in. */}
@@ -166,7 +177,7 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
         >
           <div className={cn('flex items-baseline justify-between gap-6 border-t pt-4', room.dark ? 'border-bone/25' : 'border-ink/25')}>
             <p className="label nums">{pad(n + 1)} <span className="opacity-50">/ {pad(collections.length)}</span></p>
-            <p className="label nums">{collectionSeason(c)}</p>
+            <p className="label nums">{collectionSeason(c, t)}</p>
           </div>
 
           <div>
@@ -177,7 +188,7 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
 
           <div>
             {pieces.length ? (
-              <ul aria-label={`From ${c.name}`} className="grid grid-cols-3 gap-3">
+              <ul aria-label={t('From {name}', { name: c.name })} className="grid grid-cols-3 gap-3">
                 {pieces.map(({ product }) => (
                   <li key={product.slug} data-reveal>
                     <Link href={`/products/${product.slug}`} className="group/piece flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-3">
@@ -203,7 +214,7 @@ function Chapter({ collection: c, n, flip }: { collection: Collection; n: number
 
             <div className="mt-8">
               <Link href={href} className="btn btn-solid">
-                Enter {c.name} <Icon name="arrowR" className="h-3.5 w-3.5" />
+                {t('Enter {name}', { name: c.name })} <Icon name="arrowR" className="h-3.5 w-3.5" />
               </Link>
             </div>
           </div>

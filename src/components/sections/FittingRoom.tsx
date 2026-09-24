@@ -4,6 +4,7 @@ import Link from '@/i18n/link';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Price } from '@/components/commerce/Price';
 import { useStore } from '@/components/providers/Store';
+import { useLocale, useT } from '@/i18n/client';
 import { useUi } from '@/components/providers/Ui';
 import { Icon } from '@/components/ui/Icon';
 import { Wordmark } from '@/components/ui/Wordmark';
@@ -281,6 +282,15 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
 
   const { add } = useStore();
   const { open, overlay } = useUi();
+  const t = useT();
+  const ar = useLocale() === 'ar';
+  // Inside the room (which is laid out left to right) the words still read
+  // right to left: each block of text carries the page's own direction.
+  const textDir = ar ? 'rtl' : undefined;
+  // The announcement is written from inside the dressing effect, which must
+  // not re-run when the language changes; it reads the current one from here.
+  const tRef = useRef(t);
+  useEffect(() => { tRef.current = t; }, [t]);
 
   useEffect(() => { list.current = items; }, [items]);
 
@@ -477,9 +487,10 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
       setShown(active);
       setSize(null);
       setSizeError(false);
+      const tr = tRef.current;
       setAnnounce(active === 0
-        ? `Jacket taken off. Now wearing the ${looks[0].product.name}.`
-        : `Now wearing the ${looks[active].product.name} in ${looks[active].colour}.`);
+        ? tr('Jacket taken off. Now wearing the {name}.', { name: looks[0].product.name })
+        : tr('Now wearing the {name} in {colour}.', { name: looks[active].product.name, colour: tr(looks[active].colour) }));
       if (strip.current && !reduced()) {
         gsap.fromTo(strip.current.querySelectorAll('[data-swap]'),
           { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, stagger: 0.05, ease: 'power3.out' });
@@ -611,24 +622,27 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
   // On a phone the corner is narrow and sits beside his head, so it keeps to
   // a few words; the jacket's own name is on the rail right beside him.
   const status: { label: string; line: string; phone: string | null; prompt?: boolean } =
-    media === 'dressing' ? { label: 'Putting on', line: target.product.name, phone: null }
-      : media === 'removing' ? { label: 'Taking off', line: items[shown].product.name, phone: null }
-        : hovered ? { label: hover === active ? 'Take off' : active ? 'Swap for' : 'Try on', line: hovered.product.name, phone: null }
-          : active ? { label: 'Wearing', line: target.product.name, phone: 'Tap to swap' }
+    media === 'dressing' ? { label: t('Putting on'), line: target.product.name, phone: null }
+      : media === 'removing' ? { label: t('Taking off'), line: items[shown].product.name, phone: null }
+        : hovered ? { label: t(hover === active ? 'Take off' : active ? 'Swap for' : 'Try on'), line: hovered.product.name, phone: null }
+          : active ? { label: t('Wearing'), line: target.product.name, phone: t('Tap to swap') }
             : { label: '', line: '', phone: '', prompt: true };
 
   return (
     <section ref={root} aria-labelledby="fr-title" className="fr-room relative bg-bone">
       <style href="merit-fitting-room" precedence="medium">{GEOMETRY}</style>
       <noscript><style dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} /></noscript>
-      <h1 id="fr-title" className="sr-only">MERIT, Autumn Winter 2026. The Fitting Room: choose a jacket and see it worn.</h1>
+      <h1 id="fr-title" className="sr-only">{t('MERIT, Autumn Winter 2026. The Fitting Room: choose a jacket and see it worn.')}</h1>
 
       <div
         ref={stage}
         role="group"
-        aria-label="The Fitting Room. Choose a jacket to put on. Keys 1 and 2 put one on, 0 takes it off."
+        // The room is a picture: it keeps its English composition in Arabic
+        // (sand on the left, leather on the right), only its words change.
+        dir="ltr"
+        aria-label={t('The Fitting Room. Choose a jacket to put on. Keys 1 and 2 put one on, 0 takes it off.')}
         aria-busy={working}
-        data-cursor-busy={working ? (media === 'removing' ? 'Taking off' : 'Putting on') : undefined}
+        data-cursor-busy={working ? t(media === 'removing' ? 'Taking off' : 'Putting on') : undefined}
         className="fr-stage group/room relative overflow-hidden border-b border-line"
       >
         {/* The header is clear only over this band at the top of the room, so
@@ -657,7 +671,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
                 <source media="(max-width: 767px)"
                   srcSet={`${url(items[0].still.mobile)} 1x, ${url(items[0].still.file)} 1.5x`} />
               ) : null}
-              <img src={url(items[0].still!.file)} alt={items[0].alt} width={FRAME.width} height={FRAME.height}
+              <img src={url(items[0].still!.file)} alt={t(items[0].alt)} width={FRAME.width} height={FRAME.height}
                 fetchPriority="high" decoding="async" className="h-full w-full object-contain" draggable={false} />
             </picture>
           </div>
@@ -702,7 +716,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               aria-disabled={working || undefined}
               aria-keyshortcuts={String(i)}
               aria-label={name}
-              data-cursor={working ? undefined : on ? 'Take off' : active ? 'Swap' : 'Wear'}
+              data-cursor={working ? undefined : t(on ? 'Take off' : active ? 'Swap' : 'Wear')}
               className={cn(
                 'fr-rail group z-20 flex flex-col',
                 left ? 'items-start text-left' : 'items-end text-right',
@@ -725,18 +739,19 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
 
               {/* Set in from the image box to the garment's own edge: the flat
                   shots carry about a tenth of their width in clear margin. */}
-              <span data-fr="tag" className={cn('mt-3 block w-full md:mt-4', left ? 'pl-[9%]' : 'pr-[9%]')}>
+              <span data-fr="tag" dir={textDir} className={cn('mt-3 block w-full md:mt-4', left ? 'pl-[9%]' : 'pr-[9%]')}>
                 <span className="fr-extra label-sm nums block text-mute">
-                  {on ? 'On the model' : `${pad(i)} / ${pad(jackets)}`}
+                  {on ? t('On the model') : `${pad(i)} / ${pad(jackets)}`}
                 </span>
                 <span className="fr-name mt-1.5 block text-[0.8125rem] font-semibold leading-[1.15] tracking-[-0.015em] sm:text-[0.95rem]">
                   {name}
                 </span>
                 <Price amount={it.product.price} compareAt={it.product.compareAt} size="xs" className="fr-extra mt-1 text-mute max-sm:hidden" />
-                <span className={cn('label mt-3 flex items-center gap-2', !left && 'flex-row-reverse')}>
-                  <span className="flex items-center gap-2">
+                <span dir="ltr" className={cn('label mt-3 flex items-center gap-2', !left && 'flex-row-reverse')}>
+                  {/* In Arabic the arrow leads, pointing the way Arabic reads. */}
+                  <span className={cn('flex items-center gap-2', ar && 'flex-row-reverse')}>
                     <span className="relative whitespace-nowrap pb-1">
-                      {on ? 'Take off' : 'Wear it'}
+                      {t(on ? 'Take off' : 'Wear it')}
                       <span aria-hidden className={cn(
                         'absolute inset-x-0 bottom-0 h-px origin-left bg-current transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
                         on ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100 group-focus-visible:scale-x-100',
@@ -744,7 +759,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
                     </span>
                     <Icon name={on ? 'close' : 'arrowR'} className={cn(
                       'mb-1 h-3 w-3 transition-transform duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
-                      !on && 'group-hover:translate-x-1',
+                      !on && (ar ? 'group-hover:-translate-x-1' : 'group-hover:translate-x-1'),
                     )} />
                   </span>
                   {/* The key that does the same, shown once focus is in the
@@ -762,26 +777,26 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
         })}
 
         {/* The season, in the corner of the room. */}
-        <p data-fr="meta" data-side="l" className="fr-meta label pointer-events-none z-20 text-mute">
-          <span className="sm:hidden">AW 2026</span>
-          <span className="max-sm:hidden">Autumn Winter 2026</span>
-          <span className="mt-1.5 block text-ink">Foundation</span>
+        <p data-fr="meta" data-side="l" dir={textDir} className="fr-meta label pointer-events-none z-20 text-left text-mute">
+          <span className="sm:hidden">{t('AW 2026')}</span>
+          <span className="max-sm:hidden">{t('Autumn Winter 2026')}</span>
+          <span className="mt-1.5 block text-ink">{t('Foundation')}</span>
         </p>
 
         {/* The other corner: the prompt, then what is happening, and how far
             along, on a hairline that hangs under it only while he dresses. */}
-        <div data-fr="meta" data-side="r" aria-hidden
+        <div data-fr="meta" data-side="r" aria-hidden dir={textDir}
           className="fr-meta pointer-events-none z-20 w-[min(13.5rem,42cqw)] text-right max-sm:w-[7.5rem]">
           <p className="label text-mute">
             {status.prompt
-              ? <><span className="sm:hidden">Fitting Room</span><span className="max-sm:hidden">The Fitting Room</span></>
+              ? <><span className="sm:hidden">{t('Fitting Room')}</span><span className="max-sm:hidden">{t('The Fitting Room')}</span></>
               : status.label}
           </p>
           <p className="label mt-1.5 text-ink">
             {status.prompt ? (
               <>
-                <span className="pointer-coarse:hidden">Choose a jacket</span>
-                <span className="hidden pointer-coarse:inline">Tap a jacket</span>
+                <span className="pointer-coarse:hidden">{t('Choose a jacket')}</span>
+                <span className="hidden pointer-coarse:inline">{t('Tap a jacket')}</span>
               </>
             ) : (
               <>
@@ -794,7 +809,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
             'absolute right-0 top-full mt-3 block h-px w-full bg-line transition-opacity duration-500 max-sm:w-[4.5rem]',
             working ? 'opacity-100' : 'opacity-0',
           )}>
-            <span ref={progress} className="block h-full origin-left bg-ink" style={{ transform: 'scaleX(0)' }} />
+            <span ref={progress} className="block h-full origin-left bg-ink rtl:origin-right" style={{ transform: 'scaleX(0)' }} />
           </span>
         </div>
       </div>
@@ -811,9 +826,9 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
           <div data-swap className="flex min-w-0 items-end justify-between gap-6 md:justify-start md:gap-8">
             <div className="min-w-0">
               <p className="label-sm flex items-center gap-2.5 text-mute">
-                <span>Now wearing</span>
+                <span>{t('Now wearing')}</span>
                 <span aria-hidden className="h-px w-6 bg-line-2" />
-                <span>{look.colour}</span>
+                <span>{t(look.colour)}</span>
               </p>
               <h2 className="display-sm mt-2 truncate">
                 <Link href={`/products/${look.product.slug}`} className="transition-opacity hover:opacity-60">{look.product.name}</Link>
@@ -824,12 +839,12 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
 
           {look.product.sizes.length > 1 ? (
             <div data-swap className="relative flex flex-col gap-2 md:col-span-2 md:row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1">
-              <div role="group" aria-label={`Size, ${look.product.name}`} className="grid grid-cols-5 gap-1.5 md:flex">
+              <div role="group" aria-label={t('Size, {name}', { name: look.product.name })} className="grid grid-cols-5 gap-1.5 md:flex">
                 {look.product.sizes.map((s) => {
                   const out = unavailable(s);
                   return (
                     <button key={s} type="button" disabled={out} aria-pressed={size === s}
-                      aria-label={out ? `Size ${s}, unavailable` : `Size ${s}`}
+                      aria-label={out ? t('Size {size}, unavailable', { size: s }) : t('Size {size}', { size: s })}
                       onClick={() => { setSize(s); setSizeError(false); }}
                       className={cn('label-sm min-h-11 min-w-11 border px-2.5 transition-colors duration-200',
                         out && 'cursor-not-allowed border-line text-stone line-through',
@@ -842,14 +857,14 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               </div>
               {/* Under the sizes on a phone; hung below them on a wide screen, so
                   the strip does not change height when it appears. */}
-              {sizeError ? <p role="alert" className="label-sm text-oxide lg:absolute lg:left-0 lg:top-full lg:mt-2">Choose a size</p>
-                : low ? <p className="label-sm text-mute lg:absolute lg:left-0 lg:top-full lg:mt-2">Only a few left in {size}</p> : null}
+              {sizeError ? <p role="alert" className="label-sm text-oxide lg:absolute lg:start-0 lg:top-full lg:mt-2">{t('Choose a size')}</p>
+                : low ? <p className="label-sm text-mute lg:absolute lg:start-0 lg:top-full lg:mt-2">{t('Only a few left in {size}', { size: size ?? '' })}</p> : null}
             </div>
           ) : <span />}
 
           <div data-swap className="flex gap-2 md:col-start-2 md:row-start-1 lg:col-start-3">
-            <Link href={`/products/${look.product.slug}`} className="btn btn-ghost flex-1 md:flex-none">Details</Link>
-            <button type="button" onClick={addToBag} className="btn btn-solid flex-[2] md:flex-none">Add to bag</button>
+            <Link href={`/products/${look.product.slug}`} className="btn btn-ghost flex-1 md:flex-none">{t('Details')}</Link>
+            <button type="button" onClick={addToBag} className="btn btn-solid flex-[2] md:flex-none">{t('Add to bag')}</button>
           </div>
         </div>
       </div>

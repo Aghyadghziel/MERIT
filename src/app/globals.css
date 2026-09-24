@@ -358,6 +358,8 @@ html[data-header="hidden"] { --header-offset: 0px; }
     transition: transform 420ms var(--ease-expo);
   }
   &:hover::after { transform: scaleX(0); transform-origin: right; }
+  &:dir(rtl)::after { transform-origin: right; }
+  &:dir(rtl):hover::after { transform-origin: left; }
 }
 
 /* The same rule, but absent until you reach for it. Columns of links — menus,
@@ -379,6 +381,8 @@ html[data-header="hidden"] { --header-offset: 0px; }
     transition: transform 420ms var(--ease-expo);
   }
   &:hover::after, &[aria-current="page"]::after { transform: scaleX(1); transform-origin: left; }
+  &:dir(rtl)::after { transform-origin: left; }
+  &:dir(rtl):hover::after, &:dir(rtl)[aria-current="page"]::after { transform-origin: right; }
 }
 
 /* A label followed by an arrow that leans forward when you reach for it. */
@@ -433,7 +437,7 @@ html[data-header="hidden"] { --header-offset: 0px; }
   border: 0;
   border-radius: 0;
   padding-block: 0.625rem;
-  padding-right: 1.5rem;
+  padding-inline-end: 1.5rem;
   min-height: 2.75rem;
   cursor: pointer;
   &::-ms-expand { display: none; }
@@ -517,7 +521,7 @@ html[data-header="hidden"] { --header-offset: 0px; }
 .skip-link {
   position: fixed;
   top: 0.5rem;
-  left: 0.5rem;
+  inset-inline-start: 0.5rem;
   z-index: 200;
   padding: 0.75rem 1.25rem;
   background: var(--color-ink);
@@ -586,17 +590,24 @@ html.cursor-in .house-cursor { opacity: 1; }
 }
 
 /* ─── Arabic (html[lang=ar], dir=rtl) ───────────────────────────────────
-   Latin runs keep the grotesk; Arabic characters fall through to IBM Plex
-   Sans Arabic. Arabic is never tracked (letters must join) and needs more
+   IBM Plex Sans Arabic comes first: it only covers Arabic code points, so
+   Latin runs fall through to the grotesk. (Behind the grotesk, its
+   Arial-based fallback face would catch the Arabic.) Arabic is never tracked (letters must join) and needs more
    line height than the tight Latin display settings allow. */
 html:lang(ar) {
-  --font-display: var(--font-grotesk), var(--font-arabic), "Neue Haas Grotesk Display Pro", Arial, sans-serif;
-  --font-sans: var(--font-grotesk), var(--font-arabic), "Neue Haas Grotesk Text Pro", Arial, sans-serif;
+  --font-display: var(--font-arabic), var(--font-grotesk), "Neue Haas Grotesk Display Pro", Arial, sans-serif;
+  --font-sans: var(--font-arabic), var(--font-grotesk), "Neue Haas Grotesk Text Pro", Arial, sans-serif;
 }
-html:lang(ar) body, html:lang(ar) body * { letter-spacing: 0 !important; }
+/* Latin display runs marked lang="en" (numbers, the 404) keep their tracking. */
+html:lang(ar) body, html:lang(ar) body *:not(:lang(en)) { letter-spacing: 0 !important; }
 html:lang(ar) :is(h1, h2, h3, .display, .display-xl, .display-lg, .display-md, .display-sm, [class*="leading-[0."], [class*="leading-none"], [class*="leading-tight"]) {
   line-height: 1.22 !important;
 }
 html:lang(ar) :is(input, textarea)::placeholder { letter-spacing: 0; }
 /* Arrows and chevrons that point "forward" point the other way in RTL. */
 [dir="rtl"] :is([data-icon="arrowR"], [data-icon="arrowL"], [data-icon="chevR"], [data-icon="chevL"]) { scale: -1 1; }
+/* The small tracked caps (labels, buttons) are sized for Latin capitals;
+   untracked Arabic at 10–11px reads as a whisper. */
+html:lang(ar) .label:not(:lang(en)) { font-size: 0.8125rem; }
+html:lang(ar) .label-sm:not(:lang(en)) { font-size: 0.75rem; }
+html:lang(ar) .btn:not(:lang(en)) { font-size: 0.8125rem; }

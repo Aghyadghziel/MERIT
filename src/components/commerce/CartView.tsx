@@ -12,6 +12,9 @@ import { getCollection, getProduct, type Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { formatPrice, pad2, plural } from '@/lib/format';
 import { EASE, reduced, setupGsap } from '@/lib/gsap';
+import { useLocale, useT } from '@/i18n/client';
+import type { Locale } from '@/i18n/config';
+import { localizeProduct } from '@/i18n/products';
 
 /* ══════════════════════════════════════════════════════════════════════════
    Shared by the bag, the drawer, checkout, the account and the wishlist.
@@ -19,10 +22,30 @@ import { EASE, reduced, setupGsap } from '@/lib/gsap';
 
 export const lineKey = (l: Line) => `${l.slug}|${l.colour}|${l.size}`;
 
+/**
+ * "1 piece", "3 pieces". Arabic counts in its own grammar: one and two are
+ * words (قطعة واحدة، قطعتان), three to ten take the plural, eleven and up the
+ * singular again.
+ */
+export function countPieces(n: number, locale: Locale) {
+  if (locale !== 'ar') return plural(n, 'piece');
+  if (n === 1) return 'قطعة واحدة';
+  if (n === 2) return 'قطعتان';
+  if (n >= 3 && n <= 10) return `${n} قطع`;
+  return `${n} قطعة`;
+}
+
+/** The same, from inside a Client Component. */
+export function usePieces() {
+  const locale = useLocale();
+  return (n: number) => countPieces(n, locale);
+}
+
 /** A price in the reader's currency. Unlike <Price>, it takes its size from the parent. */
 export function Amount({ value, className }: { value: number; className?: string }) {
   const { currency, ready } = useStore();
-  return <span className={cn('nums whitespace-nowrap', className)}>{formatPrice(value, ready ? currency : 'SAR')}</span>;
+  const locale = useLocale();
+  return <span className={cn('nums whitespace-nowrap', className)}>{formatPrice(value, ready ? currency : 'SAR', locale)}</span>;
 }
 
 /**
@@ -111,26 +134,27 @@ export function Stepper({ qty, name, onStep }: { qty: number; name: string; onSt
     'flex h-11 w-11 items-center justify-center transition-colors duration-200 hover:bg-ink hover:text-bone aria-disabled:cursor-not-allowed aria-disabled:opacity-30 aria-disabled:hover:bg-transparent aria-disabled:hover:text-current';
   const floor = qty <= 1;
   const ceiling = qty >= 9;
+  const t = useT();
   return (
-    <div className="inline-flex items-center border border-line-2" role="group" aria-label={`Quantity of ${name}`}>
+    <div className="inline-flex items-center border border-line-2" role="group" aria-label={t('Quantity of {name}', { name })}>
       <button
         type="button"
         className={btn}
         onClick={() => { if (!floor) onStep(-1); }}
         aria-disabled={floor || undefined}
-        aria-label={`Decrease quantity of ${name}`}
+        aria-label={t('Decrease quantity of {name}', { name })}
       >
         <Icon name="minus" className="h-3.5 w-3.5" />
       </button>
       <span className="nums w-8 text-center text-sm" aria-live="polite">
-        <span className="sr-only">Quantity </span>{qty}
+        <span className="sr-only">{t('Quantity')} </span>{qty}
       </span>
       <button
         type="button"
         className={btn}
         onClick={() => { if (!ceiling) onStep(1); }}
         aria-disabled={ceiling || undefined}
-        aria-label={`Increase quantity of ${name}`}
+        aria-label={t('Increase quantity of {name}', { name })}
       >
         <Icon name="plus" className="h-3.5 w-3.5" />
       </button>
@@ -147,12 +171,13 @@ export function LinePrice({
   product, qty = 1, stack = false, className,
 }: { product: Product; qty?: number; stack?: boolean; className?: string }) {
   const total = product.price * qty;
+  const t = useT();
   if (!product.compareAt) return <Amount value={total} className={className} />;
   return (
     <span className={cn('inline-flex', stack ? 'flex-col items-end gap-1' : 'flex-wrap items-baseline gap-x-2', className)}>
       <Amount value={total} className="text-oxide" />
       <span className="text-[0.8em] text-mute line-through">
-        <span className="sr-only">Was </span>
+        <span className="sr-only">{t('Was')} </span>
         <Amount value={product.compareAt * qty} />
       </span>
     </span>
@@ -162,6 +187,8 @@ export function LinePrice({
 /** How far the bag is from free Gulf delivery, as a rule that fills. */
 export function DeliveryRule({ tone = 'bone', className }: { tone?: 'bone' | 'ink'; className?: string }) {
   const { subtotal, currency, ready } = useStore();
+  const t = useT();
+  const locale = useLocale();
   const remaining = Math.max(0, FREE_SHIPPING - subtotal);
   const progress = Math.min(100, (subtotal / FREE_SHIPPING) * 100);
   const dark = tone === 'ink';
@@ -170,20 +197,20 @@ export function DeliveryRule({ tone = 'bone', className }: { tone?: 'bone' | 'in
       <p className="label-sm flex flex-wrap items-center gap-x-1.5 gap-y-1">
         {remaining > 0 ? (
           <>
-            <span className="nums">{formatPrice(remaining, ready ? currency : 'SAR')}</span>
-            <span>from free delivery in the Gulf</span>
+            <span className="nums">{formatPrice(remaining, ready ? currency : 'SAR', locale)}</span>
+            <span>{t('from free delivery in the Gulf')}</span>
           </>
         ) : (
           <>
             <Icon name="check" className="h-3.5 w-3.5" />
-            <span>Free delivery in the Gulf</span>
+            <span>{t('Free delivery in the Gulf')}</span>
           </>
         )}
       </p>
       <div aria-hidden className={cn('relative mt-3 h-[2px]', dark ? 'bg-line-ink' : 'bg-line')}>
         <div
           className={cn(
-            'absolute inset-y-0 left-0 transition-[width] duration-700 ease-[cubic-bezier(.22,1,.36,1)]',
+            'absolute inset-y-0 start-0 transition-[width] duration-700 ease-[cubic-bezier(.22,1,.36,1)]',
             dark ? 'bg-bone' : 'bg-ink',
           )}
           style={{ width: `${progress}%` }}
@@ -224,7 +251,9 @@ export function useBagActions(afterRemove?: () => void) {
 
     const { gsap } = setupGsap();
     gsap.set(row, { overflow: 'hidden', pointerEvents: 'none' });
-    gsap.to(row, { opacity: 0, x: 28, duration: 0.28, ease: EASE.ui });
+    // Out towards the reading end: right in English, left in Arabic.
+    const away = getComputedStyle(row).direction === 'rtl' ? -28 : 28;
+    gsap.to(row, { opacity: 0, x: away, duration: 0.28, ease: EASE.ui });
     gsap.to(row, {
       height: 0, paddingTop: 0, paddingBottom: 0, borderBottomWidth: 0,
       duration: 0.5, delay: 0.14, ease: 'power3.inOut', onComplete: done,
@@ -256,6 +285,9 @@ export function CartView() {
   const summary = useRef<HTMLDivElement>(null);
   const [summaryBelow, setSummaryBelow] = useState(false);
   const filled = ready && count > 0;
+  const t = useT();
+  const locale = useLocale();
+  const pieces = usePieces();
 
   // Removing a line removes the focused button with it. Once the bag has
   // re-rendered, keep the keyboard in the list without moving the page; if
@@ -289,7 +321,9 @@ export function CartView() {
 
   const code = currency;
   const free = subtotal >= FREE_SHIPPING;
-  const suggestions = START_WITH.map(getProduct).filter((p): p is Product => Boolean(p));
+  const suggestions = START_WITH.map(getProduct)
+    .filter((p): p is Product => Boolean(p))
+    .map((p) => localizeProduct(p, locale));
   const bar = filled && summaryBelow;
 
   return (
@@ -297,12 +331,12 @@ export function CartView() {
       <div className="page pt-(--nav-h)">
         <header className="pt-[clamp(2.25rem,1rem+4vw,5.5rem)]">
           <div className="flex items-baseline justify-between gap-4" data-reveal>
-            <p className="label">Shopping bag</p>
-            <p className="label nums text-mute">{filled ? plural(count, 'piece') : 'Empty'}</p>
+            <p className="label">{t('Shopping bag')}</p>
+            <p className="label nums text-mute">{filled ? pieces(count) : t('Empty')}</p>
           </div>
           <div className="mt-[clamp(1.25rem,0.8rem+1.6vw,2.5rem)] flex items-end justify-between gap-6 border-b border-ink pb-[clamp(1.25rem,0.8rem+1.2vw,2rem)]">
             <h1 ref={heading} tabIndex={-1} className="display-xl" style={{ outline: 'none' }}>
-              <MaskHeadline text="Your bag." />
+              <MaskHeadline text={t('Your bag.')} />
             </h1>
             <span data-reveal className="flex shrink-0">
               <Tally value={count} className="display-xl mb-[-0.04em] text-line-2" />
@@ -313,7 +347,7 @@ export function CartView() {
         {filled ? (
           <div className="grid-page items-start gap-y-12 pb-(--section)">
             <section aria-labelledby="bag-lines" className="col-span-4 md:col-span-6 lg:col-span-8">
-              <h2 id="bag-lines" className="sr-only">Pieces in your bag</h2>
+              <h2 id="bag-lines" className="sr-only">{t('Pieces in your bag')}</h2>
               <ol ref={list} tabIndex={-1} style={{ outline: 'none' }}>
                 {bag.map((line, i) => (
                   <BagRow key={lineKey(line)} line={line} index={i} onStep={step} onDrop={drop} />
@@ -322,10 +356,10 @@ export function CartView() {
 
               <div className="mt-6 flex flex-wrap items-center justify-between gap-x-6 gap-y-2" data-reveal>
                 <Link href="/new" className="label group inline-flex min-h-11 items-center gap-2.5">
-                  <Icon name="arrowL" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1" />
-                  Continue shopping
+                  <Icon name="arrowL" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
+                  {t('Continue shopping')}
                 </Link>
-                <p className="text-xs text-mute">Kept in this browser. No account needed.</p>
+                <p className="text-xs text-mute">{t('Kept in this browser. No account needed.')}</p>
               </div>
             </section>
 
@@ -339,19 +373,19 @@ export function CartView() {
                     desktop a five- or six-figure total still fits. */}
                 <div className="@container p-[clamp(1.375rem,0.8rem+1.6vw,2.25rem)]">
                   <div className="flex items-center justify-between gap-4">
-                    <h2 id="summary-title" className="label">Summary</h2>
+                    <h2 id="summary-title" className="label">{t('Summary')}</h2>
                     <Wordmark symbol className="h-[18px] w-auto text-bone/40" />
                   </div>
 
                   <dl className="mt-7 space-y-2.5 text-sm">
                     <div className="flex justify-between gap-4">
-                      <dt className="text-mute-ink">Subtotal · {plural(count, 'piece')}</dt>
+                      <dt className="text-mute-ink">{t('Subtotal')} · {pieces(count)}</dt>
                       <dd><Amount value={subtotal} /></dd>
                     </div>
                     <div className="flex justify-between gap-4">
-                      <dt className="text-mute-ink">Delivery</dt>
-                      <dd className="text-right">
-                        {free ? 'Free in the Gulf' : <>Free in the Gulf over <Amount value={FREE_SHIPPING} /></>}
+                      <dt className="text-mute-ink">{t('Delivery')}</dt>
+                      <dd className="text-end">
+                        {free ? t('Free in the Gulf') : <>{t('Free in the Gulf over')} <Amount value={FREE_SHIPPING} /></>}
                       </dd>
                     </div>
                   </dl>
@@ -361,33 +395,33 @@ export function CartView() {
                   <div className="mt-8 border-t border-line-ink pt-5">
                     {/* No destination is known here, so the figure is never
                         presented as a final, delivered price. */}
-                    <p className="label text-mute-ink">Total before delivery</p>
+                    <p className="label text-mute-ink">{t('Total before delivery')}</p>
                     <p className="mt-3 text-[clamp(2rem,15.5cqi,3.75rem)] font-semibold leading-[0.9] tracking-[-0.05em]">
                       <RollingAmount value={subtotal} />
                     </p>
                     {code !== 'SAR' ? (
                       <p className="mt-3 text-xs text-mute-ink">
-                        Shown in {code} at an indicative rate. Prices are set in SAR.
+                        {t('Shown in {code} at an indicative rate. Prices are set in SAR.', { code })}
                       </p>
                     ) : null}
                   </div>
 
                   <Link href="/checkout" className="btn btn-solid group mt-7 w-full justify-between px-5">
-                    <span>Checkout</span>
-                    <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                    <span>{t('Checkout')}</span>
+                    <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                   </Link>
                   <p className="mt-3 text-xs leading-relaxed text-mute-ink">
-                    MERIT is a concept store. Checkout shows what would happen next; nothing is charged.
+                    {t('MERIT is a concept store. Checkout shows what would happen next; nothing is charged.')}
                   </p>
                 </div>
               </div>
 
               <ul className="mt-6 space-y-3 text-xs text-mute" data-reveal>
-                <li className="flex items-start gap-3"><Icon name="truck" className="h-4 w-4 shrink-0 text-ink" /> Riyadh and Jeddah in two working days.</li>
-                <li className="flex items-start gap-3"><Icon name="arrowL" className="h-4 w-4 shrink-0 text-ink" /> Returns within thirty days, unworn.</li>
-                <li className="flex items-start gap-3"><Icon name="leaf" className="h-4 w-4 shrink-0 text-ink" /> Packed in unbleached cotton, no plastic.</li>
-                <li className="pl-7 pt-1">
-                  <Link href="/shipping-returns" className="link-rule text-ink">Delivery and returns</Link>
+                <li className="flex items-start gap-3"><Icon name="truck" className="h-4 w-4 shrink-0 text-ink" /> {t('Riyadh and Jeddah in two working days.')}</li>
+                <li className="flex items-start gap-3"><Icon name="arrowL" className="h-4 w-4 shrink-0 text-ink" /> {t('Returns within thirty days, unworn.')}</li>
+                <li className="flex items-start gap-3"><Icon name="leaf" className="h-4 w-4 shrink-0 text-ink" /> {t('Packed in unbleached cotton, no plastic.')}</li>
+                <li className="ps-7 pt-1">
+                  <Link href="/shipping-returns" className="link-rule text-ink">{t('Delivery and returns')}</Link>
                 </li>
               </ul>
             </aside>
@@ -396,15 +430,14 @@ export function CartView() {
           <div className="pb-(--section)">
             <div className="grid-page items-end gap-y-8 pt-[clamp(2rem,1rem+3vw,4rem)]">
               <div className="col-span-4 md:col-span-4 lg:col-span-6">
-                <p className="display-md" data-reveal>Nothing in it yet.</p>
+                <p className="display-md" data-reveal>{t('Nothing in it yet.')}</p>
                 <p className="body-lg mt-5 max-w-md text-mute" data-reveal>
-                  Most people start with the Index: the pieces cut from the same patterns every year,
-                  in the same cloth.
+                  {t('Most people start with the Index: the pieces cut from the same patterns every year, in the same cloth.')}
                 </p>
               </div>
               <div className="col-span-4 flex flex-wrap gap-3 md:col-span-2 md:flex-col lg:col-span-5 lg:col-start-8 lg:flex-row lg:justify-end" data-reveal>
-                <Link href="/collections/index" className="btn btn-solid">Shop the Index</Link>
-                <Link href="/new" className="btn">New arrivals</Link>
+                <Link href="/collections/index" className="btn btn-solid">{t('Shop the Index')}</Link>
+                <Link href="/new" className="btn">{t('New arrivals')}</Link>
               </div>
             </div>
 
@@ -416,17 +449,17 @@ export function CartView() {
               >
                 <span className="flex items-center gap-3 text-sm">
                   <Icon name="heart" className="h-4 w-4" />
-                  {plural(wishlist.length, 'piece')} waiting in your wishlist
+                  {t('{pieces} waiting in your wishlist', { pieces: pieces(wishlist.length) })}
                 </span>
-                <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
               </Link>
             ) : null}
 
             <section aria-labelledby="start-title" className="mt-[clamp(3.5rem,2rem+5vw,7rem)]">
               <div className="flex items-baseline justify-between gap-6 border-t border-ink pt-4" data-reveal>
-                <h2 id="start-title" className="label">From the Index</h2>
+                <h2 id="start-title" className="label">{t('From the Index')}</h2>
                 <Link href="/collections/index" className="label group inline-flex items-center gap-2">
-                  All pieces <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                  {t('All pieces')} <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </Link>
               </div>
               <div className="mt-8 grid grid-cols-2 gap-x-(--gutter) gap-y-12 lg:grid-cols-4">
@@ -454,10 +487,10 @@ export function CartView() {
         >
           <div className="page flex items-center justify-between gap-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
             <div className="min-w-0">
-              <p className="label-sm text-mute">Before delivery · {plural(count, 'piece')}</p>
+              <p className="label-sm text-mute">{t('Before delivery')} · {pieces(count)}</p>
               <p className="mt-1.5 text-xl font-semibold leading-none tracking-[-0.035em]"><RollingAmount value={subtotal} /></p>
             </div>
-            <Link href="/checkout" className="btn btn-solid shrink-0 px-6">Checkout</Link>
+            <Link href="/checkout" className="btn btn-solid shrink-0 px-6">{t('Checkout')}</Link>
           </div>
         </div>
       ) : null}
@@ -474,8 +507,11 @@ function BagRow({
   onDrop: (key: string, row: HTMLElement | null, keep?: boolean) => void;
 }) {
   const row = useRef<HTMLLIElement>(null);
-  const p = getProduct(line.slug);
-  if (!p) return null;
+  const t = useT();
+  const locale = useLocale();
+  const found = getProduct(line.slug);
+  if (!found) return null;
+  const p = localizeProduct(found, locale);
 
   const key = lineKey(line);
   const href = `/products/${p.slug}`;
@@ -507,26 +543,26 @@ function BagRow({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <p className="label-sm text-mute">
-              {p.category}{collection ? ` · ${collection.name}` : ''}
+              {t(p.category)}{collection ? ` · ${collection.name}` : ''}
             </p>
             <h3 className="mt-2 text-[clamp(1.0625rem,0.85rem+0.9vw,1.625rem)] font-semibold leading-[1.06] tracking-[-0.03em]">
               <Link href={href} className="link-quiet">{p.name}</Link>
             </h3>
           </div>
-          <LinePrice product={p} qty={line.qty} className="shrink-0 text-[0.9375rem] font-medium sm:pt-5 sm:text-right md:text-base" />
+          <LinePrice product={p} qty={line.qty} className="shrink-0 text-[0.9375rem] font-medium sm:pt-5 sm:text-end md:text-base" />
         </div>
 
         <dl className="mt-4 grid grid-cols-[3.75rem_minmax(0,1fr)] gap-y-1.5 text-sm md:mt-5 md:grid-cols-[4.5rem_minmax(0,1fr)]">
-          <dt className="text-mute">Colour</dt>
+          <dt className="text-mute">{t('Colour')}</dt>
           <dd className="flex items-center gap-2">
             {hex ? <span aria-hidden className="h-2.5 w-2.5 shrink-0 border border-ink/15" style={{ background: hex }} /> : null}
-            {line.colour}
+            {t(line.colour)}
           </dd>
-          <dt className="text-mute">Size</dt>
-          <dd>{line.size}</dd>
+          <dt className="text-mute">{t('Size')}</dt>
+          <dd>{t(line.size)}</dd>
           {line.qty > 1 ? (
             <>
-              <dt className="text-mute">Each</dt>
+              <dt className="text-mute">{t('Each')}</dt>
               <dd><Amount value={p.price} /></dd>
             </>
           ) : null}
@@ -540,18 +576,18 @@ function BagRow({
               type="button"
               className="label-sm inline-flex min-h-11 items-center text-mute transition-colors hover:text-ink"
               onClick={() => onDrop(key, row.current, true)}
-              aria-label={`Move ${p.name} to your wishlist`}
+              aria-label={t('Move {name} to your wishlist', { name: p.name })}
             >
-              <span className="sm:hidden">Save</span>
-              <span className="hidden sm:inline">Move to wishlist</span>
+              <span className="sm:hidden">{t('Save')}</span>
+              <span className="hidden sm:inline">{t('Move to wishlist')}</span>
             </button>
             <button
               type="button"
               className="label-sm inline-flex min-h-11 items-center text-mute transition-colors hover:text-ink"
               onClick={() => onDrop(key, row.current)}
-              aria-label={`Remove ${p.name} from your bag`}
+              aria-label={t('Remove {name} from your bag', { name: p.name })}
             >
-              Remove
+              {t('Remove')}
             </button>
           </div>
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useStore } from '@/components/providers/Store';
+import { useLocale, useT } from '@/i18n/client';
 import { formatPrice } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
@@ -20,14 +21,16 @@ export function Price({
   amount, compareAt, className, size = 'sm',
 }: { amount: number; compareAt?: number; className?: string; size?: keyof typeof SIZE }) {
   const { currency, ready } = useStore();
+  const locale = useLocale();
+  const t = useT();
   const code = ready ? currency : 'SAR';
   return (
     <span className={cn('nums inline-flex items-baseline gap-2', SIZE[size], className)}>
-      <span className={cn(compareAt ? 'text-oxide' : null)}>{formatPrice(amount, code)}</span>
+      <span className={cn(compareAt ? 'text-oxide' : null)}>{formatPrice(amount, code, locale)}</span>
       {compareAt ? (
         <span className="text-[0.8em] text-mute line-through">
-          <span className="sr-only">Was </span>
-          {formatPrice(compareAt, code)}
+          <span className="sr-only">{t('Was')} </span>
+          {formatPrice(compareAt, code, locale)}
         </span>
       ) : null}
     </span>

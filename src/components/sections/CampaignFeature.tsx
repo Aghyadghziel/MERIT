@@ -3,6 +3,7 @@
 import Link from '@/i18n/link';
 import { useLayoutEffect, useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
+import { useT } from '@/i18n/client';
 import { cn } from '@/lib/cn';
 import { setupGsap } from '@/lib/gsap';
 
@@ -30,6 +31,7 @@ const WORD = cn(
  * script) simply gets the full-bleed campaign with its copy.
  */
 export function CampaignFeature() {
+  const t = useT();
   const root = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -141,7 +143,7 @@ export function CampaignFeature() {
               away, pulls the jacket onto her shoulder and turns back as the
               camera closes in. Encoded all-intra so any frame can be shown
               instantly. The server paints its last frame (the opened state). */}
-          <div data-cf="img" role="img" aria-label="A model in the black leather jacket, seated on a wooden box in a dark studio, pulls the jacket up onto her shoulder."
+          <div data-cf="img" role="img" aria-label={t('A model in the black leather jacket, seated on a wooden box in a dark studio, pulls the jacket up onto her shoulder.')}
             className="absolute inset-0 will-change-transform">
             <video data-cf-film="wide" src="/video/studio-wide.mp4" poster="/video/studio-wide-last.webp" muted playsInline preload="auto"
               disablePictureInPicture aria-hidden tabIndex={-1} className="hidden h-full w-full object-cover md:landscape:block" />
@@ -152,7 +154,7 @@ export function CampaignFeature() {
         </div>
 
         {/* The name of the campaign, either side of the window. Hidden once it is open. */}
-        <div data-cf="words" aria-hidden className="group/words pointer-events-none absolute inset-0 opacity-0">
+        <div data-cf="words" aria-hidden dir="ltr" className="group/words pointer-events-none absolute inset-0 opacity-0">
           <span data-cf="w1" className={cn(WORD, 'group-data-[layout=narrow]/words:bottom-[calc(75%+0.9rem)] group-data-[layout=wide]/words:right-[calc(61%+2.2vw)]')}>
             Rule
           </span>
@@ -164,8 +166,8 @@ export function CampaignFeature() {
         {/* Small print on the white, only while the window is shut. */}
         <div data-cf="aside" aria-hidden className="pointer-events-none absolute inset-x-0 bottom-5 opacity-0 md:bottom-7">
           <div className="page flex items-end justify-between">
-            <span className="label-sm text-mute">Campaign</span>
-            <span className="label-sm nums text-mute">Autumn Winter 2026</span>
+            <span className="label-sm text-mute">{t('Campaign')}</span>
+            <span className="label-sm nums text-mute">{t('Autumn Winter 2026')}</span>
           </div>
         </div>
 
@@ -174,17 +176,18 @@ export function CampaignFeature() {
             landscape screen it stays in the empty wall to the left of the
             model, clear of her face, and on a short one it stays on screen. */}
         <div className="on-ink page relative flex h-full flex-col justify-end pb-[min(clamp(2rem,1rem+4vw,4.5rem),7svh)] pt-[calc(var(--nav-h)+1rem)] text-bone">
-          <p data-cf="meta" className="label text-bone/80">Campaign — The Rule Line</p>
+          <p data-cf="meta" className="label text-bone/80">{t('Campaign — The Rule Line')}</p>
           <h2 id="campaign-title" className="display-xl mt-[min(1.25rem,2.5svh)]" style={{ fontSize: 'min(clamp(3rem, 0.8rem + 9vw, 10rem), 14.5svh, 19svh - 1.5rem)' }}>
-            {['Quiet', 'structure.', 'Expressive', 'movement.'].map((l) => (
-              <span key={l} className="block overflow-hidden pb-[0.06em]"><span data-cf="line" className="block">{l} </span></span>
+            {/* Two sentences, set a word to a line. */}
+            {[t('Quiet structure.'), t('Expressive movement.')].flatMap((s) => s.split(' ')).map((l, i) => (
+              <span key={`${i}-${l}`} className="block overflow-hidden pb-[0.06em]"><span data-cf="line" className="block">{l} </span></span>
             ))}
           </h2>
           <div className="mt-[clamp(1rem,4svh,2.25rem)] flex flex-wrap items-center gap-x-8 gap-y-5">
             <Link data-cf="meta" href="/editorial/the-rule-line" className="btn btn-solid">
-              View the campaign <Icon name="arrowR" className="h-3.5 w-3.5" />
+              {t('View the campaign')} <Icon name="arrowR" className="h-3.5 w-3.5" />
             </Link>
-            <Link data-cf="meta" href="/collections/foundation" className="link-rule label">Shop Foundation</Link>
+            <Link data-cf="meta" href="/collections/foundation" className="link-rule label">{t('Shop Foundation')}</Link>
           </div>
         </div>
       </div>

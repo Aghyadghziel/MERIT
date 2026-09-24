@@ -4,6 +4,7 @@ import Link from '@/i18n/link';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Price } from '@/components/commerce/Price';
 import { Icon } from '@/components/ui/Icon';
+import { useLocale, useT } from '@/i18n/client';
 import type { Product } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
@@ -62,6 +63,8 @@ const CHASE = [0.2, 0.12, 0.075];
  * point is also a row in the index beside it, and the two stay in step.
  */
 export function JacketAnatomy({ products }: { products: Record<string, Product | undefined> }) {
+  const t = useT();
+  const ar = useLocale() === 'ar';
   const [j, setJ] = useState(0);
   const [on, setOn] = useState<number | null>(null);
   const root = useRef<HTMLElement>(null);
@@ -168,28 +171,28 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
         {/* The index */}
         <div className="col-span-4 md:col-span-6 lg:col-span-4 lg:self-stretch lg:py-6">
           <div className="flex h-full flex-col">
-            <p className="label text-graphite">Anatomy — Foundation outerwear</p>
+            <p className="label text-graphite">{t('Anatomy — Foundation outerwear')}</p>
             <h2 id="anatomy-title" data-an="title" className="mt-5 text-[clamp(3rem,1rem+5.2vw,6.25rem)] font-semibold leading-[0.86] tracking-[-0.055em]">
-              <span className="block overflow-hidden pb-[0.05em]"><span className="block">Read the</span></span>
-              <span className="block overflow-hidden pb-[0.05em]"><span className="block">jacket.</span></span>
+              <span className="block overflow-hidden pb-[0.05em]"><span className="block">{t('Read the')}</span></span>
+              <span className="block overflow-hidden pb-[0.05em]"><span className="block">{t('jacket.')}</span></span>
             </h2>
 
             {/* Both jackets, chosen by picture: the one being read is lit. */}
-            <div role="tablist" aria-label="Choose a jacket to read" className="mt-8 grid grid-cols-2 gap-2">
+            <div role="tablist" aria-label={t('Choose a jacket to read')} className="mt-8 grid grid-cols-2 gap-2">
               {JACKETS.map((jk, i) => {
                 const p = products[jk.key];
                 const sel = i === j;
                 return (
                   <button key={jk.key} type="button" role="tab" aria-selected={sel} onClick={() => switchTo(i)}
-                    className={cn('group flex items-center gap-3 border p-2 pr-3 text-left transition-colors duration-300',
+                    className={cn('group flex items-center gap-3 border p-2 pe-3 text-start transition-colors duration-300',
                       sel ? 'border-ink bg-ink text-bone' : 'border-ink/30 hover:border-ink')}>
                     <span className={cn('relative block aspect-square w-14 shrink-0 transition-colors duration-300', sel ? 'bg-bone/10' : 'bg-bone/50')}>
                       {/* eslint-disable-next-line @next/next/no-img-element -- tiny flat shot */}
                       <img src={jk.img} alt="" width={112} height={112} className="h-full w-full object-contain p-1" draggable={false} />
                     </span>
                     <span className="min-w-0">
-                      <span className={cn('label-sm block', sel ? 'text-bone/70' : 'text-graphite')}>{String(i + 1).padStart(2, '0')} · {jk.label}</span>
-                      <span className="mt-1 block text-sm font-semibold leading-tight tracking-[-0.02em]">{p?.name ?? jk.label}</span>
+                      <span className={cn('label-sm block', sel ? 'text-bone/70' : 'text-graphite')}>{String(i + 1).padStart(2, '0')} · {t(jk.label)}</span>
+                      <span className="mt-1 block text-sm font-semibold leading-tight tracking-[-0.02em]">{p?.name ?? t(jk.label)}</span>
                     </span>
                   </button>
                 );
@@ -202,11 +205,11 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
                   <button type="button" onPointerEnter={() => setOn(i)} onPointerLeave={() => setOn(null)}
                     onFocus={() => setOn(i)} onBlur={() => setOn(null)}
                     aria-describedby={`an-note-${i}`}
-                    className="group flex w-full items-baseline gap-4 py-3.5 text-left">
+                    className="group flex w-full items-baseline gap-4 py-3.5 text-start">
                     <span className={cn('label-sm nums w-6 transition-colors', on === i ? 'text-ink' : 'text-graphite/70')}>{String(i + 1).padStart(2, '0')}</span>
                     <span className="flex-1">
-                      <span className={cn('block text-[1.05rem] font-semibold tracking-[-0.02em] transition-transform duration-300', on === i && 'translate-x-1.5')}>{p.name}</span>
-                      <span id={`an-note-${i}`} className="mt-0.5 block text-sm text-graphite">{p.note}</span>
+                      <span className={cn('block text-[1.05rem] font-semibold tracking-[-0.02em] transition-transform duration-300', on === i && (ar ? '-translate-x-1.5' : 'translate-x-1.5'))}>{t(p.name)}</span>
+                      <span id={`an-note-${i}`} className="mt-0.5 block text-sm text-graphite">{t(p.note)}</span>
                     </span>
                   </button>
                 </li>
@@ -222,7 +225,7 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
                 <div className="flex items-center gap-5">
                   <Price amount={product.price} className="text-sm" />
                   <Link href={`/products/${product.slug}`} className="btn btn-solid">
-                    Shop <Icon name="arrowR" className="h-3.5 w-3.5" />
+                    {t('Shop')} <Icon name="arrowR" className="h-3.5 w-3.5" />
                   </Link>
                 </div>
               </div>
@@ -232,12 +235,12 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
 
         {/* The jacket, the points, the reveal */}
         <div className="order-first col-span-4 md:col-span-6 lg:order-none lg:col-span-7 lg:col-start-6">
-          <div ref={stage} data-cursor-hide className="relative mx-auto aspect-square w-full max-w-[min(100%,82svh)] select-none touch-pan-y"
+          <div ref={stage} data-cursor-hide dir="ltr" className="relative mx-auto aspect-square w-full max-w-[min(100%,82svh)] select-none touch-pan-y"
             onPointerMove={move} onPointerLeave={leave}
             onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; if (hover.current.r > 8) switchTo(other); }}>
             <div data-an="jacket" className="absolute inset-0">
               {/* eslint-disable-next-line @next/next/no-img-element -- flat shot, alpha */}
-              <img src={jacket.img} alt={`${jacket.label} ${product?.name ?? 'jacket'}, laid flat, front view.`} width={1254} height={1254}
+              <img src={jacket.img} alt={t('{colour} {name}, laid flat, front view.', { colour: t(jacket.label), name: product?.name ?? t('jacket') })} width={1254} height={1254}
                 className="h-full w-full object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.14)]" draggable={false} />
               {/* the other jacket, wiped in under the pointer */}
               <div ref={under} aria-hidden className="pointer-events-none absolute inset-0 bg-stone-brand"
@@ -263,7 +266,7 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
               const tx = p.side === 'l' ? Math.max(p.x - 14, 2) : Math.min(p.x + 14, 98);
               return (
                 <div key={`${jacket.key}-p${i}`}>
-                  <button type="button" data-an="dot" aria-label={`${String(i + 1).padStart(2, '0')}: ${p.name}. ${p.note}`}
+                  <button type="button" data-an="dot" aria-label={`${String(i + 1).padStart(2, '0')}: ${t(p.name)}. ${t(p.note)}`}
                     onPointerEnter={() => setOn(i)} onPointerLeave={() => setOn(null)} onFocus={() => setOn(i)} onBlur={() => setOn(null)}
                     className="absolute z-10 -ml-[22px] -mt-[22px] flex h-11 w-11 items-center justify-center"
                     style={{ left: `${p.x}%`, top: `${p.y}%` }}>
@@ -271,22 +274,22 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
                     <span className={cn('label-sm nums flex h-6 w-6 items-center justify-center rounded-full transition-colors duration-300',
                       on === i ? 'bg-ink text-bone' : 'bg-bone text-ink shadow-[0_0_0_1px_rgba(0,0,0,0.5)]')}>{i + 1}</span>
                   </button>
-                  <span data-an="tag" data-side={p.side} aria-hidden
+                  <span data-an="tag" data-side={p.side} aria-hidden dir={ar ? 'rtl' : undefined}
                     className={cn('label-sm pointer-events-none absolute hidden -translate-y-1/2 whitespace-nowrap bg-bone px-2 py-1 transition-colors duration-300 md:block',
                       p.side === 'l' ? '-translate-x-full pr-2' : 'pl-2', on === i ? 'bg-ink text-bone' : 'text-ink')}
                     style={{ left: `${tx}%`, top: `${p.y}%` }}>
-                    {p.name}
+                    {t(p.name)}
                   </span>
                 </div>
               );
             })}
 
             {/* what the hole shows, riding beside it */}
-            <div ref={chip} aria-hidden className="label-sm pointer-events-none absolute left-0 top-0 z-20 whitespace-nowrap bg-ink px-2.5 py-1.5 text-bone opacity-0 max-md:hidden">
-              {JACKETS[other].label} — click to read
+            <div ref={chip} aria-hidden dir={ar ? 'rtl' : undefined} className="label-sm pointer-events-none absolute left-0 top-0 z-20 whitespace-nowrap bg-ink px-2.5 py-1.5 text-bone opacity-0 max-md:hidden">
+              {t('{colour} — click to read', { colour: t(JACKETS[other].label) })}
             </div>
           </div>
-          <p className="label-sm mt-4 text-center text-graphite">{`Move over the jacket to see it in ${JACKETS[other].label.toLowerCase()}`}</p>
+          <p className="label-sm mt-4 text-center text-graphite">{t('Move over the jacket to see it in {colour}', { colour: ar ? t(JACKETS[other].label) : JACKETS[other].label.toLowerCase() })}</p>
         </div>
       </div>
     </section>

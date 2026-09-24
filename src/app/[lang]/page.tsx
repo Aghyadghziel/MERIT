@@ -8,12 +8,20 @@ import { Making } from '@/components/sections/home/Making';
 import { Marquee } from '@/components/sections/Marquee';
 import { getProduct } from '@/lib/catalog';
 import { outfits } from '@/lib/outfits';
+import { localePath } from '@/i18n/config';
+import { makeT } from '@/i18n/dictionary';
+import { localizeProduct } from '@/i18n/products';
+import { getLocale } from '@/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'MERIT — Contemporary fashion, Riyadh',
-  description: 'Foundation, Autumn Winter 2026. Step into the fitting room: choose a jacket and watch it worn.',
-  alternates: { canonical: '/' },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = makeT(locale);
+  return {
+    title: t('MERIT — Contemporary fashion, Riyadh'),
+    description: t('Foundation, Autumn Winter 2026. Step into the fitting room: choose a jacket and watch it worn.'),
+    alternates: { canonical: localePath('/', locale), languages: { en: '/', ar: '/ar' } },
+  };
+}
 
 
 /**
@@ -29,9 +37,14 @@ export const metadata: Metadata = {
  *   The shop          warm white   every category at poster size
  *   Footer            black        (layout) the liquid logotype, then the links
  */
-export default function HomePage() {
-  const items = outfits.map<OutfitItem>((o) => ({ ...o, product: getProduct(o.slug)! }));
-  const anatomy = { 'plane-technical-jacket': getProduct('plane-technical-jacket'), 'axis-leather-jacket': getProduct('axis-leather-jacket') };
+export default async function HomePage() {
+  const locale = await getLocale();
+  const local = (slug: string) => {
+    const p = getProduct(slug);
+    return p ? localizeProduct(p, locale) : undefined;
+  };
+  const items = outfits.map<OutfitItem>((o) => ({ ...o, product: local(o.slug)! }));
+  const anatomy = { 'plane-technical-jacket': local('plane-technical-jacket'), 'axis-leather-jacket': local('axis-leather-jacket') };
 
   return (
     <>

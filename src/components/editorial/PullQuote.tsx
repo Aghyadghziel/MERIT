@@ -3,6 +3,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
+import { useLocale } from '@/i18n/client';
 
 /**
  * A line lifted from the text and set large. Each word lights as the reader
@@ -13,6 +14,10 @@ export function PullQuote({ text, source, className }: { text: string; source?: 
   // A short line is set as a poster; a whole sentence a size down, so it
   // still reads as a quote rather than a wall.
   const short = text.length <= 52;
+  // Arabic sets its quotes in guillemets, wider than a curly quote, so the
+  // opening mark sits in the line rather than hanging into the margin.
+  const ar = useLocale() === 'ar';
+  const [open, close] = ar ? ['«', '»'] : ['“', '”'];
   const ref = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -41,11 +46,11 @@ export function PullQuote({ text, source, className }: { text: string; source?: 
               : 'max-w-[19em] text-[clamp(1.75rem,0.95rem+2.9vw,4rem)] leading-[1] tracking-[-0.045em]',
           )}
         >
-          <span aria-hidden className="-ml-[0.42em] inline-block w-[0.42em] text-right">“</span>
+          <span aria-hidden className={ar ? undefined : '-ms-[0.42em] inline-block w-[0.42em] text-end'}>{open}</span>
           {words.map((w, i) => (
             <span key={i} data-word>
               {w}
-              {i < words.length - 1 ? ' ' : <span aria-hidden>”</span>}
+              {i < words.length - 1 ? ' ' : <span aria-hidden>{close}</span>}
             </span>
           ))}
         </p>

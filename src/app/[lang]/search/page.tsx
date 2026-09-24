@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
 import { SearchResults } from '@/components/commerce/SearchResults';
+import { getT } from '@/i18n/server';
 
-export const metadata: Metadata = {
-  title: 'Search',
-  description: 'Search the MERIT range.',
-  robots: { index: false, follow: true },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT();
+  return {
+    title: t('Search'),
+    description: t('Search the MERIT range.'),
+    robots: { index: false, follow: true },
+  };
+}
 
 /**
  * No Suspense boundary here: the search reads its query from the address bar

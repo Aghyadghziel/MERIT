@@ -7,6 +7,8 @@ import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
 import { pad2 } from '@/lib/format';
 import { reduced, setupGsap } from '@/lib/gsap';
+import { useT } from '@/i18n/client';
+import type { T } from '@/i18n/dictionary';
 
 type Props = { images: string[]; name: string };
 
@@ -25,7 +27,8 @@ export function Gallery({ images, name }: Props) {
   const rail = useRef<HTMLUListElement>(null);
   const slides = useRef<(HTMLLIElement | null)[]>([]);
   const n = images.length;
-  const alt = (i: number) => (i === 0 ? name : `${name}, view ${i + 1}`);
+  const t = useT();
+  const alt = (i: number) => (i === 0 ? name : t('{name}, view {n}', { name, n: i + 1 }));
 
   // Which photograph is crossing the middle of the screen.
   useEffect(() => {
@@ -42,15 +45,17 @@ export function Gallery({ images, name }: Props) {
     return () => io.disconnect();
   }, [n]);
 
-  // The phone rail's page, counted from the left edge; the last page is the
-  // one where the rail can scroll no further (two-up on a tablet).
+  // The phone rail's page, counted from its starting edge (the right one in
+  // RTL, where scrollLeft runs negative); the last page is the one where the
+  // rail can scroll no further (two-up on a tablet).
   useEffect(() => {
     const el = rail.current;
     if (!el) return;
     const onScroll = () => {
       const w = (el.firstElementChild as HTMLElement | null)?.offsetWidth || el.clientWidth;
-      const end = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
-      setPage(end ? n - 1 : Math.min(n - 1, Math.round(el.scrollLeft / w)));
+      const x = Math.abs(el.scrollLeft);
+      const end = x + el.clientWidth >= el.scrollWidth - 2;
+      setPage(end ? n - 1 : Math.min(n - 1, Math.round(x / w)));
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
@@ -104,7 +109,7 @@ export function Gallery({ images, name }: Props) {
             tablet), a column of full-height photographs on a desktop. */}
         <ul
           ref={rail}
-          aria-label={`${name}, photographs`}
+          aria-label={t('{name}, photographs', { name })}
           className="no-bar flex snap-x snap-mandatory overflow-x-auto overscroll-x-contain lg:snap-none lg:flex-col lg:gap-1 lg:overflow-visible"
         >
           {images.map((img, i) => {
@@ -114,7 +119,7 @@ export function Gallery({ images, name }: Props) {
                 key={img}
                 ref={(el) => { slides.current[i] = el; }}
                 data-index={i}
-                className="w-full shrink-0 snap-start overflow-hidden md:w-1/2 md:border-r md:border-bone md:last:border-r-0 lg:w-full lg:border-r-0"
+                className="w-full shrink-0 snap-start overflow-hidden md:w-1/2 md:border-e md:border-bone md:last:border-e-0 lg:w-full lg:border-e-0"
                 {...(i > 0 ? { 'data-reveal-img': '' } : {})}
               >
                 <button
@@ -134,7 +139,7 @@ export function Gallery({ images, name }: Props) {
                       {...(photo ? { 'data-drift': '' } : {})}
                     />
                   </span>
-                  <span className="sr-only">, open full screen</span>
+                  <span className="sr-only">{t(', open full screen')}</span>
                 </button>
               </li>
             );
@@ -164,19 +169,19 @@ export function Gallery({ images, name }: Props) {
         {/* Desktop: the index hangs from the foot of the screen while the
             column passes. */}
         <div className="pointer-events-none sticky bottom-0 z-10 hidden h-0 lg:block">
-          <div className="pointer-events-auto absolute bottom-5 right-5 flex h-11 items-center bg-bone/92 pl-4 backdrop-blur-sm">
+          <div className="pointer-events-auto absolute bottom-5 end-5 flex h-11 items-center bg-bone/92 ps-4 backdrop-blur-sm">
             <p className="label-sm nums w-[4.5em]" aria-hidden>
               {pad2(active + 1)}
               <span className="text-mute"> / {pad2(n)}</span>
             </p>
             {n > 1 ? (
-              <div role="group" aria-label="Go to photograph" className="flex items-center">
+              <div role="group" aria-label={t('Go to photograph')} className="flex items-center">
                 {images.map((img, i) => (
                   <button
                     key={img}
                     type="button"
                     onClick={() => goTo(i)}
-                    aria-label={`Photograph ${i + 1} of ${n}`}
+                    aria-label={t('Photograph {i} of {n}', { i: i + 1, n })}
                     aria-current={i === active ? 'true' : undefined}
                     className="group flex h-11 w-11 items-center justify-center"
                   >
@@ -197,20 +202,22 @@ export function Gallery({ images, name }: Props) {
               className="label-sm flex h-11 items-center gap-2 px-4 transition-opacity hover:opacity-60"
             >
               <Icon name="plus" className="h-3 w-3" />
-              Zoom<span className="sr-only"> photograph {active + 1}</span>
+              {t('Zoom')}<span className="sr-only">{t(' photograph {i}', { i: active + 1 })}</span>
             </button>
           </div>
         </div>
       </div>
 
       {lightbox !== null ? (
-        <Lightbox images={images} name={name} start={lightbox} alt={alt} onClose={() => setLightbox(null)} />
+        <Lightbox images={images} name={name} start={lightbox} alt={alt} t={t} onClose={() => setLightbox(null)} />
       ) : null}
     </>
   );
 }
 
 const ZOOM = 2.4;
+/** Scroll offsets run negative from the start edge in a right-to-left box. */
+const sign = (el: HTMLElement) => (getComputedStyle(el).direction === 'rtl' ? -1 : 1);
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
 /** Where the photograph actually sits inside its full-screen button. */
@@ -272,8 +279,8 @@ function panAt(e: React.PointerEvent<HTMLElement> | React.MouseEvent<HTMLElement
  * photograph), a finger pans by dragging, one to one.
  */
 function Lightbox({
-  images, name, start, alt, onClose,
-}: { images: string[]; name: string; start: number; alt: (i: number) => string; onClose: () => void }) {
+  images, name, start, alt, t, onClose,
+}: { images: string[]; name: string; start: number; alt: (i: number) => string; t: T; onClose: () => void }) {
   const dlg = useRef<HTMLDialogElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const drag = useRef<{ x: number; y: number; fx: number; fy: number; moved: boolean } | null>(null);
@@ -297,10 +304,10 @@ function Lightbox({
 
   useEffect(() => {
     const d = dlg.current;
-    const t = track.current;
-    if (!d || !t) return;
+    const tk = track.current;
+    if (!d || !tk) return;
     if (!d.open) d.showModal();
-    t.scrollTo({ left: start * t.clientWidth, behavior: 'instant' });
+    tk.scrollTo({ left: sign(tk) * start * tk.clientWidth, behavior: 'instant' });
     const html = document.documentElement;
     const before = html.style.overflow;
     html.style.overflow = 'hidden';
@@ -308,17 +315,17 @@ function Lightbox({
   }, [start]);
 
   const go = (i: number) => {
-    const t = track.current;
-    if (!t) return;
+    const tk = track.current;
+    if (!tk) return;
     const k = (i + n) % n;
     setZoom(false);
-    t.scrollTo({ left: k * t.clientWidth, behavior: reduced() ? 'instant' : 'smooth' });
+    tk.scrollTo({ left: sign(tk) * k * tk.clientWidth, behavior: reduced() ? 'instant' : 'smooth' });
   };
 
   const onScroll = () => {
-    const t = track.current;
-    if (!t) return;
-    const i = Math.round(t.scrollLeft / t.clientWidth);
+    const tk = track.current;
+    if (!tk) return;
+    const i = Math.round(Math.abs(tk.scrollLeft) / tk.clientWidth);
     if (i !== cur) {
       setCur(i);
       setZoom(false);
@@ -330,10 +337,13 @@ function Lightbox({
       ref={dlg}
       onClose={onClose}
       onKeyDown={(e) => {
-        if (e.key === 'ArrowRight') { e.preventDefault(); go(cur + 1); }
-        if (e.key === 'ArrowLeft') { e.preventDefault(); go(cur - 1); }
+        // The arrow that points along the reading direction goes forward.
+        const fwd = dlg.current && sign(dlg.current) === -1 ? 'ArrowLeft' : 'ArrowRight';
+        const back = fwd === 'ArrowRight' ? 'ArrowLeft' : 'ArrowRight';
+        if (e.key === fwd) { e.preventDefault(); go(cur + 1); }
+        if (e.key === back) { e.preventDefault(); go(cur - 1); }
       }}
-      aria-label={`${name}, photographs`}
+      aria-label={t('{name}, photographs', { name })}
       className="m-0 h-dvh max-h-none w-dvw max-w-none overflow-hidden border-0 bg-bone p-0 text-ink backdrop:bg-bone"
     >
       <div className="relative flex h-full flex-col">
@@ -344,7 +354,7 @@ function Lightbox({
           </p>
           <p className="label-sm hidden truncate text-mute md:block">{name}</p>
           <div className="flex w-24 justify-end">
-            <button type="button" autoFocus onClick={() => dlg.current?.close()} className="icon-btn" aria-label="Close photographs">
+            <button type="button" autoFocus onClick={() => dlg.current?.close()} className="icon-btn" aria-label={t('Close photographs')}>
               <Icon name="close" />
             </button>
           </div>
@@ -362,7 +372,7 @@ function Lightbox({
                 <button
                   type="button"
                   tabIndex={i === cur ? 0 : -1}
-                  aria-label={`${alt(i)}. ${on ? 'Zoom out' : 'Zoom in'}`}
+                  aria-label={`${alt(i)}. ${t(on ? 'Zoom out' : 'Zoom in')}`}
                   className={cn('relative block h-full w-full overflow-hidden', on ? 'cursor-zoom-out touch-none' : 'cursor-zoom-in')}
                   onPointerDown={(e) => {
                     drag.current = { x: e.clientX, y: e.clientY, fx: pan.current.x, fy: pan.current.y, moved: false };
@@ -424,16 +434,16 @@ function Lightbox({
             <button
               type="button"
               onClick={() => go(cur - 1)}
-              aria-label="Previous photograph"
-              className="absolute left-(--gutter) top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center border border-line bg-bone/85 transition-colors hover:border-ink md:flex"
+              aria-label={t('Previous photograph')}
+              className="absolute start-(--gutter) top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center border border-line bg-bone/85 transition-colors hover:border-ink md:flex"
             >
               <Icon name="arrowL" />
             </button>
             <button
               type="button"
               onClick={() => go(cur + 1)}
-              aria-label="Next photograph"
-              className="absolute right-(--gutter) top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center border border-line bg-bone/85 transition-colors hover:border-ink md:flex"
+              aria-label={t('Next photograph')}
+              className="absolute end-(--gutter) top-1/2 hidden h-12 w-12 -translate-y-1/2 items-center justify-center border border-line bg-bone/85 transition-colors hover:border-ink md:flex"
             >
               <Icon name="arrowR" />
             </button>
@@ -444,7 +454,7 @@ function Lightbox({
                   key={img}
                   type="button"
                   onClick={() => go(i)}
-                  aria-label={`Photograph ${i + 1} of ${n}`}
+                  aria-label={t('Photograph {i} of {n}', { i: i + 1, n })}
                   aria-current={i === cur ? 'true' : undefined}
                   className={cn(
                     'relative h-14 w-11 overflow-hidden bg-bone-2 outline-offset-2 transition-opacity',

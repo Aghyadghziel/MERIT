@@ -6,10 +6,13 @@ import { notifyQuery, QueryWatch, useLocationQuery } from '@/components/commerce
 import { ProductGrid } from '@/components/commerce/ProductGrid';
 import { ArtImage } from '@/components/editorial/ArtImage';
 import { Icon } from '@/components/ui/Icon';
+import { useLocale, useT } from '@/i18n/client';
+import { localePath } from '@/i18n/config';
 import { getProduct, newArrivals } from '@/lib/catalog';
 import { cn } from '@/lib/cn';
-import { pad2, plural } from '@/lib/format';
-import { clearRecent, hrefOf, pushRecent, readRecent, search, SUGGESTED, type Hit } from '@/lib/search';
+import { pad2 } from '@/lib/format';
+import { countOf } from '@/lib/nav';
+import { clearRecent, hrefOf, pushRecent, readRecent, search, suggestedFor, type Hit } from '@/lib/search';
 
 // ─── Recent searches, as a store so they render after hydration ────────────
 
@@ -38,6 +41,14 @@ const HIT = "link-quiet relative min-h-8 uppercase before:absolute before:-inset
  * offers the suggested searches as an index and the newest pieces below.
  */
 export function SearchResults() {
+  const t = useT();
+  const locale = useLocale();
+  // A suggestion is a promise: only offer the ones that find something.
+  const SUGGESTED = useMemo(
+    () => suggestedFor(locale).filter((s) => { const r = search(s, locale); return r.products.length + r.other.length > 0; }),
+    [locale],
+  );
+  const here = localePath('/search', locale);
   const urlQuery = new URLSearchParams(useLocationQuery()).get('q') ?? '';
   const [text, setText] = useState(urlQuery);
   // The last query this page wrote to, or read from, the address bar. When
@@ -51,7 +62,7 @@ export function SearchResults() {
 
   const input = useRef<HTMLInputElement>(null);
   const term = useDeferredValue(text.trim());
-  const results = useMemo(() => search(term), [term]);
+  const results = useMemo(() => search(term, locale), [term, locale]);
   const found = useMemo(
     () => results.products.map((h) => getProduct(h.slug)).filter((p): p is NonNullable<typeof p> => Boolean(p)),
     [results],
@@ -61,7 +72,7 @@ export function SearchResults() {
 
   const write = (q: string) => {
     setSynced(q);
-    window.history.replaceState(null, '', q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+    window.history.replaceState(null, '', q ? `${here}?q=${encodeURIComponent(q)}` : here);
     notifyQuery();
   };
 
@@ -71,11 +82,11 @@ export function SearchResults() {
     if (q === synced) return;
     const t = window.setTimeout(() => {
       setSynced(q);
-      window.history.replaceState(null, '', q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+      window.history.replaceState(null, '', q ? `${here}?q=${encodeURIComponent(q)}` : here);
       notifyQuery();
     }, 400);
     return () => window.clearTimeout(t);
-  }, [text, synced]);
+  }, [text, synced, here]);
 
   const run = (q: string) => {
     setText(q);
@@ -85,25 +96,27 @@ export function SearchResults() {
   };
 
   const searching = term.length >= 2;
+  const nCollections = results.other.filter((h) => h.kind === 'collection').length;
+  const nStories = results.other.filter((h) => h.kind === 'story').length;
   const tally = [
-    found.length ? plural(found.length, 'piece') : '',
-    plural(results.other.filter((h) => h.kind === 'collection').length, 'collection'),
-    plural(results.other.filter((h) => h.kind === 'story').length, 'story', 'stories'),
-  ].filter((t) => t && !t.startsWith('0 '));
+    found.length ? countOf(found.length, locale, ['piece', 'pieces'], ['قطعة واحدة', 'قطعتان', 'قطع', 'قطعة']) : '',
+    nCollections ? countOf(nCollections, locale, ['collection', 'collections'], ['مجموعة واحدة', 'مجموعتان', 'مجموعات', 'مجموعة']) : '',
+    nStories ? countOf(nStories, locale, ['story', 'stories'], ['قصة واحدة', 'قصتان', 'قصص', 'قصة']) : '',
+  ].filter(Boolean);
   const status = !term
-    ? 'Pieces, collections and stories'
+    ? t('Pieces, collections and stories')
     : !searching
-      ? 'Two letters or more'
+      ? t('Two letters or more')
       : tally.length
-        ? `${tally.join(' · ')} — “${term}”`
-        : `Nothing for “${term}”`;
+        ? t('{tally} — “{term}”', { tally: tally.join(' · '), term })
+        : t('Nothing for “{term}”', { term });
 
   return (
     <div className="page pb-(--section) pt-[calc(var(--nav-h)+clamp(1.5rem,4vw,3.5rem))]">
       <Suspense fallback={null}>
         <QueryWatch />
       </Suspense>
-      <h1 className="sr-only">{searching ? `Search results for “${term}”` : 'Search'}</h1>
+      <h1 className="sr-only">{searching ? t('Search results for “{term}”', { term }) : t('Search')}</h1>
 
       {/* ─── The field ─────────────────────────────────────────────── */}
       <form
@@ -111,8 +124,8 @@ export function SearchResults() {
         onSubmit={(e) => { e.preventDefault(); run(text); input.current?.blur(); }}
       >
         <div className="flex items-baseline justify-between gap-4 border-b border-line pb-3" data-reveal>
-          <label htmlFor="search-page" className="label">Search the range</label>
-          <p className="label hidden text-mute sm:block">Enter to search · Esc to clear</p>
+          <label htmlFor="search-page" className="label">{t('Search the range')}</label>
+          <p className="label hidden text-mute sm:block">{t('Enter to search · Esc to clear')}</p>
         </div>
         <div className="mt-[clamp(0.75rem,2vw,1.75rem)] flex items-center gap-2 border-b-2 border-ink pb-1 transition-shadow duration-300 focus-within:shadow-[0_2px_0_0_var(--color-ink)] md:gap-4 md:pb-2">
           <input
@@ -122,7 +135,7 @@ export function SearchResults() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Escape' && text) { e.preventDefault(); setText(''); } }}
-            placeholder="Type to search"
+            placeholder={t('Type to search')}
             enterKeyHint="search"
             autoComplete="off"
             spellCheck={false}
@@ -133,14 +146,14 @@ export function SearchResults() {
               type="button"
               onClick={() => { setText(''); write(''); input.current?.focus(); }}
               className="flex h-11 w-11 shrink-0 items-center justify-center transition-opacity hover:opacity-60"
-              aria-label="Clear search"
+              aria-label={t('Clear search')}
             >
               <Icon name="close" className="h-5 w-5 md:h-6 md:w-6" />
             </button>
           ) : null}
           <button
             type="submit"
-            aria-label="Search"
+            aria-label={t('Search')}
             className="flex h-12 w-12 shrink-0 items-center justify-center bg-ink text-bone transition-colors duration-300 hover:bg-ink-3 md:h-16 md:w-16"
           >
             <Icon name="arrowR" className="h-5 w-5 md:h-6 md:w-6" />
@@ -152,7 +165,7 @@ export function SearchResults() {
         <p className="label nums text-mute" aria-live="polite" aria-atomic="true">{status}</p>
         {searching ? (
           <p className="label flex flex-wrap items-baseline gap-x-4 gap-y-1 text-mute">
-            <span>Try</span>
+            <span>{t('Try')}</span>
             {SUGGESTED.filter((s) => s.toLowerCase() !== term.toLowerCase()).slice(0, 4).map((s) => (
               <button key={s} type="button" onClick={() => run(s)} className={cn(HIT, 'text-ink')}>
                 {s}
@@ -168,16 +181,16 @@ export function SearchResults() {
           <section aria-labelledby="try-title" className="mt-[clamp(3rem,7vw,6rem)]">
             <div className="flex items-baseline justify-between gap-6" data-reveal>
               <h2 id="try-title" className="label">
-                <span className="nums mr-3 text-mute">01</span>
-                Suggested
+                <span className="nums me-3 text-mute">01</span>
+                {t('Suggested')}
               </h2>
               {recent.length ? (
                 <div className="label flex min-w-0 flex-wrap items-baseline justify-end gap-x-4 gap-y-1 text-mute">
-                  <span>Recent</span>
+                  <span>{t('Recent')}</span>
                   {recent.slice(0, 4).map((r) => (
                     <button key={r} type="button" onClick={() => run(r)} className={cn(HIT, 'text-ink')}>{r}</button>
                   ))}
-                  <button type="button" onClick={() => { clearRecent(); notifyRecent(); }} className={HIT}>Clear</button>
+                  <button type="button" onClick={() => { clearRecent(); notifyRecent(); }} className={HIT}>{t('Clear')}</button>
                 </div>
               ) : null}
             </div>
@@ -187,20 +200,20 @@ export function SearchResults() {
                   <button
                     type="button"
                     onClick={() => run(s)}
-                    className="group flex w-full items-center gap-4 py-[clamp(0.75rem,0.4rem+1.1vw,1.5rem)] text-left md:gap-8"
+                    className="group flex w-full items-center gap-4 py-[clamp(0.75rem,0.4rem+1.1vw,1.5rem)] text-start md:gap-8"
                   >
                     <span className="label-sm nums w-6 shrink-0 text-mute">{pad2(i + 1)}</span>
-                    <span className="min-w-0 flex-1 truncate text-[clamp(1.875rem,0.6rem+5.4vw,6.5rem)] font-semibold uppercase leading-[0.86] tracking-[-0.055em] transition-transform duration-700 ease-expo md:group-hover:translate-x-4">
+                    <span className="min-w-0 flex-1 truncate text-[clamp(1.875rem,0.6rem+5.4vw,6.5rem)] font-semibold uppercase leading-[0.86] tracking-[-0.055em] transition-transform duration-700 ease-expo md:group-hover:translate-x-4 rtl:md:group-hover:-translate-x-4">
                       {s}
                     </span>
-                    <Icon name="arrowR" className="h-5 w-5 shrink-0 -translate-x-2 opacity-0 transition-[opacity,transform] duration-500 ease-expo group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:h-7 md:w-7" />
+                    <Icon name="arrowR" className="h-5 w-5 shrink-0 -translate-x-2 rtl:translate-x-2 opacity-0 transition-[opacity,transform,translate] duration-500 ease-expo group-hover:translate-x-0 rtl:group-hover:translate-x-0 group-hover:opacity-100 group-focus-visible:translate-x-0 rtl:group-focus-visible:translate-x-0 group-focus-visible:opacity-100 md:h-7 md:w-7" />
                   </button>
                 </li>
               ))}
             </ul>
           </section>
 
-          <Block n={2} title="New in the studio" count={fresh.length} className="mt-[clamp(4rem,9vw,8rem)]">
+          <Block n={2} title={t('New in the studio')} count={fresh.length} className="mt-[clamp(4rem,9vw,8rem)]">
             {/* On a phone with recent searches, its first row peeks into the first screen. */}
             <ProductGrid products={fresh} columns={4} priorityCount={2} />
           </Block>
@@ -208,26 +221,26 @@ export function SearchResults() {
       ) : found.length === 0 && results.other.length === 0 ? (
         <>
           <div className="mt-[clamp(3rem,7vw,6rem)] max-w-3xl">
-            <p className="display-lg">Nothing for “{term}”.</p>
+            <p className="display-lg">{t('Nothing for “{term}”.', { term })}</p>
             <p className="body-lg mt-6 max-w-[34rem] text-mute">
-              Try a material — cashmere, poplin, gabardine — a category, or the name of a collection.
+              {t('Try a material — cashmere, poplin, gabardine — a category, or the name of a collection.')}
             </p>
           </div>
-          <Block n={1} title="In the studio now" count={Math.min(4, fresh.length)} className="mt-[clamp(4rem,8vw,7rem)]">
+          <Block n={1} title={t('In the studio now')} count={Math.min(4, fresh.length)} className="mt-[clamp(4rem,8vw,7rem)]">
             <ProductGrid products={fresh.slice(0, 4)} columns={4} priorityCount={4} />
           </Block>
         </>
       ) : (
         <>
           {found.length ? (
-            <Block n={1} title="Pieces" more={` matching “${term}”`} count={found.length} className="mt-[clamp(3rem,6vw,5rem)]">
+            <Block n={1} title={t('Pieces')} more={t(' matching “{term}”', { term })} count={found.length} className="mt-[clamp(3rem,6vw,5rem)]">
               <ProductGrid products={found} columns={found.length <= 3 ? 3 : 4} priorityCount={4} />
             </Block>
           ) : null}
           {results.other.length ? (
             <Block
               n={found.length ? 2 : 1}
-              title="Collections and stories"
+              title={t('Collections and stories')}
               count={results.other.length}
               className="mt-[clamp(4rem,8vw,7rem)]"
             >
@@ -254,11 +267,11 @@ export function SearchResults() {
                         </div>
                         <div className={cn(single && 'md:col-span-5 md:pb-1')}>
                           <p className="label mt-4 text-mute">
-                            {KIND[hit.kind]} <span aria-hidden>·</span> {hit.meta}
+                            {t(KIND[hit.kind])} <span aria-hidden>·</span> {hit.meta}
                           </p>
                           <p className={cn('mt-2', single ? 'display-lg' : 'display-md')}>{hit.title}</p>
                           <span className="label link-arrow mt-4 md:mt-6">
-                            {hit.kind === 'story' ? 'Read the story' : 'View the collection'}
+                            {t(hit.kind === 'story' ? 'Read the story' : 'View the collection')}
                             <Icon name="arrowR" className="h-3.5 w-3.5" />
                           </span>
                         </div>
@@ -288,7 +301,7 @@ function Block({
     <section className={className} aria-labelledby={id}>
       <div className="mb-[clamp(1.75rem,3.5vw,3rem)] flex items-baseline justify-between gap-6 border-t border-ink pt-4" data-reveal>
         <h2 id={id} className="label">
-          <span className="nums mr-3 text-mute" aria-hidden>{pad2(n)}</span>
+          <span className="nums me-3 text-mute" aria-hidden>{pad2(n)}</span>
           {title}
           {more ? <span className="sr-only">{more}</span> : null}
         </h2>

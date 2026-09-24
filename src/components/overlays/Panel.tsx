@@ -10,7 +10,8 @@ type Props = {
   label: string;
   /**
    * Where the panel comes from.
-   *  right  a drawer (the bag)
+   *  right  a drawer (the bag), from the end side: the right in English,
+   *         the left in Arabic
    *  top    a sheet that drops over the header, with a scrim (search)
    *  full   the whole screen, no scrim (the mobile menu)
    */
@@ -61,6 +62,9 @@ export function Panel({ open, onClose, label, from, children, className, rootCla
     tl.current?.kill();
     const items = el.querySelectorAll('[data-panel-item]');
     const lines = el.querySelectorAll('[data-panel-line]');
+    // The drawer is pinned to the end side, so it comes in from the left on
+    // an Arabic page.
+    const off = document.documentElement.dir === 'rtl' ? -100 : 100;
 
     if (reduced()) {
       gsap.set(el, { autoAlpha: open ? 1 : 0 });
@@ -78,7 +82,7 @@ export function Panel({ open, onClose, label, from, children, className, rootCla
       const t = gsap.timeline();
       if (from === 'right') {
         t.fromTo(scrim.current, { opacity: 0 }, { opacity: 1, duration: DUR.panel, ease: EASE.ui }, 0)
-          .fromTo(sheet, { xPercent: 100 }, { xPercent: 0, duration: 0.62, ease: EASE.cut }, 0);
+          .fromTo(sheet, { xPercent: off }, { xPercent: 0, duration: 0.62, ease: EASE.cut }, 0);
       } else {
         // top and full are the same gesture: a blind drawn down from the
         // header line, fast off the mark and slow to settle.
@@ -100,7 +104,7 @@ export function Panel({ open, onClose, label, from, children, className, rootCla
         onComplete: () => { gsap.set(el, { autoAlpha: 0 }); onClosed?.(); },
       });
       if (from === 'right') {
-        t.to(sheet, { xPercent: 100, duration: 0.36, ease: 'power3.in' }, 0);
+        t.to(sheet, { xPercent: off, duration: 0.36, ease: 'power3.in' }, 0);
       } else {
         t.to(sheet, { clipPath: SHUT, duration: from === 'full' ? 0.55 : 0.42, ease: 'power3.inOut' }, 0);
       }
@@ -163,7 +167,7 @@ export function Panel({ open, onClose, label, from, children, className, rootCla
         aria-label={label}
         className={cn(
           'absolute bg-bone',
-          from === 'right' && 'inset-y-0 right-0 flex w-full max-w-[29rem] flex-col',
+          from === 'right' && 'inset-y-0 end-0 flex w-full max-w-[29rem] flex-col',
           from === 'top' && 'inset-x-0 top-0 flex max-h-dvh flex-col',
           from === 'full' && 'inset-0 flex h-dvh flex-col',
           className,

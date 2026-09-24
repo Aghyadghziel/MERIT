@@ -1,3 +1,231 @@
-/** Arabic strings for the product area, keyed by the English source. */
+/**
+ * Arabic strings for the product area, keyed by the English source: the
+ * product page, the bag (page and drawer), the checkout notice, the account
+ * and the wishlist. Categories, colours, sizes and seasons live in catalog.ts.
+ * Facts (30 days, 1,500 SAR, working days) must stay identical to the English.
+ */
 export const product: Record<string, string> = {
+  // ─── Shared punctuation and small words ────────────────────────────────
+  ', ': '، ',
+  '{list} and {last}': '{list} و{last}',
+  Home: 'الرئيسية',
+  Breadcrumb: 'مسار التنقّل',
+  Close: 'إغلاق',
+
+  // ─── Buying panel ──────────────────────────────────────────────────────
+  Colour: 'اللون',
+  ', {colour} selected': '، المختار: {colour}',
+  ', sold out': '، نفدت الكمية',
+  Size: 'المقاس',
+  'Size guide': 'دليل المقاسات',
+  'Size {size}': 'المقاس {size}',
+  'Size {size}, low stock': 'المقاس {size}، كمية محدودة',
+  'Size {size}, unavailable in {colour}': 'المقاس {size}، غير متوفّر بلون {colour}',
+  'Select size': 'اختر المقاس',
+  'Choose colour': 'اختر اللون',
+  'Choose a size to continue.': 'اختر مقاسًا للمتابعة.',
+  'Every size is sold out.': 'نفدت كل المقاسات.',
+  'Sold out in {colour}': 'نفدت بلون {colour}',
+  'Sold out in {colour}. Another colour may still be available.': 'نفدت بلون {colour}. قد يتوفّر لون آخر.',
+  'Three or fewer left in this size.': 'بقيت ثلاث قطع أو أقل من هذا المقاس.',
+  'Three or fewer left in {colour}.': 'بقيت ثلاث قطع أو أقل بلون {colour}.',
+  'Three or fewer left in {sizes}.': 'بقيت ثلاث قطع أو أقل في {sizes}.',
+  'In stock in {colour}.': 'متوفّرة بلون {colour}.',
+  '{n} of {total} sizes available in {colour}.': '{n} من أصل {total} مقاسات متوفّرة بلون {colour}.',
+  'Add to bag': 'أضف إلى الحقيبة',
+  'Added to bag': 'أُضيفت إلى الحقيبة',
+  Added: 'أُضيفت',
+  'Quick add to bag': 'إضافة سريعة إلى الحقيبة',
+  'Save to wishlist': 'احفظ في قائمة الأمنيات',
+  'Remove from wishlist': 'إزالة من قائمة الأمنيات',
+  'Save {name} to wishlist': 'حفظ {name} في قائمة الأمنيات',
+  'Remove {name} from wishlist': 'إزالة {name} من قائمة الأمنيات',
+  'This piece is finished. Made in a count of a few hundred and not re-cut.':
+    'انتهت هذه القطعة. صُنعت بعدد لا يتجاوز بضع مئات، ولن يُعاد قصّها.',
+  'Two working days to Riyadh and Jeddah.': 'يوما عمل إلى الرياض وجدة.',
+  'Free Gulf delivery over {n} SAR': 'توصيل مجاني داخل الخليج للطلبات فوق {n} ر.س',
+  'Returns within 30 days.': 'الإرجاع خلال 30 يومًا.',
+  'Returns within 30 days': 'الإرجاع خلال 30 يومًا',
+  'Unworn, with the tag attached.': 'دون ارتداء، ومع بقاء البطاقة.',
+  'Fit, materials and care': 'القَصّة والخامات والعناية',
+
+  // ─── Gallery and full screen ───────────────────────────────────────────
+  '{name}, photographs': 'صور {name}',
+  '{name}, view {n}': '{name}، المنظر {n}',
+  ', open full screen': '، اعرضها بملء الشاشة',
+  'Go to photograph': 'الانتقال إلى صورة',
+  'Photograph {i} of {n}': 'الصورة {i} من {n}',
+  Zoom: 'تكبير',
+  ' photograph {i}': ' الصورة {i}',
+  'Zoom in': 'تكبير',
+  'Zoom out': 'تصغير',
+  'Close photographs': 'إغلاق الصور',
+  'Previous photograph': 'الصورة السابقة',
+  'Next photograph': 'الصورة التالية',
+
+  // ─── The piece: description and folds ──────────────────────────────────
+  'The piece': 'القطعة',
+  'About the {name}': 'عن {name}',
+  Material: 'الخامة',
+  Origin: 'المنشأ',
+  'Fit and size': 'القَصّة والمقاس',
+  'Size and dimensions': 'المقاس والأبعاد',
+  'Materials and origin': 'الخامات والمنشأ',
+  Care: 'العناية',
+  'Delivery and returns': 'التوصيل والإرجاع',
+  'Riyadh and Jeddah — two working days; the rest of Saudi Arabia, two to three.':
+    'الرياض وجدة — يوما عمل؛ وبقية مناطق السعودية من يومين إلى ثلاثة.',
+  'Gulf — three to five working days. Free over 1,500 SAR in Saudi Arabia and the Gulf.':
+    'الخليج — من ثلاثة إلى خمسة أيام عمل. التوصيل مجاني للطلبات فوق 1,500 ر.س داخل السعودية والخليج.',
+  'Europe and UK — five to eight working days; elsewhere five to ten, duties paid at checkout.':
+    'أوروبا والمملكة المتحدة — من خمسة إلى ثمانية أيام عمل؛ وبقية الدول من خمسة إلى عشرة، مع دفع الرسوم الجمركية عند إتمام الشراء.',
+  'Returns accepted within 30 days, unworn and with the tag attached.':
+    'يُقبل الإرجاع خلال 30 يومًا، دون ارتداء ومع بقاء البطاقة.',
+  'Full policy': 'السياسة كاملة',
+
+  // ─── Collection band, the look, rails ──────────────────────────────────
+  'From the collection': 'من المجموعة',
+  'Explore {name}': 'استكشف {name}',
+  'Complete the look — {n} pieces': 'أكمل الإطلالة — {n} قطع',
+  'Worn together.': 'تُلبس معًا.',
+  'Chosen from the {collection} collection to wear with the {name}. Each piece is sold on its own.':
+    'اختيرت من مجموعة {collection} لتُلبس مع {name}. كل قطعة تُباع منفردة.',
+  'Chosen to wear with the {name}. Each piece is sold on its own.':
+    'اختيرت لتُلبس مع {name}. كل قطعة تُباع منفردة.',
+  'This piece': 'هذه القطعة',
+  'You might also consider': 'قد يستهويك أيضًا',
+  'Previous pieces': 'القطع السابقة',
+  'Next pieces': 'القطع التالية',
+  'Recently viewed': 'شوهدت مؤخرًا',
+
+  // ─── Bag: page, drawer, lines ──────────────────────────────────────────
+  Bag: 'الحقيبة',
+  'Shopping bag': 'حقيبة التسوّق',
+  'Close bag': 'إغلاق الحقيبة',
+  Empty: 'فارغة',
+  'Your bag.': 'حقيبتك.',
+  'Your bag': 'حقيبتك',
+  'Pieces in your bag': 'القطع في حقيبتك',
+  'Quantity': 'الكمية',
+  'Quantity of {name}': 'كمية {name}',
+  'Decrease quantity of {name}': 'إنقاص كمية {name}',
+  'Increase quantity of {name}': 'زيادة كمية {name}',
+  Was: 'السعر السابق',
+  Each: 'سعر القطعة',
+  Save: 'احفظ',
+  'Move to wishlist': 'انقلها إلى قائمة الأمنيات',
+  'Move {name} to your wishlist': 'نقل {name} إلى قائمة الأمنيات',
+  Remove: 'إزالة',
+  'Remove {name} from your bag': 'إزالة {name} من حقيبتك',
+  'Continue shopping': 'مواصلة التسوّق',
+  'Kept in this browser. No account needed.': 'محفوظة في هذا المتصفح. لا حاجة إلى حساب.',
+  Summary: 'الملخّص',
+  Subtotal: 'المجموع الفرعي',
+  Delivery: 'التوصيل',
+  'Free in the Gulf': 'مجاني داخل الخليج',
+  'Free in the Gulf over': 'مجاني داخل الخليج للطلبات فوق',
+  'from free delivery in the Gulf': 'تفصلك عن التوصيل المجاني داخل الخليج',
+  'Free delivery in the Gulf': 'توصيل مجاني داخل الخليج',
+  'Total before delivery': 'الإجمالي قبل التوصيل',
+  'Before delivery': 'قبل التوصيل',
+  'Shown in {code} at an indicative rate. Prices are set in SAR.':
+    'معروضة بعملة {code} بسعر صرف تقريبي. الأسعار محدّدة بالريال السعودي.',
+  Checkout: 'إتمام الشراء',
+  'MERIT is a concept store. Checkout shows what would happen next; nothing is charged.':
+    'MERIT متجر تصوّري. تعرض صفحة إتمام الشراء ما كان سيحدث بعدها، ولا يُخصم أي مبلغ.',
+  'Riyadh and Jeddah in two working days.': 'الرياض وجدة خلال يومَي عمل.',
+  'Returns within thirty days, unworn.': 'الإرجاع خلال 30 يومًا، دون ارتداء.',
+  'Packed in unbleached cotton, no plastic.': 'تُغلَّف بقطن غير مُبيَّض، بلا بلاستيك.',
+  'Nothing in it yet.': 'لا شيء فيها بعد.',
+  'Most people start with the Index: the pieces cut from the same patterns every year, in the same cloth.':
+    'يبدأ أكثر الناس بمجموعة Index: قطع تُقصّ من النماذج نفسها كل عام، وبالقماش نفسه.',
+  'Shop the Index': 'تسوّق Index',
+  'New arrivals': 'وصل حديثًا',
+  '{pieces} waiting in your wishlist': '{pieces} بانتظارك في قائمة الأمنيات',
+  'From the Index': 'من مجموعة Index',
+  'All pieces': 'كل القطع',
+  'Nothing in the bag yet.': 'لا شيء في الحقيبة بعد.',
+  'Pieces you add stay here, in this browser, until you take them out.':
+    'تبقى القطع التي تضيفها هنا، في هذا المتصفح، حتى تُخرجها.',
+  'Start shopping': 'ابدأ التسوّق',
+  'Start with': 'ابدأ من',
+  'The Index': 'مجموعة Index',
+  '{pieces} in your wishlist': '{pieces} في قائمة الأمنيات',
+  'You may also like': 'قد يعجبك أيضًا',
+  'Free Gulf delivery over {amount}. A concept store: checkout explains, nothing is charged.':
+    // formatPrice already ends "ر.س." here, so the sentence closes on the amount.
+    'متجر تصوّري: صفحة إتمام الشراء تشرح فقط، ولا يُخصم أي مبلغ. التوصيل مجاني داخل الخليج للطلبات فوق {amount}',
+  'View bag': 'عرض الحقيبة',
+
+  // ─── Checkout: the page and its order slip ─────────────────────────────
+  'A concept site': 'موقع تصوّري',
+  'Nothing here can be bought.': 'لا شيء هنا قابل للشراء.',
+  'MERIT is not a real company. There is no payment processor connected to this page, no order will be placed, and nothing you have put in the bag will be charged or shipped.':
+    'MERIT ليست شركة حقيقية. لا توجد بوابة دفع مرتبطة بهذه الصفحة، ولن يُسجَّل أي طلب، ولن يُخصم ثمن أي شيء وضعته في الحقيبة ولن يُشحن.',
+  'Everything else works as it would in a real store: the bag, the wishlist, the currency, the stock on each size. This is the one place where pretending would be dishonest.':
+    'كل ما عدا ذلك يعمل كما في متجر حقيقي: الحقيبة، وقائمة الأمنيات، والعملة، والمخزون في كل مقاس. هذا هو الموضع الوحيد الذي يصبح فيه التظاهر خداعًا.',
+  'Back to the bag': 'العودة إلى الحقيبة',
+  'Keep looking': 'واصل التصفّح',
+  'Order slip': 'قسيمة الطلب',
+  Riyadh: 'الرياض',
+  'The bag is empty.': 'الحقيبة فارغة.',
+  'Not calculated': 'لم يُحتسب',
+  'Order number': 'رقم الطلب',
+  'Not issued': 'لم يصدر',
+  Payment: 'الدفع',
+  'Not connected': 'غير مفعّل',
+  Shipping: 'الشحن',
+  'Not scheduled': 'لم يُجدوَل',
+  Charged: 'المبلغ المخصوم',
+  'Kept for reference only. Your bag has not been changed.': 'للاطّلاع فقط. لم تتغيّر حقيبتك.',
+
+  // ─── Account (not connected) ───────────────────────────────────────────
+  "A navy jacket on a tailor's dummy, basted in white thread before its first fitting":
+    'سترة كحلية على مانيكان الخيّاط، مُسرَّجة بخيط أبيض قبل قياسها الأول',
+  'Basted, before the first fitting': 'مُسرَّجة، قبل القياس الأول',
+  Account: 'الحساب',
+  'Sign in.': 'تسجيل الدخول.',
+  'No accounts.': 'لا حسابات.',
+  'Nothing was sent to': 'لم يُرسَل شيء إلى',
+  'MERIT is a concept site with no sign-in and no order history. Your bag and wishlist are kept in this browser instead, and they survive a reload without an account.':
+    'MERIT موقع تصوّري بلا تسجيل دخول ولا سجلّ طلبات. تُحفَظ حقيبتك وقائمة أمنياتك في هذا المتصفح بدلًا من ذلك، وتبقى بعد إعادة تحميل الصفحة دون حاجة إلى حساب.',
+  'Use another address': 'استخدم عنوانًا آخر',
+  'Email address': 'البريد الإلكتروني',
+  'Enter your email address.': 'أدخل بريدك الإلكتروني.',
+  'That address is missing something. Check it and try again.': 'ينقص هذا العنوان شيء. تحقّق منه وحاول مجددًا.',
+  Continue: 'متابعة',
+  'Accounts are not connected on this concept site: no code is sent, and nothing is stored beyond this browser.':
+    'الحسابات غير مفعّلة في هذا الموقع التصوّري: لا يُرسَل أي رمز، ولا يُحفَظ شيء خارج هذا المتصفح.',
+  'On this device': 'على هذا الجهاز',
+  'No account needed': 'لا حاجة إلى حساب',
+  Saved: 'المحفوظة',
+  Orders: 'الطلبات',
+  'Concept site': 'موقع تصوّري',
+  'Shopping bag, {pieces}': 'حقيبة التسوّق، {pieces}',
+  'Wishlist, {pieces} saved': 'قائمة الأمنيات، المحفوظ: {pieces}',
+  'Orders: none, as nothing can be bought on this concept site.':
+    'الطلبات: لا شيء، إذ لا يمكن شراء أي شيء في هذا الموقع التصوّري.',
+
+  // ─── Wishlist ──────────────────────────────────────────────────────────
+  Wishlist: 'قائمة الأمنيات',
+  '{pieces} saved': 'المحفوظ: {pieces}',
+  'Nothing saved': 'لا شيء محفوظ',
+  'Saved.': 'المحفوظة.',
+  'Kept in this browser, with no account behind it. Tap the': 'محفوظة في هذا المتصفح، دون أي حساب. اضغط على',
+  heart: 'القلب',
+  'on a piece again to let it go.': 'في القطعة مرة أخرى لإزالتها.',
+  'Saved pieces': 'القطع المحفوظة',
+  'Nothing saved now.': 'لا شيء محفوظ الآن.',
+  'Nothing saved yet.': 'لم تحفظ شيئًا بعد.',
+  'Tap the': 'اضغط على',
+  'on any piece to keep it here. Saved pieces stay in this browser; there is no account behind them.':
+    'في أي قطعة لتحفظها هنا. تبقى القطع المحفوظة في هذا المتصفح، دون أي حساب.',
+  'New this season — save one to start': 'جديد هذا الموسم — احفظ قطعة لتبدأ',
+  'All new': 'كل الجديد',
+  All: 'الكل',
+  Removed: 'أُزيلت',
+  Undo: 'تراجع',
+  'Undo all': 'تراجع عن الكل',
+  'Undo — save {name} again': 'تراجع — احفظ {name} مجددًا',
+  'Undo — save all {pieces} again': 'تراجع — احفظ {pieces} مجددًا',
 };

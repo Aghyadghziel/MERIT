@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
 import type { Product } from '@/lib/catalog';
 import { getCollection } from '@/lib/catalog';
+import { getT } from '@/i18n/server';
 import { pad2 } from '@/lib/format';
 import { MASK_ROOM } from './mask';
 import { fitClass, imageSrc } from './media';
@@ -17,7 +18,8 @@ const SIZES = '(min-width:1024px) 23vw, (min-width:768px) 36vw, 66vw';
  * first, then a plus between each of the others. Each card keeps its own
  * quick-add, so the look can be bought piece by piece without leaving.
  */
-export function CompleteTheLook({ product, look }: { product: Product; look: Product[] }) {
+export async function CompleteTheLook({ product, look }: { product: Product; look: Product[] }) {
+  const t = await getT();
   const img = product.images[0];
   // The pairing reaches into other collections when its own runs short, so
   // the line names the collection only when every piece really is from it.
@@ -28,18 +30,19 @@ export function CompleteTheLook({ product, look }: { product: Product; look: Pro
       <div className="page grid-page items-end gap-y-6">
         <div className="col-span-4 md:col-span-4 lg:col-span-8">
           <p className="label text-mute" data-reveal>
-            Complete the look — {pad2(look.length + 1)} pieces
+            {t('Complete the look — {n} pieces', { n: pad2(look.length + 1) })}
           </p>
           <h2 id="look-title" className={`display-xl mt-4 ${MASK_ROOM}`}>
-            <Lines text="Worn together." />
+            <Lines text={t('Worn together.')} />
           </h2>
         </div>
         <p
           className="col-span-4 max-w-sm text-sm leading-relaxed text-mute md:col-span-2 lg:col-span-4 lg:justify-self-end"
           data-reveal
         >
-          {from ? `Chosen from the ${from} collection to wear` : 'Chosen to wear'} with the {product.name}. Each
-          piece is sold on its own.
+          {from
+            ? t('Chosen from the {collection} collection to wear with the {name}. Each piece is sold on its own.', { collection: from, name: product.name })
+            : t('Chosen to wear with the {name}. Each piece is sold on its own.', { name: product.name })}
         </p>
       </div>
 
@@ -48,14 +51,14 @@ export function CompleteTheLook({ product, look }: { product: Product; look: Pro
           <li className={ITEM}>
             <div className="relative aspect-[4/5] overflow-hidden bg-bone-2">
               <Image src={imageSrc(img)} alt="" fill sizes={SIZES} className={fitClass(img)} />
-              <span className="label-sm absolute left-3 top-3 bg-ink px-2 py-1 text-bone">This piece</span>
+              <span className="label-sm absolute start-3 top-3 bg-ink px-2 py-1 text-bone">{t('This piece')}</span>
             </div>
             <div className="mt-3.5 flex items-start gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-sm leading-snug">{product.name}</p>
                 <p className="label-sm mt-1.5 text-mute">
                   <span className="nums">01 — </span>
-                  {product.category}
+                  {t(product.category)}
                 </p>
               </div>
               <Price amount={product.price} compareAt={product.compareAt} />
@@ -65,7 +68,7 @@ export function CompleteTheLook({ product, look }: { product: Product; look: Pro
           {look.map((p, i) => (
             <li key={p.slug} className={ITEM}>
               <span aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-20 aspect-[4/5]">
-                <span className="absolute left-[calc(var(--gutter)/-2)] top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center border border-line bg-bone">
+                <span className="absolute start-[calc(var(--gutter)/-2)] top-1/2 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 rtl:translate-x-1/2 items-center justify-center border border-line bg-bone">
                   <Icon name="plus" className="h-3.5 w-3.5" />
                 </span>
               </span>

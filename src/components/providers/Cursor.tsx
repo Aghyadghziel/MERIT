@@ -142,7 +142,7 @@ export function Cursor() {
           <circle ref={arc} className="house-cursor-arc" cx="17" cy="17" r={R} fill="none" strokeWidth="1.6"
             strokeDasharray={C} strokeDashoffset={C} strokeLinecap="round" />
         </svg>
-        <span ref={note} className="house-cursor-note absolute left-full top-1/2 ml-3 -translate-y-1/2 whitespace-nowrap" />
+        <span ref={note} className="house-cursor-note absolute start-full top-1/2 ms-3 -translate-y-1/2 whitespace-nowrap" />
       </div>
       <div ref={dot} className="house-cursor-dot absolute left-0 top-0 h-1.5 w-1.5 rounded-full" />
     </div>

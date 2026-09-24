@@ -6,7 +6,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
 import { reduced, setupGsap } from '@/lib/gsap';
-import type { MenuLink, NavItem } from '@/lib/nav';
+import { useLocale } from '@/i18n/client';
+import type { Locale } from '@/i18n/config';
+import { countOf, type MenuLink, type NavItem } from '@/lib/nav';
 
 type Props = {
   item: NavItem & { menu: NonNullable<NavItem['menu']> };
@@ -20,10 +22,10 @@ type Props = {
 };
 
 /** "03 pieces", "01 piece", or the entry's own meta (a season, a kicker). */
-function caption(l: MenuLink, fallback: string) {
+function caption(l: MenuLink, fallback: string, locale: Locale) {
   if (!l.meta) return fallback;
   if (!/^\d+$/.test(l.meta)) return l.meta;
-  return `${l.meta} ${Number(l.meta) === 1 ? 'piece' : 'pieces'}`;
+  return countOf(Number(l.meta), locale, ['piece', 'pieces'], ['قطعة واحدة', 'قطعتان', 'قطع', 'قطعة'], () => l.meta as string);
 }
 
 const SHUT = 'inset(0% 0% 100% 0%)';
@@ -49,6 +51,7 @@ export function MegaMenu({ item, id, open, switching, handoff, onClose }: Props)
   const panel = useRef<HTMLDivElement>(null);
   const [preview, setPreview] = useState<MenuLink | null>(null);
   const [warm, setWarm] = useState(false);
+  const locale = useLocale();
   const { primary, columns, feature, viewAll, note } = item.menu;
   const md = primary.size === 'md';
   const n = primary.links.length;
@@ -155,7 +158,7 @@ export function MegaMenu({ item, id, open, switching, handoff, onClose }: Props)
                   onFocus={point(l)}
                   className={cn(
                     'group/l inline-flex items-start gap-3 py-[0.07em] font-semibold transition-[color,translate] duration-500 ease-(--ease-expo)',
-                    'group-hover/list:text-stone hover:translate-x-2 hover:text-ink! focus-visible:text-ink!',
+                    'group-hover/list:text-stone hover:translate-x-2 rtl:hover:-translate-x-2 hover:text-ink! focus-visible:text-ink!',
                     md ? 'leading-[1.02] tracking-[-0.04em]' : 'leading-[0.96] tracking-[-0.05em]',
                   )}
                 >
@@ -195,7 +198,7 @@ export function MegaMenu({ item, id, open, switching, handoff, onClose }: Props)
                     >
                       {l.label}
                       {l.meta ? (
-                        <span className="label-sm nums ml-2 text-mute">
+                        <span className="label-sm nums ms-2 text-mute">
                           <span className="sr-only">, </span>
                           {l.meta}
                         </span>
@@ -232,7 +235,7 @@ export function MegaMenu({ item, id, open, switching, handoff, onClose }: Props)
           <div className="mt-4 min-h-[4.75rem]" data-mm-item>
             {preview ? (
               <>
-                <p className="label-sm text-mute">{caption(preview, item.label)}</p>
+                <p className="label-sm text-mute">{caption(preview, item.label, locale)}</p>
                 <p className="display-sm mt-1.5 font-semibold">{preview.label}</p>
               </>
             ) : (
@@ -241,7 +244,7 @@ export function MegaMenu({ item, id, open, switching, handoff, onClose }: Props)
                 <p className="display-sm mt-1.5 font-semibold">{feature.title}</p>
                 <span className="label mt-2.5 inline-flex items-center gap-2">
                   {feature.cta}
-                  <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-500 ease-(--ease-expo) group-hover:translate-x-1" />
+                  <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-500 ease-(--ease-expo) group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </span>
               </Link>
             )}

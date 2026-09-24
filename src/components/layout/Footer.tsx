@@ -48,15 +48,12 @@ export function Footer() {
 
   return (
     <footer className="on-ink relative bg-ink text-bone">
-      <div className="page pt-12 md:pt-16">
-        <div className="flex items-center justify-between">
-          <p className="label text-bone/60">{BRAND.city} — since {BRAND.founded}</p>
-          <p className="label text-bone/60">Autumn Winter 2026</p>
+      <div className="page grid items-end gap-6 py-10 md:grid-cols-[minmax(0,34rem)_1fr] md:gap-12 md:py-12">
+        <LiquidLogo className="w-full max-w-[34rem]" />
+        <div className="flex flex-col gap-2 md:items-end md:text-right">
+          <p className="text-[clamp(1.05rem,0.95rem+0.5vw,1.3rem)] font-semibold leading-tight tracking-[-0.03em]">Quiet structure, expressive movement.</p>
+          <p className="label-sm text-bone/60">{BRAND.city} — since {BRAND.founded} · Autumn Winter 2026</p>
         </div>
-        <LiquidLogo className="mx-auto mt-6 w-full md:mt-10" />
-        <p className="mt-6 max-w-md pb-4 text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold leading-[1.05] tracking-[-0.035em] md:mt-10">
-          Quiet structure, expressive movement.
-        </p>
       </div>
 
       <div className="border-t border-line-ink">
@@ -64,11 +61,11 @@ export function Footer() {
       </div>
 
       <div className="page border-t border-line-ink">
-        <div className="grid-page gap-y-12 py-14 md:py-20">
+        <div className="grid-page gap-y-10 py-10 md:py-12">
           {FOOTER.map((group) => (
             <nav key={group.title} aria-label={group.title} className="col-span-2 md:col-span-3 lg:col-span-2">
               <p className="label-sm text-mute-ink">{group.title}</p>
-              <ul className="mt-5 space-y-1">
+              <ul className="mt-4 space-y-0.5">
                 {group.links.map((l) => (
                   <li key={l.label}>
                     <Link href={l.href} className="link-quiet inline-flex min-h-8 items-center text-[0.9375rem]">
@@ -101,7 +98,7 @@ export function Footer() {
       </div>
 
       <div className="page border-t border-line-ink">
-        <div className="flex flex-col gap-6 py-8 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-5 py-6 lg:flex-row lg:items-center lg:justify-between">
           <ul className="flex flex-wrap items-center gap-x-8 gap-y-2 text-[0.9375rem]">
             {/* No social link: MERIT is a concept and owns no account, so a
                 handle here would send people to whoever does. */}
@@ -132,7 +129,7 @@ export function Footer() {
       </div>
 
       <div className="page border-t border-line-ink">
-        <div className="grid-page gap-y-3 py-7 text-xs leading-relaxed text-mute-ink">
+        <div className="grid-page gap-y-3 py-5 text-xs leading-relaxed text-mute-ink">
           <p className="col-span-4 md:col-span-3 lg:col-span-4">
             © {new Date().getFullYear()} {BRAND.legal}. {BRAND.city}, {BRAND.country}.
           </p>

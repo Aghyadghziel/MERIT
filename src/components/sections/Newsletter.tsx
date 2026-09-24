@@ -46,11 +46,11 @@ export function Newsletter() {
   };
 
   return (
-    <section className="page grid-page section-y-sm gap-y-10" aria-labelledby={`${id}-title`}>
+    <section className="page grid-page gap-y-6 py-10 md:py-12" aria-labelledby={`${id}-title`}>
       <div className="col-span-4 md:col-span-6 lg:col-span-5">
         <p className="label-sm text-mute-ink">Newsletter</p>
-        <h2 id={`${id}-title`} className="display-lg mt-4">Collection notes.</h2>
-        <p className="mt-5 max-w-[34ch] text-sm leading-relaxed text-mute-ink">
+        <h2 id={`${id}-title`} className="display-sm mt-3">Collection notes.</h2>
+        <p className="mt-3 max-w-[34ch] text-sm leading-relaxed text-mute-ink">
           Four or five letters a year: what is being made, when it lands, and the counts. Nothing
           else.
         </p>
@@ -85,7 +85,7 @@ export function Newsletter() {
                 aria-invalid={state === 'error'}
                 aria-describedby={hint}
                 placeholder="you@example.com"
-                className="min-h-16 w-full min-w-0 flex-1 bg-transparent py-3 text-[clamp(1.5rem,1rem+2.2vw,2.75rem)] font-semibold tracking-[-0.035em] text-bone outline-none! placeholder:text-mute-ink/70 md:min-h-20"
+                className="min-h-12 w-full min-w-0 flex-1 bg-transparent py-2 text-[clamp(1.125rem,1rem+0.6vw,1.5rem)] font-semibold tracking-[-0.035em] text-bone outline-none! placeholder:text-mute-ink/70"
               />
               <button
                 type="submit"

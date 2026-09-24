@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useEffect, useRef, useState } from 'react';
 import { MaskHeadline, Tally } from '@/components/commerce/CartView';
 import { ProductCard } from '@/components/commerce/ProductCard';

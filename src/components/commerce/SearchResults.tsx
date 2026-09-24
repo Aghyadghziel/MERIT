@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { Suspense, useDeferredValue, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { notifyQuery, QueryWatch, useLocationQuery } from '@/components/commerce/Listing';
 import { ProductGrid } from '@/components/commerce/ProductGrid';

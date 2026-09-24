@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { fitClass, imageKind, imageSrc } from '@/app/products/[slug]/_parts/media';
+import { fitClass, imageKind, imageSrc } from '@/app/[lang]/products/[slug]/_parts/media';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
 import { pad2 } from '@/lib/format';

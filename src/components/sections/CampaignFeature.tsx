@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useLayoutEffect, useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';

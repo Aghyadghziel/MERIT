@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useEffect, useLayoutEffect, useRef } from 'react';
 import { Price } from '@/components/commerce/Price';
 import { ProductCard } from '@/components/commerce/ProductCard';

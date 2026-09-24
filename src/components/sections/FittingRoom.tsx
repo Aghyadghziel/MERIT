@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Price } from '@/components/commerce/Price';
 import { useStore } from '@/components/providers/Store';

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 

@@ -1,8 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { LanguageSwitch } from '@/i18n/LanguageSwitch';
+import Link from '@/i18n/link';
+import { usePath } from '@/i18n/client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Panel } from '@/components/overlays/Panel';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
@@ -28,7 +29,7 @@ import { pad2 } from '@/lib/format';
 export function MobileNav() {
   const { overlay, close, open } = useUi();
   const { wishlist, count, ready } = useStore();
-  const pathname = usePathname();
+  const pathname = usePath();
   const isOpen = overlay === 'menu';
   const [layer, setLayer] = useState<string | null>(null);
   const sub = useRef<HTMLDivElement>(null);
@@ -220,14 +221,9 @@ export function MobileNav() {
             <div className="border-b border-line [&_label]:w-full [&_select]:w-full [&_select]:min-h-12">
               <CurrencySelect id="currency-mobile" />
             </div>
-            <label className="relative flex items-center border-b border-line">
-              <span className="sr-only">Language</span>
-              <select className="label select-quiet min-h-12 w-full" defaultValue="en">
-                <option value="en">English</option>
-                <option value="ar" disabled>العربية — in preparation</option>
-              </select>
-              <Icon name="chevD" className="pointer-events-none absolute right-0 h-3.5 w-3.5" />
-            </label>
+            <div className="flex min-h-12 items-center border-b border-line">
+              <LanguageSwitch />
+            </div>
           </div>
 
           {/* The signature, cropped by the bottom of the screen. */}

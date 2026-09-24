@@ -1,4 +1,4 @@
-import { Inter_Tight } from 'next/font/google';
+import { IBM_Plex_Sans_Arabic, Inter_Tight } from 'next/font/google';
 
 /**
  * The brand face is Neue Haas Grotesk (Monotype). It needs a web licence, so
@@ -15,4 +15,12 @@ const grotesk = Inter_Tight({
   display: 'swap',
 });
 
-export const fontVariables = grotesk.variable;
+/** Arabic: a modern grotesk-style naskh-kufi hybrid that sits with the Latin. */
+const arabic = IBM_Plex_Sans_Arabic({
+  subsets: ['arabic'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-arabic',
+  display: 'swap',
+});
+
+export const fontVariables = `${grotesk.variable} ${arabic.variable}`;

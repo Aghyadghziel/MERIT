@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { usePathname, useSearchParams } from 'next/navigation';
+import { usePath } from '@/i18n/client';
 import {
   Suspense, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore,
 } from 'react';
@@ -174,7 +175,7 @@ const navHeight = () =>
 function ListingView({
   pool, title, description, campaign, eyebrow, stories, next, variant, query, onQuery,
 }: ViewProps) {
-  const pathname = usePathname();
+  const pathname = usePath();
   const mode = variant ?? (pathname.startsWith('/collections/') ? 'section' : 'page');
 
   const [drawer, setDrawer] = useState(false);

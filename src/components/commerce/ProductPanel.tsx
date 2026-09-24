@@ -1,10 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { MASK_ROOM } from '@/app/products/[slug]/_parts/mask';
-import { fitClass, imageSrc } from '@/app/products/[slug]/_parts/media';
+import { MASK_ROOM } from '@/app/[lang]/products/[slug]/_parts/mask';
+import { fitClass, imageSrc } from '@/app/[lang]/products/[slug]/_parts/media';
 import { Price } from '@/components/commerce/Price';
 import { StatusTag } from '@/components/commerce/StatusTag';
 import { FREE_SHIPPING, useStore } from '@/components/providers/Store';

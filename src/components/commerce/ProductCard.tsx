@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useId, useRef, useState } from 'react';
 import { WishButton } from '@/components/commerce/WishButton';
 import { useStore } from '@/components/providers/Store';

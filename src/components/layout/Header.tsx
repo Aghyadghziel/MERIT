@@ -1,6 +1,7 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/i18n/link';
+import { LanguageSwitch } from '@/i18n/LanguageSwitch';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { MegaMenu } from '@/components/layout/MegaMenu';
@@ -9,6 +10,7 @@ import { Wordmark } from '@/components/ui/Wordmark';
 import { useStore } from '@/components/providers/Store';
 import { useUi } from '@/components/providers/Ui';
 import { cn } from '@/lib/cn';
+import { stripLocale } from '@/i18n/config';
 import { reduced, setupGsap } from '@/lib/gsap';
 import { NAV, type NavItem } from '@/lib/nav';
 
@@ -41,6 +43,7 @@ const slug = (label: string) => `menu-${label.toLowerCase()}`;
  */
 export function Header() {
   const pathname = usePathname();
+  const path = stripLocale(pathname);
   const { count, wishlist, ready } = useStore();
   const { open } = useUi();
 
@@ -224,7 +227,7 @@ export function Header() {
           <nav aria-label="Primary" className="col-start-1 row-start-1 hidden self-stretch lg:block">
             <ul className="flex h-full items-stretch gap-5 xl:gap-7">
               {NAV.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const active = path === item.href || path.startsWith(`${item.href}/`);
                 const isOpen = menu.current === item.label;
                 return (
                   <li
@@ -326,6 +329,7 @@ export function Header() {
             >
               <Roll text="Search" />
             </button>
+            <LanguageSwitch className="me-1 hidden px-2 lg:inline-flex" />
             <Link href="/account" className={cn(TAP, 'hidden sm:inline-flex')} aria-label="Account">
               <Icon name="account" />
             </Link>

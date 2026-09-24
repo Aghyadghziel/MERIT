@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useCallback, useRef } from 'react';
 import { DeliveryRule, LinePrice, RollingAmount, Stepper, Tally, lineKey, useBagActions } from '@/components/commerce/CartView';
 import { Panel } from '@/components/overlays/Panel';

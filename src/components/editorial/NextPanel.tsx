@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { Icon } from '@/components/ui/Icon';
 import { Lines } from '@/components/ui/Lines';
 import { ArtImage } from '@/components/editorial/ArtImage';

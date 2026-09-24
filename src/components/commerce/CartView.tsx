@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ProductCard } from '@/components/commerce/ProductCard';
 import { RecentlyViewed } from '@/components/commerce/RecentlyViewed';

@@ -1,5 +1,5 @@
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { Fragment } from 'react';
 import { Price } from '@/components/commerce/Price';
 import { WishButton } from '@/components/commerce/WishButton';

@@ -49,6 +49,7 @@ type Props = {
 export function Icon({ name, className = 'w-[18px] h-[18px]', filled }: Props) {
   return (
     <svg
+      data-icon={name}
       viewBox="0 0 20 20"
       className={className}
       fill={filled ? 'currentColor' : 'none'}

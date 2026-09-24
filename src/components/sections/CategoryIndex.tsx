@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { isSoldOut, products, type Category, type Product } from '@/lib/catalog';

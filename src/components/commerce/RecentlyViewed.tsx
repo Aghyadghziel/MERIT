@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
-import { fitClass, imageSrc } from '@/app/products/[slug]/_parts/media';
+import Link from '@/i18n/link';
+import { fitClass, imageSrc } from '@/app/[lang]/products/[slug]/_parts/media';
 import { Price } from '@/components/commerce/Price';
 import { useStore } from '@/components/providers/Store';
 import { getProduct } from '@/lib/catalog';

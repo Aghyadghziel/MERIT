@@ -14,9 +14,11 @@ export const CURRENCIES = {
 export type CurrencyCode = keyof typeof CURRENCIES;
 export const currencyCodes = Object.keys(CURRENCIES) as CurrencyCode[];
 
-export function formatPrice(sar: number, code: CurrencyCode = 'SAR') {
-  const { rate, locale } = CURRENCIES[code];
+/** Arabic pages print the currency in Arabic but keep Western digits. */
+export function formatPrice(sar: number, code: CurrencyCode = 'SAR', lang: 'en' | 'ar' = 'en') {
+  const { rate, locale: fmt } = CURRENCIES[code];
   const value = Math.round(sar * rate);
+  const locale = lang === 'ar' ? 'ar-SA-u-nu-latn' : fmt;
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: code,

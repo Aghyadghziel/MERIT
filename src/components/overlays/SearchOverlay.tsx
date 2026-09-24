@@ -1,8 +1,10 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
+import Link from '@/i18n/link';
 import { useRouter } from 'next/navigation';
+import { useLocale } from '@/i18n/client';
+import { localePath } from '@/i18n/config';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Panel } from '@/components/overlays/Panel';
 import { Price } from '@/components/commerce/Price';
@@ -41,6 +43,7 @@ export function SearchOverlay() {
   const [recent, setRecent] = useState<string[]>([]);
   const input = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const locale = useLocale();
 
   useEffect(() => {
     if (isOpen) {
@@ -82,7 +85,7 @@ export function SearchOverlay() {
   const go = (href: string) => {
     pushRecent(query);
     close();
-    router.push(href);
+    router.push(localePath(href, locale));
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {

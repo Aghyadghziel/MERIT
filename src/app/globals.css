@@ -584,3 +584,19 @@ html.cursor-in .house-cursor { opacity: 1; }
 .house-cursor-note {
   color: var(--color-bone); font-size: 5.6px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
 }
+
+/* ─── Arabic (html[lang=ar], dir=rtl) ───────────────────────────────────
+   Latin runs keep the grotesk; Arabic characters fall through to IBM Plex
+   Sans Arabic. Arabic is never tracked (letters must join) and needs more
+   line height than the tight Latin display settings allow. */
+html:lang(ar) {
+  --font-display: var(--font-grotesk), var(--font-arabic), "Neue Haas Grotesk Display Pro", Arial, sans-serif;
+  --font-sans: var(--font-grotesk), var(--font-arabic), "Neue Haas Grotesk Text Pro", Arial, sans-serif;
+}
+html:lang(ar) body, html:lang(ar) body * { letter-spacing: 0 !important; }
+html:lang(ar) :is(h1, h2, h3, .display, .display-xl, .display-lg, .display-md, .display-sm, [class*="leading-[0."], [class*="leading-none"], [class*="leading-tight"]) {
+  line-height: 1.22 !important;
+}
+html:lang(ar) :is(input, textarea)::placeholder { letter-spacing: 0; }
+/* Arrows and chevrons that point "forward" point the other way in RTL. */
+[dir="rtl"] :is([data-icon="arrowR"], [data-icon="arrowL"], [data-icon="chevR"], [data-icon="chevL"]) { scale: -1 1; }

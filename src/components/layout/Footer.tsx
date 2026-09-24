@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Newsletter } from '@/components/sections/Newsletter';
 import { Icon } from '@/components/ui/Icon';
-import { LiquidFooterMark } from '@/components/landing/LiquidMark';
+import { LiquidLogo } from '@/components/landing/LiquidMark';
 import { BRAND } from '@/lib/brand';
 import { reduced } from '@/lib/gsap';
 import { FOOTER } from '@/lib/nav';
@@ -35,8 +35,10 @@ function RiyadhClock() {
 
 
 /**
- * The footer ends on the signature: the logotype poured in liquid chrome on
- * every page (LiquidFooterMark, WebGL, with the drawn logotype as its fallback).
+ * The footer opens on the signature: the city and the season on one line, the
+ * logotype poured in liquid chrome across the page (LiquidLogo, WebGL, with
+ * the drawn logotype as its fallback) and the house line under it. The links,
+ * the letter and the small print follow.
  */
 export function Footer() {
   const toTop = () => {
@@ -46,7 +48,20 @@ export function Footer() {
 
   return (
     <footer className="on-ink relative bg-ink text-bone">
-      <Newsletter />
+      <div className="page pt-12 md:pt-16">
+        <div className="flex items-center justify-between">
+          <p className="label text-bone/60">{BRAND.city} — since {BRAND.founded}</p>
+          <p className="label text-bone/60">Autumn Winter 2026</p>
+        </div>
+        <LiquidLogo className="mx-auto mt-6 w-full md:mt-10" />
+        <p className="mt-6 max-w-md pb-4 text-[clamp(1.25rem,1rem+1vw,1.75rem)] font-semibold leading-[1.05] tracking-[-0.035em] md:mt-10">
+          Quiet structure, expressive movement.
+        </p>
+      </div>
+
+      <div className="border-t border-line-ink">
+        <Newsletter />
+      </div>
 
       <div className="page border-t border-line-ink">
         <div className="grid-page gap-y-12 py-14 md:py-20">
@@ -131,8 +146,6 @@ export function Footer() {
         </div>
       </div>
 
-      {/* The signature: the logotype, edge to edge, cropped by the page end. */}
-      <LiquidFooterMark />
     </footer>
   );
 }

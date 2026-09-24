@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/Header';
 import { CartDrawer } from '@/components/overlays/CartDrawer';
 import { MobileNav } from '@/components/overlays/MobileNav';
 import { SearchOverlay } from '@/components/overlays/SearchOverlay';
+import { Cursor } from '@/components/providers/Cursor';
 import { MotionRoot } from '@/components/providers/Motion';
 import { StoreProvider } from '@/components/providers/Store';
 import { UiProvider } from '@/components/providers/Ui';
@@ -97,6 +98,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <StoreProvider>
           <UiProvider>
             <MotionRoot />
+            <Cursor />
             <Header />
             <main id="main">{children}</main>
             <Footer />

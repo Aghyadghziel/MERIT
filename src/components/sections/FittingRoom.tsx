@@ -359,7 +359,9 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
     const steps = (from !== 0 ? 1 : 0) + (active !== 0 ? 1 : 0);
     let step = 0;
     const paint = (t: number) => {
-      if (bar) bar.style.transform = `scaleX(${Math.min(1, (step + t) / steps)})`;
+      const v = Math.min(1, (step + t) / steps);
+      if (bar) bar.style.transform = `scaleX(${v})`;
+      document.documentElement.style.setProperty('--fr-progress', v.toFixed(4));   // the cursor's ring reads this
     };
     paint(0);
 
@@ -626,6 +628,7 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
         role="group"
         aria-label="The Fitting Room. Choose a jacket to put on. Keys 1 and 2 put one on, 0 takes it off."
         aria-busy={working}
+        data-cursor-busy={working ? (media === 'removing' ? 'Taking off' : 'Putting on') : undefined}
         className="fr-stage group/room relative overflow-hidden border-b border-line"
       >
         {/* The header is clear only over this band at the top of the room, so
@@ -699,10 +702,10 @@ export function FittingRoom({ items }: { items: OutfitItem[] }) {
               aria-disabled={working || undefined}
               aria-keyshortcuts={String(i)}
               aria-label={name}
+              data-cursor={working ? undefined : on ? 'Take off' : active ? 'Swap' : 'Wear'}
               className={cn(
                 'fr-rail group z-20 flex flex-col',
                 left ? 'items-start text-left' : 'items-end text-right',
-                working && 'cursor-progress',
               )}
             >
               <span data-fr="hang" className="relative block aspect-square w-full">

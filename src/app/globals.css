@@ -560,3 +560,27 @@ html[data-header="hidden"] { --header-offset: 0px; }
   pointer-events: none;
   opacity: 0;
 }
+
+/* ─── The house cursor (components/providers/Cursor.tsx) ─────────────────
+   Drawn in cream under mix-blend-mode: difference, so it is ink on the warm
+   white and warm white on black. Only on fine pointers, once it has moved. */
+.house-cursor { opacity: 0; transition: opacity 0.25s ease; }
+html.cursor-in .house-cursor { opacity: 1; }
+@media (hover: hover) and (pointer: fine) {
+  html.has-cursor, html.has-cursor * { cursor: none !important; }
+  html.has-cursor :is(input, textarea, select, [contenteditable="true"]) { cursor: text !important; }
+}
+.house-cursor-ring, .house-cursor-dot { will-change: transform; }
+.house-cursor-dot { background: var(--color-bone); }
+.house-cursor-track { stroke: var(--color-bone); opacity: calc(1 - var(--fill, 0)); }
+.house-cursor-arc { stroke: var(--color-bone); opacity: 0; transition: opacity 0.2s ease; }
+.house-cursor-ring[data-busy="1"] .house-cursor-arc { opacity: 1; }
+.house-cursor-ring[data-busy="1"] .house-cursor-track { opacity: 0.3; }
+.house-cursor-disc { background: var(--color-ink); opacity: var(--fill, 0); }
+.house-cursor-label {
+  color: var(--color-bone); font-size: 4.3px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  opacity: var(--fill, 0);
+}
+.house-cursor-note {
+  color: var(--color-bone); font-size: 5.6px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+}

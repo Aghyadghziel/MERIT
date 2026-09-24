@@ -14,13 +14,14 @@ import { reduced, setupGsap } from '@/lib/gsap';
  * flat shot (public/img/anatomy/*.webp, 1254 px, alpha).
  */
 type Point = { x: number; y: number; name: string; note: string; side: 'l' | 'r' };
-type Jacket = { key: string; label: string; img: string; points: Point[] };
+type Jacket = { key: string; label: string; img: string; under: string; points: Point[] };
 
 const JACKETS: Jacket[] = [
   {
     key: 'plane-technical-jacket',
     label: 'Sand',
     img: '/img/anatomy/sand.webp',
+    under: '/img/anatomy/leather-on-sand.webp',
     points: [
       { x: 50, y: 9, name: 'Stand collar', note: 'Cut to stand without a stiffener.', side: 'r' },
       { x: 63.5, y: 32.5, name: 'Chest zip pocket', note: 'Set flat, on the left breast.', side: 'r' },
@@ -33,6 +34,7 @@ const JACKETS: Jacket[] = [
     key: 'axis-leather-jacket',
     label: 'Black leather',
     img: '/img/anatomy/leather.webp',
+    under: '/img/anatomy/sand-on-leather.webp',
     points: [
       { x: 36, y: 19, name: 'Shirt collar', note: 'Lies flat, open or closed.', side: 'l' },
       { x: 28, y: 40, name: 'Vegetable-tanned lambskin', note: 'Softens with wear rather than creasing.', side: 'l' },
@@ -43,22 +45,31 @@ const JACKETS: Jacket[] = [
   },
 ];
 
-const LOUPE = 176; // px, diameter
-const ZOOM = 2.6;
+/**
+ * The reveal: the other jacket lies under this one, aligned to the same
+ * outline (public/img/anatomy/*-on-*.webp), and the pointer wipes a soft,
+ * liquid hole through the top one. Three circles chase the pointer at
+ * different speeds, so a fast move stretches the hole into a drop and it
+ * settles round when the hand stops.
+ */
+const REVEAL = 0.2;            // radius, as a share of the stage width
+const CHASE = [0.2, 0.12, 0.075];
 
 /**
  * Anatomy of a jacket. The flat shot at poster scale on stone, five numbered
- * points drawn onto it with leader lines, and a loupe that follows the pointer
- * so the cloth can be read up close. Switch between the two jackets; each
+ * points drawn onto it with leader lines, and under the pointer the other
+ * jacket wipes through in the same place (see REVEAL). Switch between the two jackets; each
  * point is also a row in the index beside it, and the two stay in step.
  */
 export function JacketAnatomy({ products }: { products: Record<string, Product | undefined> }) {
   const [j, setJ] = useState(0);
   const [on, setOn] = useState<number | null>(null);
-  const [loupe, setLoupe] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const seen = useRef(false);
+  const under = useRef<HTMLDivElement>(null);
+  const chip = useRef<HTMLDivElement>(null);
+  const hover = useRef({ in: false, x: 0, y: 0, r: 0, pts: CHASE.map(() => ({ x: 0, y: 0 })), raf: 0 });
   const jacket = JACKETS[j];
   const product = products[jacket.key];
 
@@ -110,11 +121,43 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
     });
   }, [j]);
 
+  // ─── the reveal loop: springs toward the pointer, paints the mask ───────
+  const paint = useCallback(function tick() {
+    const h = hover.current, el = under.current, st = stage.current;
+    if (!el || !st) return;
+    const w = st.clientWidth;
+    const still = reduced();
+    const target = h.in ? REVEAL * w : 0;
+    h.r += (target - h.r) * (still ? 1 : 0.14);
+    h.pts.forEach((p, i) => {
+      const k = still ? 1 : CHASE[i];
+      p.x += (h.x - p.x) * k; p.y += (h.y - p.y) * k;
+    });
+    const [a, b, c] = h.pts;
+    const g = (p: { x: number; y: number }, r: number) =>
+      `radial-gradient(circle ${Math.max(r, 0.01).toFixed(1)}px at ${p.x.toFixed(1)}px ${p.y.toFixed(1)}px, #000 90%, transparent 100%)`;
+    const m = [g(a, h.r), g(b, h.r * 0.78), g(c, h.r * 0.58)].join(', ');
+    el.style.setProperty('-webkit-mask-image', m);
+    el.style.setProperty('mask-image', m);
+    if (chip.current) {
+      chip.current.style.transform = `translate(${a.x + h.r * 0.72}px, ${a.y + h.r * 0.72}px)`;
+      chip.current.style.opacity = String(Math.min(1, h.r / (REVEAL * w * 0.6)));
+    }
+    const moving = Math.abs(target - h.r) > 0.3 || h.pts.some((p) => Math.abs(p.x - h.x) + Math.abs(p.y - h.y) > 0.3);
+    h.raf = moving ? requestAnimationFrame(tick) : 0;
+  }, []);
+  const kick = useCallback(() => { if (!hover.current.raf) hover.current.raf = requestAnimationFrame(paint); }, [paint]);
+  useEffect(() => { const h = hover.current; return () => cancelAnimationFrame(h.raf); }, []);
+
   const move = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (e.pointerType !== 'mouse') return;
     const r = e.currentTarget.getBoundingClientRect();
-    setLoupe({ x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height });
+    const h = hover.current;
+    h.x = e.clientX - r.left; h.y = e.clientY - r.top;
+    if (!h.in) { h.in = true; if (h.r < 1) h.pts.forEach((p) => { p.x = h.x; p.y = h.y; }); }
+    kick();
   };
+  const leave = () => { hover.current.in = false; kick(); };
+  const other = j === 0 ? 1 : 0;
 
   // Keyboard: arrows walk the points while the index has focus.
   useEffect(() => { setOn(null); }, [j]);
@@ -187,14 +230,22 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
           </div>
         </div>
 
-        {/* The jacket, the points, the loupe */}
+        {/* The jacket, the points, the reveal */}
         <div className="order-first col-span-4 md:col-span-6 lg:order-none lg:col-span-7 lg:col-start-6">
-          <div ref={stage} className="relative mx-auto aspect-square w-full max-w-[min(100%,82svh)] cursor-none select-none max-md:cursor-auto"
-            onPointerMove={move} onPointerLeave={() => setLoupe(null)}>
+          <div ref={stage} data-cursor-hide className="relative mx-auto aspect-square w-full max-w-[min(100%,82svh)] select-none touch-pan-y"
+            onPointerMove={move} onPointerLeave={leave}
+            onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; if (hover.current.r > 8) switchTo(other); }}>
             <div data-an="jacket" className="absolute inset-0">
-              {/* eslint-disable-next-line @next/next/no-img-element -- flat shot, alpha, also the loupe source */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- flat shot, alpha */}
               <img src={jacket.img} alt={`${jacket.label} ${product?.name ?? 'jacket'}, laid flat, front view.`} width={1254} height={1254}
                 className="h-full w-full object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.14)]" draggable={false} />
+              {/* the other jacket, wiped in under the pointer */}
+              <div ref={under} aria-hidden className="pointer-events-none absolute inset-0 bg-stone-brand"
+                style={{ WebkitMaskImage: 'radial-gradient(circle 0px at 0 0, #000, transparent)', maskImage: 'radial-gradient(circle 0px at 0 0, #000, transparent)' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element -- aligned flat shot of the other jacket */}
+                <img src={jacket.under} alt="" width={1254} height={1254} draggable={false}
+                  className="h-full w-full object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,0.14)]" />
+              </div>
             </div>
 
             {/* Leader lines + points */}
@@ -230,23 +281,12 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
               );
             })}
 
-            {/* The loupe */}
-            {loupe ? (
-              <div aria-hidden className="pointer-events-none absolute z-20 overflow-hidden rounded-full border border-ink bg-bone shadow-[0_20px_50px_rgba(0,0,0,0.25)] max-md:hidden"
-                style={{
-                  width: LOUPE, height: LOUPE,
-                  left: loupe.x - LOUPE / 2, top: loupe.y - LOUPE / 2,
-                  backgroundImage: `url(${jacket.img})`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: `${loupe.w * ZOOM}px ${loupe.h * ZOOM}px`,
-                  backgroundPosition: `${-(loupe.x * ZOOM - LOUPE / 2)}px ${-(loupe.y * ZOOM - LOUPE / 2)}px`,
-                }}>
-                <span className="absolute left-1/2 top-1/2 h-3 w-px -translate-x-1/2 -translate-y-1/2 bg-ink/60" />
-                <span className="absolute left-1/2 top-1/2 h-px w-3 -translate-x-1/2 -translate-y-1/2 bg-ink/60" />
-              </div>
-            ) : null}
+            {/* what the hole shows, riding beside it */}
+            <div ref={chip} aria-hidden className="label-sm pointer-events-none absolute left-0 top-0 z-20 whitespace-nowrap bg-ink px-2.5 py-1.5 text-bone opacity-0 max-md:hidden">
+              {JACKETS[other].label} — click to read
+            </div>
           </div>
-          <p className="label-sm mt-4 text-center text-graphite max-md:hidden">Move over the jacket to read the cloth</p>
+          <p className="label-sm mt-4 text-center text-graphite">{`Move over the jacket to see it in ${JACKETS[other].label.toLowerCase()}`}</p>
         </div>
       </div>
     </section>

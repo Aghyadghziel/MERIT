@@ -128,7 +128,7 @@ export default async function ProductPage({ params }: PageProps<'/[lang]/product
             <ProductPanel
               product={product}
               lead={<Breadcrumb crumbs={crumbs} />}
-              kicker={collection ? `${collection.name} — ${t(collection.season)} ${collection.year}` : undefined}
+              kicker={collection ? `${t(collection.name)} — ${t(collection.season)} ${collection.year}` : undefined}
             />
           </div>
         </div>

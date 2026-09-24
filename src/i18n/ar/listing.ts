@@ -10,22 +10,22 @@ export const listing: Record<string, string> = {
   "Men's ready to wear": 'الأزياء الرجالية الجاهزة',
   'The permanent range': 'المجموعة الدائمة',
   'Tailoring cut on our own blocks, outerwear made from double-faced cloth, and the Index pieces that are re-issued every year.':
-    'تفصيل مقصوص على قوالبنا الخاصة، وملابس خارجية من قماش مزدوج الوجه، وقطع Index التي يُعاد إصدارها كل عام.',
+    'تفصيل مقصوص على قوالبنا الخاصة، وملابس خارجية من قماش مزدوج الوجه، وقطع الفهرس التي يُعاد إصدارها كل عام.',
   "Soft shoulders, half canvas and a wide leg. The men's range shares its cloth with the women's and is cut on the same blocks.":
     'أكتاف ناعمة، ونصف كانفاس، وساق واسعة. تتقاسم المجموعة الرجالية أقمشتها مع النسائية، وتُقصّ على القوالب نفسها.',
   'Foundation, Autumn Winter 2026, and what is made for sale from Runway 01. The cloth is heavier than last season, and the colour has been pulled back to four.':
-    'Foundation لموسم خريف وشتاء 2026، وما صُنع للبيع من Runway 01. القماش أثقل من الموسم الماضي، والألوان اختُزلت إلى أربعة.',
-  'Autumn Winter 2026 — Foundation': 'خريف وشتاء 2026 — Foundation',
+    'مجموعة الأساس لموسم خريف وشتاء 2026، وما صُنع للبيع من العرض الأول. القماش أثقل من الموسم الماضي، والألوان اختُزلت إلى أربعة.',
+  'Autumn Winter 2026 — الأساس': 'خريف وشتاء 2026 — الأساس',
   '{kicker} — {when}': '{kicker} — {when}',
 
   // ─── Metadata ──────────────────────────────────────────────────────────
   "MERIT women's tailoring, outerwear, knitwear, shirting and accessories. Made in small counts in Italy and Portugal.":
-    'تفصيل وملابس خارجية وتريكو وقمصان وإكسسوارات نسائية من MERIT، تُصنع بكميات قليلة في إيطاليا والبرتغال.',
+    'تفصيل وملابس خارجية وتريكو وقمصان وإكسسوارات نسائية من ميرت، تُصنع بكميات قليلة في إيطاليا والبرتغال.',
   "MERIT men's tailoring, overcoats, knitwear and shirting. Soft-shouldered jackets and wide trousers, made in small counts.":
-    'تفصيل ومعاطف وتريكو وقمصان رجالية من MERIT. سترات بأكتاف ناعمة وبناطيل واسعة، تُصنع بكميات قليلة.',
+    'تفصيل ومعاطف وتريكو وقمصان رجالية من ميرت. سترات بأكتاف ناعمة وبناطيل واسعة، تُصنع بكميات قليلة.',
   'This season at MERIT: Foundation, Autumn Winter 2026, and what is made for sale from Runway 01.':
-    'هذا الموسم في MERIT: مجموعة Foundation لخريف وشتاء 2026، وما صُنع للبيع من Runway 01.',
-  'Search the MERIT range.': 'ابحث في مجموعة MERIT.',
+    'هذا الموسم في ميرت: مجموعة الأساس لخريف وشتاء 2026، وما صُنع للبيع من العرض الأول.',
+  'Search the MERIT range.': 'ابحث في مجموعة ميرت.',
 
   // ─── Head and toolbar ──────────────────────────────────────────────────
   Home: 'الرئيسية',

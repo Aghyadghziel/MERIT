@@ -51,7 +51,7 @@ export async function CollectionBand({ collection }: { collection: Collection })
           <div>
             <FitText
               id="band-title"
-              text={collection.name}
+              text={t(collection.name)}
               max={0.42}
               className="-ms-[0.045em] text-[clamp(3.25rem,0.5rem+12vw,15rem)] font-semibold uppercase leading-[0.8] tracking-[-0.06em]"
             />
@@ -68,7 +68,7 @@ export async function CollectionBand({ collection }: { collection: Collection })
             </p>
             <div className="md:col-span-3 md:justify-self-end" data-reveal>
               <Link href={`/collections/${collection.slug}`} className="btn">
-                {t('Explore {name}', { name: collection.name })}
+                {t('Explore {name}', { name: t(collection.name) })}
                 <Icon name="arrowR" className="h-3.5 w-3.5" />
               </Link>
             </div>

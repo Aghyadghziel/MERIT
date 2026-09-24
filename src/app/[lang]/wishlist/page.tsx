@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'قائمة الأمنيات' : 'Wishlist',
     description: ar
-      ? 'قطع MERIT التي حفظتها، محفوظة في هذا المتصفح.'
+      ? 'قطع ميرت التي حفظتها، محفوظة في هذا المتصفح.'
       : 'The MERIT pieces you have saved, kept in this browser.',
     robots: { index: false, follow: true },
     alternates: { canonical: ar ? '/ar/wishlist' : '/wishlist', languages: { en: '/wishlist', ar: '/ar/wishlist' } },

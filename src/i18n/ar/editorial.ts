@@ -36,18 +36,18 @@ export const editorial: Record<string, string> = {
 
   // ─── Stories: title and standfirst ──────────────────────────────────────
   // Range and collection names stay in Latin.
-  'The Rule Line': 'Rule Line',
+  'The Rule Line': 'خطّ المسطرة',
   'The Foundation campaign was shot against a single wall over two afternoons, with the light left exactly as it was found.':
-    'صُوّرت حملة Foundation أمام جدار واحد على مدى عصرين، وتُرك الضوء تمامًا كما وُجد.',
-  'Atrium: Twelve Rooms': 'Atrium: اثنتا عشرة غرفة',
+    'صُوّرت حملة الأساس أمام جدار واحد على مدى عصرين، وتُرك الضوء تمامًا كما وُجد.',
+  'Atrium: Twelve Rooms': 'الفناء: اثنتا عشرة غرفة',
   'A spring collection organised around a courtyard house, and the twelve rooms that open onto it.':
     'مجموعة ربيعية تنتظم حول بيتٍ ذي فناء، وحول الغرف الاثنتي عشرة التي تنفتح عليه.',
-  'Runway 01, Riyadh': 'Runway 01، الرياض',
+  'Runway 01, Riyadh': 'العرض الأول، الرياض',
   'Twenty-four looks shown on a stripped office floor on King Fahd Road, in daylight, without music.':
     'أربع وعشرون إطلالة عُرضت في طابق مكاتب عارٍ على طريق الملك فهد، في ضوء النهار، بلا موسيقى.',
   'On Making: The Basted Jacket': 'في الصنعة: السترة المُسرَّجة',
   'Why the Rule jacket is still assembled in white thread before it is assembled properly.':
-    'لماذا ما تزال سترة Rule تُجمع بخيطٍ أبيض أولًا، قبل أن تُجمع كما ينبغي.',
+    'لماذا ما تزال سترة مسطرة تُجمع بخيطٍ أبيض أولًا، قبل أن تُجمع كما ينبغي.',
 
   // ─── Pictures (alt text and plate captions) ─────────────────────────────
   'A model in a pale cropped jacket and trousers against a brown plaster wall.':
@@ -80,7 +80,7 @@ export const editorial: Record<string, string> = {
 
   // ─── Collections pages ──────────────────────────────────────────────────
   'Foundation, Atrium, Index and Runway 01 — the four MERIT collections, seasonal and permanent.':
-    'Foundation وAtrium وIndex وRunway 01 — مجموعات MERIT الأربع، الموسمية منها والدائمة.',
+    'الأساس والفناء والفهرس والعرض الأول — مجموعات ميرت الأربع، الموسمية منها والدائمة.',
   'Seasonal and permanent': 'موسمية ودائمة',
   'Two seasons, one permanent range, and the archive.': 'موسمان، ومجموعة دائمة، والأرشيف.',
   'The seasons, the permanent range, and the archive.': 'المواسم، والمجموعة الدائمة، والأرشيف.',
@@ -109,7 +109,7 @@ export const editorial: Record<string, string> = {
 
   // ─── Editorial pages ────────────────────────────────────────────────────
   'Campaigns, runway presentations and notes from the MERIT atelier.':
-    'حملات، وعروض أزياء، وملاحظات من مشغل MERIT.',
+    'حملات، وعروض أزياء، وملاحظات من مشغل ميرت.',
   'Campaigns, runway and how things are made.': 'حملات، وعروض أزياء، وكيف تُصنع الأشياء.',
   'In this issue': 'في هذا العدد',
   'Cover story': 'قصة الغلاف',

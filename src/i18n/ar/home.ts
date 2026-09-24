@@ -1,9 +1,9 @@
 /** Arabic strings for the home area, keyed by the English source. */
 export const home: Record<string, string> = {
   // ─── Metadata ──────────────────────────────────────────────────────────
-  'MERIT — Contemporary fashion, Riyadh': 'MERIT — أزياء معاصرة من الرياض',
+  'MERIT — Contemporary fashion, Riyadh': 'ميرت — أزياء معاصرة من الرياض',
   'Foundation, Autumn Winter 2026. Step into the fitting room: choose a jacket and watch it worn.':
-    'Foundation، خريف وشتاء 2026. ادخل غرفة القياس: اختر سترة وشاهدها وهي تُرتدى.',
+    'الأساس، خريف وشتاء 2026. ادخل غرفة القياس: اختر سترة وشاهدها وهي تُرتدى.',
 
   // ─── Shared on the home page ───────────────────────────────────────────
   Riyadh: 'الرياض',
@@ -18,11 +18,11 @@ export const home: Record<string, string> = {
 
   // ─── The Fitting Room ──────────────────────────────────────────────────
   'MERIT, Autumn Winter 2026. The Fitting Room: choose a jacket and see it worn.':
-    'MERIT، خريف وشتاء 2026. غرفة القياس: اختر سترة وشاهدها على العارض.',
+    'ميرت، خريف وشتاء 2026. غرفة القياس: اختر سترة وشاهدها على العارض.',
   'The Fitting Room. Choose a jacket to put on. Keys 1 and 2 put one on, 0 takes it off.':
     'غرفة القياس. اختر سترة ليرتديها العارض. المفتاحان 1 و2 لارتداء سترة، والمفتاح 0 لخلعها.',
   'The model in the Baseline Tee in ink and washed grey Column jeans, standing square to the camera, arms at his sides.':
-    'العارض بقميص Baseline باللون الحبري وجينز Column رمادي مغسول، يقف مواجهًا للكاميرا وذراعاه إلى جانبيه.',
+    'العارض بتيشيرت سطر باللون الحبري وجينز عمود رمادي مغسول، يقف مواجهًا للكاميرا وذراعاه إلى جانبيه.',
   'Putting on': 'يرتديها الآن',
   'Taking off': 'يخلعها الآن',
   'Take off': 'اخلعها',
@@ -50,15 +50,15 @@ export const home: Record<string, string> = {
   // ─── Marquee ───────────────────────────────────────────────────────────
   'Drawn in Riyadh': 'رُسمت في الرياض',
   'Made in small counts': 'تُصنع بكميات قليلة',
-  'Re-issued, not replaced': 'يُعاد إصدارها ولا تُستبدل',
+  'Re-issued, not replaced': 'تُعاد ولا تُستبدل',
   'Foundation, Autumn Winter 2026. Drawn in Riyadh, made in small counts, re-issued, not replaced.':
-    'Foundation، خريف وشتاء 2026. رُسمت في الرياض، وتُصنع بكميات قليلة، ويُعاد إصدارها ولا تُستبدل.',
+    'الأساس، خريف وشتاء 2026. رُسمت في الرياض، وتُصنع بكميات قليلة، ويُعاد إصدارها ولا تُستبدل.',
 
   // ─── Anatomy ───────────────────────────────────────────────────────────
-  'Anatomy — Foundation outerwear': 'تشريح السترة — ملابس Foundation الخارجية',
-  'Read the': 'اقرأ',
-  'jacket.': 'السترة.',
-  'Choose a jacket to read': 'اختر سترة لتقرأها',
+  'Anatomy — Foundation outerwear': 'تشريح السترة — ملابس الأساس الخارجية',
+  'Read the': 'لكلّ درزةٍ',
+  'jacket.': 'سبب.',
+  'Choose a jacket to read': 'اختر سترة لتقرأ تفاصيلها',
   'Stand collar': 'ياقة واقفة',
   'Cut to stand without a stiffener.': 'مقصوصة لتقف وحدها، بلا حشوة تقوية.',
   'Chest zip pocket': 'جيب صدر بسحّاب',
@@ -79,23 +79,23 @@ export const home: Record<string, string> = {
   'Rib cuff': 'كُمّ مضلّع',
   'Knitted, to close at the wrist.': 'محبوك، لينغلق عند المعصم.',
   '{colour} {name}, laid flat, front view.': '{name} ({colour})، ممدودة، من الأمام.',
-  '{colour} — click to read': '{colour} — انقر لتقرأها',
+  '{colour} — click to read': '{colour} — انقر لترى تفاصيلها',
   'Move over the jacket to see it in {colour}': 'مرّر المؤشر فوق السترة لتكشف الأخرى: {colour}',
 
   // ─── Campaign ──────────────────────────────────────────────────────────
   'A model in the black leather jacket, seated on a wooden box in a dark studio, pulls the jacket up onto her shoulder.':
     'عارضة بالسترة الجلدية السوداء، جالسة على صندوق خشبي في استوديو معتم، ترفع السترة على كتفها.',
-  'Campaign — The Rule Line': 'الحملة — خطّ Rule',
-  'Quiet structure.': 'بنية هادئة.',
-  'Expressive movement.': 'حركة معبّرة.',
+  'Campaign — The Rule Line': 'الحملة — خطّ المسطرة',
+  'Quiet structure.': 'بنيةٌ هادئة.',
+  'Expressive movement.': 'وحركةٌ تتكلّم.',
   'View the campaign': 'شاهد الحملة',
-  'Shop Foundation': 'تسوّق Foundation',
+  'Shop Foundation': 'تسوّق مجموعة الأساس',
 
   // ─── The house ─────────────────────────────────────────────────────────
   'A small number of things,': 'قطعٌ قليلة،',
-  'made for a long time. Cut on our own blocks in Riyadh,': 'تُصنع لتدوم طويلًا. تُقصّ على قوالبنا الخاصة في الرياض،',
-  'made in counts we can count,': 'وتُنتج بكميات نستطيع عدّها،',
-  'and re-issued rather than replaced.': 'ويُعاد إصدارها بدل أن تُستبدل.',
+  'made for a long time. Cut on our own blocks in Riyadh,': 'تُصنع لتبقى طويلًا. نقصّها على قوالبنا في الرياض،',
+  'made in counts we can count,': 'بأعدادٍ نعرفها قطعةً قطعة،',
+  'and re-issued rather than replaced.': 'ونعيد إصدارها ولا نستبدلها.',
   'The tied belt of a grey wool coat, close up': 'حزام معقود لمعطف من الصوف الرمادي، عن قرب',
   'A model walking a dark runway in a pale draped look': 'عارضة تمشي على منصة عرض معتمة بإطلالة فاتحة منسدلة',
   'Folded knitwear stacked in grey, ash and camel': 'قطع تريكو مطويّة ومكدّسة بالرمادي والرمادي الفاتح والجملي',
@@ -103,23 +103,23 @@ export const home: Record<string, string> = {
   '{city}, since {year}': '{city}، منذ {year}',
   'About the house': 'عن الدار',
   'Two collections a year around a permanent range, {index}, cut from the same patterns every year and changed only when something is wrong with it.':
-    'مجموعتان في السنة حول تشكيلة دائمة، {index}، تُقصّ من النماذج نفسها كل عام، ولا تتغيّر إلا حين يكون فيها خطأ.',
+    'مجموعتان في السنة، وبينهما تشكيلة دائمة هي {index}: تُقصّ من النماذج نفسها كل عام، ولا نغيّرها إلا إن وجدنا فيها خطأ.',
 
   // ─── The making ────────────────────────────────────────────────────────
   'The making, six stages. Scroll sideways.': 'الصنعة، ست مراحل. مرّر أفقيًا.',
   'The making — {n} stages': 'الصنعة — {n} مراحل',
   'How a jacket is made.': 'هكذا تُصنع السترة.',
   'The Rule jacket, from the cloth to the rail, in the order it happens.':
-    'سترة Rule، من القماش حتى تُعلَّق على الراك، بالترتيب الذي تحدث به.',
+    'سترة مسطرة، خطوةً بخطوة: من القماش إلى الراك.',
   'Keep scrolling': 'تابع التمرير',
   'Swipe, or use the arrows': 'اسحب، أو استخدم الأسهم',
   Cloth: 'القماش',
   'Grey-green wool cloth, close up': 'قماش صوف رمادي مخضرّ، عن قرب',
   'Wool and linen woven in Biella. For Foundation the cloth is heavier than last season, and the colour has been pulled back to four.':
-    'صوف وكتان منسوجان في بييلا. في Foundation صار القماش أثقل من الموسم الماضي، واختُزلت الألوان إلى أربعة.',
+    'صوف وكتان منسوجان في بييلا. في مجموعة الأساس صار القماش أثقل من الموسم الماضي، واختُزلت الألوان إلى أربعة.',
   'The block': 'القالب',
   'Every shape is drawn against one garment, the Column trouser. A jacket ends where the trouser reads best; a coat is long enough to cover both.':
-    'كل قصّة تُرسم مقابل قطعة واحدة: بنطال Column. تنتهي السترة حيث يظهر البنطال في أحسن حالاته، ويطول المعطف بما يكفي ليغطي الاثنين.',
+    'كل قصّة تُرسم مقابل قطعة واحدة: بنطال عمود. تنتهي السترة حيث يظهر البنطال في أحسن حالاته، ويطول المعطف بما يكفي ليغطي الاثنين.',
   Basting: 'التسريج',
   'A navy jacket on a tailor’s stand, held together with white basting thread':
     'سترة كحلية على مانيكان خيّاط، مجموعة بخيط تسريج أبيض',
@@ -130,7 +130,7 @@ export const home: Record<string, string> = {
     'القماش وكانفاس شعر الخيل والدوميت، تُضمّ بغرزة تبطين يدوية، فتتحرك الطبقات الثلاث كلٌّ على حدة ثم تعود إلى شكل واحد.',
   Pressing: 'الكيّ',
   'The basting comes out, the seams are pressed open over a ham, and the jacket stops looking like a set of instructions.':
-    'تُنزع غرز التسريج، وتُكوى الدرزات مفتوحةً على وسادة الكيّ، فتكفّ السترة عن أن تبدو كمجموعة تعليمات.',
+    'تُنزع غرز التسريج، وتُكوى الدرزات مفتوحةً على وسادة الكيّ، فتصير السترة سترةً بعد أن كانت مخطّطًا.',
   'The count': 'العدد',
   'Jackets in white, pale blue and navy hanging on a rail': 'سترات بالأبيض والأزرق الفاتح والكحلي معلّقة على راك',
   'Made in small counts. When a count is finished it is finished; the pattern stays, and is re-issued rather than replaced.':
@@ -138,14 +138,14 @@ export const home: Record<string, string> = {
   'Empty white hangers on a rail': 'علّاقات بيضاء فارغة على راك',
   '{n} min read': 'قراءة في {n} دقائق',
   'Read the story': 'اقرأ القصة',
-  'Shop the Rule jacket': 'تسوّق سترة Rule',
+  'Shop the Rule jacket': 'تسوّق سترة مسطرة',
   'Previous stage': 'المرحلة السابقة',
   'Next stage': 'المرحلة التالية',
 
   // ─── The making: the pattern-room drawings ─────────────────────────────
   'Line drawing of the Column trouser front pattern, with dashed lines marking where a jacket and a coat end against it.':
-    'رسم خطّي لنموذج الواجهة الأمامية لبنطال Column، وعليه خطوط متقطعة تبيّن أين تنتهي السترة وأين ينتهي المعطف.',
-  'Column trouser': 'بنطال Column',
+    'رسم خطّي لنموذج الواجهة الأمامية لبنطال عمود، وعليه خطوط متقطعة تبيّن أين تنتهي السترة وأين ينتهي المعطف.',
+  'Column trouser': 'بنطال عمود',
   'Front — cut 2': 'الأمام — قصّ 2',
   Grain: 'اتجاه النسيج',
   Knee: 'الركبة',
@@ -177,5 +177,5 @@ export const home: Record<string, string> = {
   // ─── The poured logotype ───────────────────────────────────────────────
   '{name}, {city}, since {year}': '{name}، {city}، منذ {year}',
   '{city} — since {year}': '{city} — منذ {year}',
-  'Quiet structure, expressive movement.': 'بنية هادئة، وحركة معبّرة.',
+  'Quiet structure, expressive movement.': 'بنيةٌ هادئة، وحركةٌ تتكلّم.',
 };

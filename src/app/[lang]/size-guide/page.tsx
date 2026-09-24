@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'دليل المقاسات' : 'Size guide',
     description: ar
-      ? 'قياسات MERIT للنساء والرجال والبناطيل والأحذية، بالسنتيمتر والإنش.'
+      ? 'قياسات ميرت للنساء والرجال والبناطيل والأحذية، بالسنتيمتر والإنش.'
       : 'MERIT measurements for women, men, trousers and footwear, in centimetres and inches.',
     alternates: { canonical: ar ? '/ar/size-guide' : '/size-guide', languages: { en: '/size-guide', ar: '/ar/size-guide' } },
   };
@@ -147,7 +147,7 @@ export default async function SizeGuidePage() {
         <p>
           {l(
             'Sized in EU, running true on a standard width. The Pivot mule is cut on a square last and reads a half size small across the toe; take the next size up if your foot is wide. The Plinth derby runs true.',
-            'المقاسات بالنظام الأوروبي (EU)، ومطابقة للمقاس المعتاد على عرض قياسي. حذاء Pivot المفتوح من الخلف مصنوع على قالب مربّع، ويأتي أصغر بنصف مقاس عند مقدّمة القدم؛ اختر المقاس التالي إن كانت قدمك عريضة. أما حذاء Plinth من طراز ديربي فمطابق للمقاس.',
+            'المقاسات بالنظام الأوروبي (EU)، ومطابقة للمقاس المعتاد على عرض قياسي. حذاء ارتكاز المفتوح من الخلف مصنوع على قالب مربّع، ويأتي أصغر بنصف مقاس عند مقدّمة القدم؛ اختر المقاس التالي إن كانت قدمك عريضة. أما حذاء قاعدة من طراز ديربي فمطابق للمقاس.',
           )}
         </p>
       </Section>

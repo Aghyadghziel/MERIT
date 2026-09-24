@@ -24,7 +24,7 @@ export async function CompleteTheLook({ product, look }: { product: Product; loo
   // The pairing reaches into other collections when its own runs short, so
   // the line names the collection only when every piece really is from it.
   const collection = getCollection(product.collection);
-  const from = collection && look.every((p) => p.collection === product.collection) ? collection.name : null;
+  const from = collection && look.every((p) => p.collection === product.collection) ? t(collection.name) : null;
   return (
     <section aria-labelledby="look-title" className="pb-(--section-sm) pt-(--section)">
       <div className="page grid-page items-end gap-y-6">

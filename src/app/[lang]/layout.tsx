@@ -10,7 +10,7 @@ import { MotionRoot } from '@/components/providers/Motion';
 import { StoreProvider } from '@/components/providers/Store';
 import { UiProvider } from '@/components/providers/Ui';
 import { BRAND } from '@/lib/brand';
-import { arabicStack, fontVariables } from '@/lib/fonts';
+import { arabicDisplayStack, arabicEditorialStack, arabicStack, fontVariables } from '@/lib/fonts';
 import { LocaleProvider } from '@/i18n/client';
 import { dirOf, LOCALES } from '@/i18n/config';
 import { getLocale, getT } from '@/i18n/server';
@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     template: `%s — ${BRAND.name}`,
   },
   description: ar
-    ? 'MERIT علامة أزياء معاصرة من الرياض. خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة.'
+    ? 'ميرت علامة أزياء معاصرة من الرياض. خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة.'
     : 'MERIT is a contemporary fashion label based in Riyadh. Tailoring, outerwear and knitwear made in small counts, sold directly.',
   applicationName: BRAND.name,
   alternates: { canonical: ar ? '/ar' : '/', languages: { en: '/', ar: '/ar' } },
@@ -45,7 +45,7 @@ export async function generateMetadata(): Promise<Metadata> {
       : 'Tailoring, outerwear and knitwear made in small counts, sold directly from Riyadh.',
     url: ar ? '/ar' : '/',
     locale: ar ? 'ar_SA' : 'en_SA',
-    images: [{ url: '/img/campaign-rule-line-wide.webp', width: 2560, height: 1440, alt: ar ? 'MERIT خريف وشتاء 2026' : 'MERIT Autumn Winter 2026' }],
+    images: [{ url: '/img/campaign-rule-line-wide.webp', width: 2560, height: 1440, alt: ar ? 'ميرت خريف وشتاء 2026' : 'MERIT Autumn Winter 2026' }],
   },
   twitter: {
     card: 'summary_large_image',
@@ -105,7 +105,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // globals.css off while it resets the scroll on a route change; without
     // it, the reset animates and a new page can land part-way down.
     <html lang={locale} dir={dirOf(locale)} className={fontVariables} data-scroll-behavior="smooth"
-      style={locale === 'ar' ? ({ '--font-ar-stack': arabicStack } as React.CSSProperties) : undefined}>
+      style={locale === 'ar' ? ({
+        '--font-ar-stack': arabicStack,
+        '--font-ar-display-stack': arabicDisplayStack,
+        '--font-ar-editorial-stack': arabicEditorialStack,
+      } as React.CSSProperties) : undefined}>
       <head>
         <noscript><style dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} /></noscript>
       </head>

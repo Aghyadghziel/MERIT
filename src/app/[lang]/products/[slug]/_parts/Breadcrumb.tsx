@@ -16,14 +16,14 @@ export async function Breadcrumb({ crumbs }: { crumbs: Crumb[] }) {
         {crumbs.map((c, i) =>
           i === last ? (
             <li key={c.href} className="sr-only">
-              <span aria-current="page">{c.name}</span>
+              <span aria-current="page">{t(c.name)}</span>
             </li>
           ) : (
             <li key={c.href} className="flex items-center">
               {i > 0 ? <span aria-hidden className="mx-2.5 text-line-2">/</span> : null}
               {/* A 44px target that takes up the room of the type alone. */}
               <Link href={c.href} className="-mx-2 -my-2.5 inline-flex min-h-11 items-center px-2 transition-colors hover:text-ink">
-                {c.name}
+                {t(c.name)}
               </Link>
             </li>
           ),

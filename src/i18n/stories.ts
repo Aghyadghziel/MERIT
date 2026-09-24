@@ -32,10 +32,10 @@ export function localizeStory<S extends Story>(s: S, locale: Locale): S {
  */
 export const keepLatin = (text: string) => text.replace(/([A-Za-z0-9][^\s\u0600-\u06FF]*) (?=[A-Za-z0-9])/g, '$1\u00A0');
 
-/** A collection in the reader's language: its statement and note. The name stays in Latin. */
+/** A collection in the reader's language: its name, statement and note. */
 export function localizeCollection<C extends Collection>(c: C, locale: Locale): C {
   if (locale !== 'ar') return c;
-  return { ...c, statement: translate(locale, c.statement), note: translate(locale, c.note) };
+  return { ...c, name: translate(locale, c.name), statement: translate(locale, c.statement), note: translate(locale, c.note) };
 }
 
 /**

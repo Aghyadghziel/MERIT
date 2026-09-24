@@ -2,15 +2,17 @@
 
 import Link from '@/i18n/link';
 import { LanguageSwitch } from '@/i18n/LanguageSwitch';
-import { useT } from '@/i18n/client';
+import { useLocale, useT } from '@/i18n/client';
 import { useSyncExternalStore } from 'react';
 import { CurrencySelect } from '@/components/ui/CurrencySelect';
 import { Newsletter } from '@/components/sections/Newsletter';
 import { Icon } from '@/components/ui/Icon';
 import { LiquidLogo } from '@/components/landing/LiquidMark';
+import { PaymentMethods } from '@/components/commerce/PaymentMethods';
 import { BRAND } from '@/lib/brand';
 import { reduced } from '@/lib/gsap';
 import { FOOTER } from '@/lib/nav';
+import { hijriDate } from '@/lib/saudi';
 
 // ─── The time in Riyadh, for the foot of the page ──────────────────────────
 const riyadhTime = new Intl.DateTimeFormat('en-GB', {
@@ -24,14 +26,19 @@ const subscribeClock = (tick: () => void) => {
   return () => window.clearInterval(id);
 };
 const readClock = () => riyadhTime.format(new Date());
+const readHijri = () => hijriDate();
 const serverClock = () => '';
 
+/** The time in Riyadh; on the Arabic site, the Hijri date after it. */
 function RiyadhClock() {
   const t = useT();
+  const ar = useLocale() === 'ar';
   const time = useSyncExternalStore(subscribeClock, readClock, serverClock);
+  const hijri = useSyncExternalStore(subscribeClock, readHijri, serverClock);
   return (
     <span className="nums">
       {t(BRAND.city)} <span className="text-bone" dir="ltr">{time || '--:--'}</span> <span className="sr-only">{t('local time')}</span>
+      {ar && hijri ? <span className="ms-3 text-bone/80">{hijri}</span> : null}
     </span>
   );
 }
@@ -45,6 +52,7 @@ function RiyadhClock() {
  */
 export function Footer() {
   const t = useT();
+  const ar = useLocale() === 'ar';
   const toTop = () => {
     window.scrollTo({ top: 0, behavior: reduced() ? 'auto' : 'smooth' });
     document.querySelector<HTMLElement>('header a[data-home]')?.focus({ preventScroll: true });
@@ -113,6 +121,9 @@ export function Footer() {
               <a href={`mailto:${BRAND.email}`} className="link-quiet inline-flex min-h-11 items-center" dir="ltr">{BRAND.email}</a>
             </li>
             <li className="nums text-mute-ink" dir="ltr">{BRAND.phone}</li>
+            {/* WhatsApp is how a Saudi customer reaches a shop. The number is
+                the site's placeholder, so it is printed, never linked. */}
+            {ar ? <li className="text-mute-ink">واتساب على الرقم نفسه <span className="text-xs">(رقم تجريبي)</span></li> : null}
           </ul>
 
           <div className="grid grid-cols-2 items-center gap-x-(--gutter) gap-y-3 lg:flex lg:gap-x-9">
@@ -141,6 +152,7 @@ export function Footer() {
           <p className="label-sm col-span-4 md:col-span-6 lg:col-span-3 lg:text-end">
             <RiyadhClock />
           </p>
+          {ar ? <PaymentMethods tone="bone" className="col-span-4 md:col-span-6 lg:col-span-12" /> : null}
         </div>
       </div>
 

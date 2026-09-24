@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'عن الدار' : 'About',
     description: ar
-      ? 'MERIT علامة أزياء معاصرة من الرياض، تصنع الخياطة والمعاطف والتريكو بكميات قليلة.'
+      ? 'ميرت علامة أزياء معاصرة من الرياض، تصنع الخياطة والمعاطف والتريكو بكميات قليلة.'
       : 'MERIT is a contemporary fashion label based in Riyadh, making tailoring, outerwear and knitwear in small counts.',
     alternates: { canonical: ar ? '/ar/about' : '/about', languages: { en: '/about', ar: '/ar/about' } },
   };
@@ -134,7 +134,7 @@ export default async function AboutPage() {
           data-reveal
         >
           {ar
-            ? 'تصنع MERIT أشياء قليلة، وتواصل صنعها طويلًا. تبقى البنية ثابتة كي يتحرك القماش.'
+            ? 'تصنع ميرت أشياء قليلة، وتواصل صنعها طويلًا. تبقى البنية ثابتة كي يتحرك القماش.'
             : 'MERIT makes a small number of things and makes them for a long time. The structure stays still so the cloth can move.'}
         </p>
 
@@ -170,7 +170,7 @@ export default async function AboutPage() {
           />
         </Unfold>
         <figcaption className="page mt-4 flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
-          <span className="label-sm text-mute">{ar ? 'سترة Rule مسرّجةً، قبل نزع الخيط الأبيض' : 'The Rule jacket, basted, before the white thread comes out'}</span>
+          <span className="label-sm text-mute">{ar ? 'سترة مسطرة مسرّجةً، قبل نزع الخيط الأبيض' : 'The Rule jacket, basted, before the white thread comes out'}</span>
           <Link href="/editorial/on-making-the-basted-jacket" className="label group inline-flex min-h-11 items-center gap-2 sm:-my-3.5">
             {ar ? 'عن صنع السترة المسرّجة' : 'On making the basted jacket'}
             <Icon name="arrowR" className={ARROW} />
@@ -196,7 +196,7 @@ export default async function AboutPage() {
             {ar ? (
               <>
                 <p className="body-lg">
-                  تأسست MERIT عام {BRAND.founded} على يد قاطع باترونات ومشترٍ أمضيا عقدًا من الزمن يشاهدان
+                  تأسست ميرت عام {BRAND.founded} على يد قاطع باترونات ومشترٍ أمضيا عقدًا من الزمن يشاهدان
                   القماش الجيد يتحوّل إلى ملابس لا تصمد أكثر من موسم واحد. وُجدت العلامة لتفعل العكس، انطلاقًا
                   من قوالب باترونات خاصة بها.
                 </p>
@@ -232,7 +232,7 @@ export default async function AboutPage() {
             <div className="frame frame-4-5" data-reveal-img>
               <Image src="/img/trouser-column-3.webp" alt={ar ? 'عارضة جالسة على كرسي خشبي عالٍ، ترتدي بنطالًا واسعًا بلون الحجر وقميصًا أبيض' : 'A model seated on a wooden stool in wide stone trousers and a white shirt'} width={1400} height={1750} sizes="(min-width:1024px) 40vw, (min-width:768px) 48vw, 100vw" />
             </div>
-            <figcaption className="label-sm mt-3 text-mute">{ar ? 'بنطال Column — القطعة التي تُقاس عليها التشكيلة كلها' : 'The Column trouser — the garment the range is measured against'}</figcaption>
+            <figcaption className="label-sm mt-3 text-mute">{ar ? 'بنطال عمود — القطعة التي تُقاس عليها التشكيلة كلها' : 'The Column trouser — the garment the range is measured against'}</figcaption>
           </figure>
 
           <div className="col-span-4 md:col-span-3 lg:col-span-6 lg:col-start-7 lg:pt-4">
@@ -241,7 +241,7 @@ export default async function AboutPage() {
             </p>
             <p className="body-lg mt-6 max-w-[46ch] text-ink-3" data-reveal>
               {ar
-                ? 'بنطال Column. كل قطعة أخرى تُرسَم نسبةً إليه، ولهذا تظهر التشكيلة في الصور تشكيلةً واحدة متماسكة.'
+                ? 'بنطال عمود. كل قطعة أخرى تُرسَم نسبةً إليه، ولهذا تظهر التشكيلة في الصور تشكيلةً واحدة متماسكة.'
                 : 'The Column trouser. Every other piece is drawn in relation to it, which is why the range photographs as a range.'}
             </p>
             <dl className="mt-10 border-t border-ink">
@@ -263,7 +263,7 @@ export default async function AboutPage() {
                 <Link href={`/collections/${c.slug}`} className="group block pb-8 pt-4">
                   <span className="label-sm text-mute">{l(SEASON_OF[c.slug])}</span>
                   <span className="mt-5 flex items-center justify-between gap-4 text-[clamp(2.25rem,1.3rem+3vw,4.5rem)] font-semibold leading-[0.9] tracking-[-0.055em]">
-                    {c.name}
+                    {t(c.name)}
                     <Icon name="arrowR" className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                   </span>
                   <span className="mt-4 block max-w-[32ch] text-sm leading-relaxed text-mute">
@@ -367,7 +367,7 @@ export default async function AboutPage() {
             <p className="text-[clamp(1.375rem,1rem+1.5vw,2.625rem)] font-medium leading-[1.14] tracking-[-0.03em]" data-reveal>
               {ar ? (
                 <>
-                  MERIT علامة خيالية، بُنيت لتوضيح ما يمكن أن يكون عليه متجر أزياء إلكتروني. القطع والمصانع
+                  ميرت علامة خيالية، بُنيت لتوضيح ما يمكن أن يكون عليه متجر أزياء إلكتروني. القطع والمصانع
                   والكميات والأسعار والمتاجر ومستويات المخزون هنا كلها مُختلَقة، والصور مؤقتة، ولا يمكن شراء
                   أي شيء.{' '}
                   <Link href="/stores" className="link-rule">والمتاجر</Link> غير موجودة هي الأخرى.

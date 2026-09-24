@@ -1,10 +1,20 @@
 /**
  * Arabic strings for the catalogue itself, keyed by the English source:
  * categories, colours, sizes, statuses, sort and price labels, seasons.
- * Any page can render these through t(). Range names stay in Latin and need
- * no entry. Story titles and collection statements belong to editorial.ts.
+ * Any page can render these through t(). Story titles and collection
+ * statements belong to editorial.ts.
  */
 export const catalog: Record<string, string> = {
+  // ─── The house and its collections ────────────────────────────────────
+  // The Arabic site names things in Arabic. Each name keeps the meaning of the
+  // English one, so the house reads the same in both: Foundation is the base
+  // everything is drawn from, Index the permanent list. Product ranges are
+  // named the same way in products.ts (Rule → مسطرة, Column → عمود …).
+  Foundation: 'الأساس',
+  Atrium: 'الفناء',
+  Index: 'الفهرس',
+  'Runway 01': 'العرض الأول',
+
   // ─── Categories ────────────────────────────────────────────────────────
   Outerwear: 'الملابس الخارجية',
   Tailoring: 'التفصيل',
@@ -65,8 +75,8 @@ export const catalog: Record<string, string> = {
   'Price, low to high': 'السعر: من الأقل إلى الأعلى',
   'Price, high to low': 'السعر: من الأعلى إلى الأقل',
   'Under 1,000': 'أقل من 1,000',
-  '1,000 – 2,500': '1,000 – 2,500',
-  '2,500 – 4,000': '2,500 – 4,000',
+  '1,000 – 2,500': 'من 1,000 إلى 2,500',
+  '2,500 – 4,000': 'من 2,500 إلى 4,000',
   'Over 4,000': 'أكثر من 4,000',
   '{band} SAR': '{band} ر.س',
 

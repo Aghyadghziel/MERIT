@@ -116,7 +116,7 @@ const seasonShort = (season: string, year: number, t: T) => {
 
 const collectionLinks = (t: T): MenuLink[] =>
   collections.map((c) => ({
-    label: c.name,
+    label: t(c.name),
     href: `/collections/${c.slug}`,
     image: c.image,
     meta: seasonShort(c.season, c.year, t),
@@ -153,7 +153,7 @@ const shopMenu = (gender: 'women' | 'men', base: string, t: T, locale: Locale): 
     feature: {
       image: women ? 'campaign-rule-line' : 'campaign-foundation',
       kicker: t(women ? 'Campaign · Autumn Winter 26' : 'Collection · Autumn Winter 26'),
-      title: women ? t('The Rule Line') : 'Foundation',
+      title: women ? t('The Rule Line') : t('Foundation'),
       href: women ? '/editorial/the-rule-line' : '/collections/foundation',
       cta: t(women ? 'Read the story' : 'View collection'),
     },

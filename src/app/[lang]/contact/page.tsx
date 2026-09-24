@@ -11,7 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'تواصل معنا' : 'Contact',
     description: ar
-      ? 'راسل MERIT بخصوص طلب أو تعديل أو موعد في الرياض أو جدة.'
+      ? 'راسل ميرت بخصوص طلب أو تعديل أو موعد في الرياض أو جدة.'
       : 'Write to MERIT about an order, an alteration, or an appointment in Riyadh or Jeddah.',
     alternates: { canonical: ar ? '/ar/contact' : '/contact', languages: { en: '/contact', ar: '/ar/contact' } },
   };
@@ -56,11 +56,22 @@ export default async function ContactPage() {
             <dt className="label-sm text-mute">{ar ? 'الهاتف' : 'Telephone'}</dt>
             <dd className={`${VALUE} nums`}><span dir="ltr">{BRAND.phone}</span></dd>
           </div>
+          {/* On the Arabic site, WhatsApp: how a Saudi customer reaches a shop.
+              The number is the placeholder above, so it is not linked. */}
+          {ar ? (
+            <div>
+              <dt className="label-sm text-mute">واتساب</dt>
+              <dd className={VALUE}>
+                على الرقم نفسه
+                <span className="block text-mute">رقم تجريبي، لا يستقبل رسائل</span>
+              </dd>
+            </div>
+          ) : null}
           <div>
             <dt className="label-sm text-mute">{ar ? 'ساعات العمل' : 'Hours'}</dt>
             <dd className={VALUE}>
               {ar ? 'من الأحد إلى الخميس' : 'Sunday to Thursday'}
-              <span className="nums block text-mute">{ar ? '09:00 — 18:00 بتوقيت السعودية' : '09:00 — 18:00 AST'}</span>
+              <span className="nums block text-mute">{ar ? 'من 9 صباحًا إلى 6 مساءً بتوقيت السعودية' : '09:00 — 18:00 AST'}</span>
             </dd>
           </div>
           <div>

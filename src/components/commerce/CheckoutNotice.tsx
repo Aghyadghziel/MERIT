@@ -4,7 +4,9 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import { Amount, LinePrice, usePieces } from '@/components/commerce/CartView';
 import { FREE_SHIPPING, useStore } from '@/components/providers/Store';
 import { Wordmark } from '@/components/ui/Wordmark';
+import { PaymentMethods } from '@/components/commerce/PaymentMethods';
 import { getProduct } from '@/lib/catalog';
+import { hijriDate } from '@/lib/saudi';
 import { cn } from '@/lib/cn';
 import { EASE, reduced, setupGsap } from '@/lib/gsap';
 import { useLocale, useT } from '@/i18n/client';
@@ -31,6 +33,7 @@ export function CheckoutNotice() {
   const t = useT();
   const pieces = usePieces();
   const [date] = useState(() => today(locale));
+  const [hijri] = useState(() => (locale === 'ar' ? hijriDate() : null));
 
   useLayoutEffect(() => {
     const el = slip.current;
@@ -65,6 +68,7 @@ export function CheckoutNotice() {
               <div className="text-end">
                 <h2 id="slip-title" className="label">{t('Order slip')}</h2>
                 <p className="label-sm nums mt-1.5 text-mute">{date} · {t('Riyadh')}</p>
+                {hijri ? <p className="label-sm nums mt-1 text-mute">{hijri}</p> : null}
               </div>
             </div>
 
@@ -112,6 +116,7 @@ export function CheckoutNotice() {
               <SlipRow label={t('Payment')}>{t('Not connected')}</SlipRow>
               <SlipRow label={t('Shipping')}>{t('Not scheduled')}</SlipRow>
             </dl>
+            {locale === 'ar' ? <PaymentMethods className="px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pt-4" /> : null}
 
             <div className="px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pb-[clamp(1.5rem,1rem+1.4vw,2.25rem)] pt-7" data-slip-row>
               <p className="label">{t('Charged')}</p>

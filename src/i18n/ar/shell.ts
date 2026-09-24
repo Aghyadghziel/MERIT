@@ -13,7 +13,7 @@ export const shell: Record<string, string> = {
   Menu: 'القائمة',
   Primary: 'التنقّل الرئيسي',
   '{label} menu': 'قائمة {label}',
-  'MERIT, home': 'MERIT، الصفحة الرئيسية',
+  'MERIT, home': 'ميرت، الصفحة الرئيسية',
   Search: 'بحث',
   Account: 'الحساب',
   'Wishlist, {n} saved': 'قائمة الأمنيات، المحفوظ: {n}',
@@ -29,7 +29,7 @@ export const shell: Record<string, string> = {
   // ─── Mega menu ───────────────────────────────────────────────────────────
   'Shop by category': 'تسوّق حسب الفئة',
   'Accessories, by piece': 'الإكسسوارات، قطعةً قطعة',
-  'Index, by category': 'Index، حسب الفئة',
+  'Index, by category': 'الفهرس، حسب الفئة',
   'The stories behind them': 'القصص من ورائها',
   'Campaign · Autumn Winter 26': 'حملة · خريف وشتاء 26',
   'Collection · Autumn Winter 26': 'مجموعة · خريف وشتاء 26',
@@ -47,7 +47,7 @@ export const shell: Record<string, string> = {
   '{n} stories': '{n} قصص',
   Stories: 'القصص',
   'The house': 'الدار',
-  'About MERIT': 'عن MERIT',
+  'About MERIT': 'عن ميرت',
   'AW {yy}': 'خريف وشتاء {yy}',
   'SS {yy}': 'ربيع وصيف {yy}',
   'Show {yy}': 'عرض {yy}',
@@ -89,7 +89,7 @@ export const shell: Record<string, string> = {
 
   // ─── Newsletter ──────────────────────────────────────────────────────────
   Newsletter: 'النشرة البريدية',
-  'Collection notes.': 'ملاحظات المجموعة.',
+  'Collection notes.': 'رسائل من المشغل.',
   'Four or five letters a year: what is being made, when it lands, and the counts. Nothing else.':
     'أربع رسائل أو خمس في السنة: ما يُصنع، ومتى يصل، وكم قطعة منه. لا شيء غير ذلك.',
   'Email address': 'البريد الإلكتروني',
@@ -107,7 +107,7 @@ export const shell: Record<string, string> = {
   Close: 'إغلاق',
   Clear: 'مسح',
   'Search garments, collections and stories': 'ابحث في القطع والمجموعات والقصص',
-  'Coat, cashmere, Atrium': 'معطف، كشمير، Atrium',
+  'Coat, cashmere, Atrium': 'معطف، كشمير، الفناء',
   'No results': 'لا نتائج',
   'No results for {q}.': 'لا نتائج لـ«{q}».',
   '{n} results': 'النتائج: {n}',
@@ -155,7 +155,7 @@ export const shell: Record<string, string> = {
   // ─── 404 ─────────────────────────────────────────────────────────────────
   'Error 404': 'خطأ 404',
   'Not found': 'الصفحة غير موجودة',
-  'This page has been taken down.': 'أُزيلت هذه الصفحة.',
+  'This page has been taken down.': 'هذه الصفحة لم تعد هنا.',
   'Pieces are made in small counts and the pages go with them. The link may have been correct once.':
     'تُصنع القطع بكميات قليلة، وتمضي صفحاتها معها. لعلّ هذا الرابط كان صحيحًا ذات يوم.',
   'Search the collection': 'ابحث في المجموعة',

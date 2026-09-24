@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'المتاجر' : 'Stores',
     description: ar
-      ? 'متجر MERIT الرئيسي على طريق العروبة في الرياض، ومشغل جدة بموعد مسبق.'
+      ? 'متجر ميرت الرئيسي على طريق العروبة في الرياض، ومشغل جدة بموعد مسبق.'
       : 'The MERIT flagship on Al Urubah Road in Riyadh, and the Jeddah atelier, by appointment.',
     alternates: { canonical: ar ? '/ar/stores' : '/stores', languages: { en: '/stores', ar: '/ar/stores' } },
   };
@@ -69,7 +69,7 @@ const ROOMS: Record<'en' | 'ar', Room[]> = {
       dark: false,
       address: ['طريق العروبة', 'العليا، الرياض 12244'],
       hours: [['من السبت إلى الخميس', '10:00 — 22:00'], ['الجمعة', '16:00 — 22:00']],
-      room: ['التشكيلة كاملة', 'تعديلات فورية أثناء انتظارك', 'رفّ الأرشيف في آخر الصالة', 'إصلاح بسعر التكلفة لأي قطعة من MERIT'],
+      room: ['التشكيلة كاملة', 'تعديلات فورية أثناء انتظارك', 'رفّ الأرشيف في آخر الصالة', 'إصلاح بسعر التكلفة لأي قطعة من ميرت'],
       image: { src: 'campaign-studio', width: 1400, height: 1750, alt: 'عارضة ببدلة فاتحة اللون جالسة على كرسي معدني في استوديو أبيض، بالأبيض والأسود', position: '50% 30%', sizes: IMG_SIZES },
       cta: { label: 'راسل المتجر الرئيسي', href: '/contact' },
     },
@@ -223,7 +223,7 @@ export default async function StoresPage() {
       </div>
 
       <section className="page section-y" aria-labelledby="stockists-title">
-        <SectionHead index={3} title={ar ? 'نقاط البيع' : 'Stockists'} id="stockists-title" tone="ink" note={ar ? 'تشكيلة Index فقط' : 'Index range only'} />
+        <SectionHead index={3} title={ar ? 'نقاط البيع' : 'Stockists'} id="stockists-title" tone="ink" note={ar ? 'تشكيلة الفهرس فقط' : 'Index range only'} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-8">
           <p className={cn('display-lg col-span-4 max-w-[15ch] md:col-span-6 lg:col-span-7', LINE_ROOM)}>
             <Lines text={ar ? 'لا نبيع عبر المتاجر الكبرى.' : 'Not sold through department stores.'} />
@@ -231,7 +231,7 @@ export default async function StoresPage() {
           <div className="col-span-4 self-end md:col-span-4 lg:col-span-4 lg:col-start-9" data-reveal>
             <p className="body-lg text-ink-3">
               {ar
-                ? 'تحمل قائمة قصيرة من المتاجر المستقلة تشكيلة Index في دبي ومدينة الكويت وبيروت. راسلنا لمعرفة العناوين.'
+                ? 'تحمل قائمة قصيرة من المتاجر المستقلة تشكيلة الفهرس في دبي ومدينة الكويت وبيروت. راسلنا لمعرفة العناوين.'
                 : 'A short list of independent rooms carries the Index range in Dubai, Kuwait City and Beirut. Write to us for addresses.'}
             </p>
             <ul className="mt-6 border-t border-line">

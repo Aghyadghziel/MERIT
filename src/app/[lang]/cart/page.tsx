@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'حقيبة التسوق' : 'Shopping bag',
     description: ar
-      ? 'حقيبة تسوّقك في MERIT.'
+      ? 'حقيبة تسوّقك في ميرت.'
       : 'Your MERIT shopping bag.',
     robots: { index: false, follow: true },
     alternates: { canonical: ar ? '/ar/cart' : '/cart', languages: { en: '/cart', ar: '/ar/cart' } },

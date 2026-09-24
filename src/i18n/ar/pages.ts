@@ -25,7 +25,7 @@ export const pages: Record<string, string> = {
   'Not sent — concept site': 'لم تُرسَل — موقع تصوّري',
   'Thank you, {name}.': 'شكرًا، {name}.',
   'This is a concept site, so the message was not sent anywhere and no address was stored. On a real MERIT you would have an answer within a working day.':
-    'هذا موقع تصوّري، لذا لم تُرسَل الرسالة إلى أي جهة ولم يُحفَظ أي عنوان. في نسخة حقيقية من MERIT، كان سيصلك الردّ خلال يوم عمل.',
+    'هذا موقع تصوّري، لذا لم تُرسَل الرسالة إلى أي جهة ولم يُحفَظ أي عنوان. في نسخة حقيقية من ميرت، كان سيصلك الردّ خلال يوم عمل.',
   'Write another': 'اكتب رسالة أخرى',
   'Write to client care': 'راسل خدمة العملاء',
   'Your name': 'اسمك',

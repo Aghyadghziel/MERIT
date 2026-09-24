@@ -72,7 +72,7 @@ export default async function CollectionsPage() {
                   <a href={`#${c.slug}`} className="group flex min-h-12 items-center gap-4 py-2.5">
                     <span className="label-sm nums w-6 shrink-0 text-mute">{pad(i + 1)}</span>
                     <span className="flex-1 text-[0.9375rem] font-medium leading-snug transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] md:group-hover:translate-x-1.5 rtl:md:group-hover:-translate-x-1.5">
-                      {c.name}
+                      {t(c.name)}
                     </span>
                     <span className="label-sm nums hidden shrink-0 text-mute sm:inline">
                       {collectionSeason(c, t)} · {pieceCount(c, locale)}

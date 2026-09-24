@@ -132,24 +132,24 @@ export const product: Record<string, string> = {
     'معروضة بعملة {code} بسعر صرف تقريبي. الأسعار محدّدة بالريال السعودي.',
   Checkout: 'إتمام الشراء',
   'MERIT is a concept store. Checkout shows what would happen next; nothing is charged.':
-    'MERIT متجر تصوّري. تعرض صفحة إتمام الشراء ما كان سيحدث بعدها، ولا يُخصم أي مبلغ.',
+    'ميرت متجر تصوّري. تعرض صفحة إتمام الشراء ما كان سيحدث بعدها، ولا يُخصم أي مبلغ.',
   'Riyadh and Jeddah in two working days.': 'الرياض وجدة خلال يومَي عمل.',
   'Returns within thirty days, unworn.': 'الإرجاع خلال 30 يومًا، دون ارتداء.',
   'Packed in unbleached cotton, no plastic.': 'تُغلَّف بقطن غير مُبيَّض، بلا بلاستيك.',
   'Nothing in it yet.': 'لا شيء فيها بعد.',
   'Most people start with the Index: the pieces cut from the same patterns every year, in the same cloth.':
-    'يبدأ أكثر الناس بمجموعة Index: قطع تُقصّ من النماذج نفسها كل عام، وبالقماش نفسه.',
-  'Shop the Index': 'تسوّق Index',
+    'يبدأ أكثر الناس بمجموعة الفهرس: قطع تُقصّ من النماذج نفسها كل عام، وبالقماش نفسه.',
+  'Shop the Index': 'تسوّق الفهرس',
   'New arrivals': 'وصل حديثًا',
   '{pieces} waiting in your wishlist': '{pieces} بانتظارك في قائمة الأمنيات',
-  'From the Index': 'من مجموعة Index',
+  'From the Index': 'من مجموعة الفهرس',
   'All pieces': 'كل القطع',
   'Nothing in the bag yet.': 'لا شيء في الحقيبة بعد.',
   'Pieces you add stay here, in this browser, until you take them out.':
     'تبقى القطع التي تضيفها هنا، في هذا المتصفح، حتى تُخرجها.',
   'Start shopping': 'ابدأ التسوّق',
   'Start with': 'ابدأ من',
-  'The Index': 'مجموعة Index',
+  'The Index': 'مجموعة الفهرس',
   '{pieces} in your wishlist': '{pieces} في قائمة الأمنيات',
   'You may also like': 'قد يعجبك أيضًا',
   'Free Gulf delivery over {amount}. A concept store: checkout explains, nothing is charged.':
@@ -161,7 +161,7 @@ export const product: Record<string, string> = {
   'A concept site': 'موقع تصوّري',
   'Nothing here can be bought.': 'لا شيء هنا قابل للشراء.',
   'MERIT is not a real company. There is no payment processor connected to this page, no order will be placed, and nothing you have put in the bag will be charged or shipped.':
-    'MERIT ليست شركة حقيقية. لا توجد بوابة دفع مرتبطة بهذه الصفحة، ولن يُسجَّل أي طلب، ولن يُخصم ثمن أي شيء وضعته في الحقيبة ولن يُشحن.',
+    'ميرت ليست شركة حقيقية. لا توجد بوابة دفع مرتبطة بهذه الصفحة، ولن يُسجَّل أي طلب، ولن يُخصم ثمن أي شيء وضعته في الحقيبة ولن يُشحن.',
   'Everything else works as it would in a real store: the bag, the wishlist, the currency, the stock on each size. This is the one place where pretending would be dishonest.':
     'كل ما عدا ذلك يعمل كما في متجر حقيقي: الحقيبة، وقائمة الأمنيات، والعملة، والمخزون في كل مقاس. هذا هو الموضع الوحيد الذي يصبح فيه التظاهر خداعًا.',
   'Back to the bag': 'العودة إلى الحقيبة',
@@ -188,7 +188,7 @@ export const product: Record<string, string> = {
   'No accounts.': 'لا حسابات.',
   'Nothing was sent to': 'لم يُرسَل شيء إلى',
   'MERIT is a concept site with no sign-in and no order history. Your bag and wishlist are kept in this browser instead, and they survive a reload without an account.':
-    'MERIT موقع تصوّري بلا تسجيل دخول ولا سجلّ طلبات. تُحفَظ حقيبتك وقائمة أمنياتك في هذا المتصفح بدلًا من ذلك، وتبقى بعد إعادة تحميل الصفحة دون حاجة إلى حساب.',
+    'ميرت موقع تصوّري بلا تسجيل دخول ولا سجلّ طلبات. تُحفَظ حقيبتك وقائمة أمنياتك في هذا المتصفح بدلًا من ذلك، وتبقى بعد إعادة تحميل الصفحة دون حاجة إلى حساب.',
   'Use another address': 'استخدم عنوانًا آخر',
   'Email address': 'البريد الإلكتروني',
   'Enter your email address.': 'أدخل بريدك الإلكتروني.',

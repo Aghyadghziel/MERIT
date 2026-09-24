@@ -186,6 +186,8 @@ export default async function StoryPage({ params }: PageProps<'/[lang]/editorial
                   className={cn(
                     'col-span-4 md:col-span-5 lg:col-span-6 lg:col-start-5',
                     'text-[clamp(1.0625rem,0.96rem+0.42vw,1.3125rem)] leading-[1.62] tracking-[-0.008em] [text-wrap:pretty]',
+                    // Arabic story text is set in the written hand (Markazi).
+                    ar && 'ar-editorial-body',
                     // A drop cap would cut the first letter from the word it
                     // joins in Arabic, so it is Latin only.
                     k === 0 && !ar && 'first-letter:float-left first-letter:mr-3 first-letter:mt-[0.065em] first-letter:text-[5.3em] first-letter:font-semibold first-letter:leading-[0.76] first-letter:tracking-[-0.05em]',

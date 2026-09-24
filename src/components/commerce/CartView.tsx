@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from '@/i18n/link';
 import { Fragment, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { PaymentMethods } from '@/components/commerce/PaymentMethods';
 import { ProductCard } from '@/components/commerce/ProductCard';
 import { RecentlyViewed } from '@/components/commerce/RecentlyViewed';
 import { FREE_SHIPPING, useStore, type Line } from '@/components/providers/Store';
@@ -413,6 +414,7 @@ export function CartView() {
                   <p className="mt-3 text-xs leading-relaxed text-mute-ink">
                     {t('MERIT is a concept store. Checkout shows what would happen next; nothing is charged.')}
                   </p>
+                  {locale === 'ar' ? <PaymentMethods tone="bone" className="mt-4" /> : null}
                 </div>
               </div>
 
@@ -543,7 +545,7 @@ function BagRow({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
           <div className="min-w-0">
             <p className="label-sm text-mute">
-              {t(p.category)}{collection ? ` · ${collection.name}` : ''}
+              {t(p.category)}{collection ? ` · ${t(collection.name)}` : ''}
             </p>
             <h3 className="mt-2 text-[clamp(1.0625rem,0.85rem+0.9vw,1.625rem)] font-semibold leading-[1.06] tracking-[-0.03em]">
               <Link href={href} className="link-quiet">{p.name}</Link>

@@ -40,6 +40,8 @@ export function PullQuote({ text, source, className }: { text: string; source?: 
         <p
           className={cn(
             'font-semibold [text-wrap:balance]',
+            // Arabic quotes change hand: naskh, not the kufi of the headlines.
+            ar && 'ar-editorial',
             // The measure is set in em on the quote itself, so it scales with it.
             short
               ? 'max-w-[8.5em] text-[clamp(2.5rem,0.9rem+6vw,7.5rem)] leading-[0.9] tracking-[-0.055em]'

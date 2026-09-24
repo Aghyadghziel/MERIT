@@ -16,7 +16,7 @@ export const SUGGESTED = [
  * The Arabic suggestions: the words an Arabic reader would type, not the
  * English ones translated. Any that finds nothing is dropped by the caller.
  */
-const SUGGESTED_AR = ['معطف', 'بليزر', 'بنطال واسع', 'كشمير', 'Foundation', 'Runway 01'];
+const SUGGESTED_AR = ['معطف', 'بليزر', 'بنطال واسع', 'كشمير', 'الأساس', 'العرض الأول'];
 
 export const suggestedFor = (locale: Locale) => (locale === 'ar' ? SUGGESTED_AR : SUGGESTED);
 
@@ -83,7 +83,7 @@ export function search(query: string, locale: Locale = 'en'): { products: Hit[];
             [item.name, 10],
             [ar ? raw.name : '', 8],
             [both(item.category), 6],
-            [both(item.collection), 4],
+            [both(collections.find((c) => c.slug === item.collection)?.name ?? ''), 4],
             [both(item.gender === 'unisex' ? 'Unisex' : item.gender === 'women' ? 'Women' : 'Men'), 3],
             [item.colours.map((c) => both(c.name)).join(' '), 3],
             [item.summary, 2],
@@ -108,12 +108,12 @@ export function search(query: string, locale: Locale = 'en'): { products: Hit[];
     }));
 
   const c = collections
-    .filter((item) => score([[item.name, 10], [both(item.season), 4], [t(item.statement), 2], [t(item.note), 1]], q) > 0)
+    .filter((item) => score([[both(item.name), 10], [both(item.season), 4], [t(item.statement), 2], [t(item.note), 1]], q) > 0)
     .slice(0, 3)
     .map<Hit>((item) => ({
       kind: 'collection',
       slug: item.slug,
-      title: item.name,
+      title: t(item.name),
       meta: `${t(item.season)} ${item.year}`,
       image: item.image,
     }));

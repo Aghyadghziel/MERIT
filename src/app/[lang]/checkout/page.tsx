@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'إتمام الشراء' : 'Checkout',
     description: ar
-      ? 'MERIT موقع تصوّري. لا توجد بوابة دفع، ولا يمكن شراء أي شيء.'
+      ? 'ميرت موقع تصوّري. لا توجد بوابة دفع، ولا يمكن شراء أي شيء.'
       : 'MERIT is a concept site. There is no payment processor, and nothing can be bought.',
     robots: { index: false, follow: false },
   };

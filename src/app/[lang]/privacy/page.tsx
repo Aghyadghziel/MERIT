@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'سياسة الخصوصية' : 'Privacy policy',
     description: ar
-      ? 'ما الذي تحفظه MERIT، وما لا تحفظه، وكيف تطلب استعادته.'
+      ? 'ما الذي تحفظه ميرت، وما لا تحفظه، وكيف تطلب استعادته.'
       : 'What MERIT stores, what it does not, and how to ask for it back.',
     alternates: { canonical: ar ? '/ar/privacy' : '/privacy', languages: { en: '/privacy', ar: '/ar/privacy' } },
   };
@@ -64,7 +64,7 @@ const COPY = {
   ar: {
     eyebrow: 'الشؤون القانونية',
     title: 'سياسة الخصوصية.',
-    standfirst: 'MERIT موقع تصوّري. لا يُرسَل أي شيء تكتبه هنا إلى أي جهة، ولا يُحفظ شيء على خادم، لأنه لا يوجد خادم خلف هذا الموقع.',
+    standfirst: 'ميرت موقع تصوّري. لا يُرسَل أي شيء تكتبه هنا إلى أي جهة، ولا يُحفظ شيء على خادم، لأنه لا يوجد خادم خلف هذا الموقع.',
     facts: [
       { label: 'ملفات تعريف الارتباط', value: '0', note: 'لا شيء، لا منّا ولا من غيرنا.' },
       { label: 'نصوص التتبّع', value: '0', note: 'لا أدوات تحليل، ولا وحدات بكسل إعلانية.' },
@@ -128,7 +128,7 @@ export default async function PrivacyPage() {
 
           <Section id="real" title={title(3)}>
             <p>
-              كانت النسخة الحقيقية من MERIT ستعالج بيانات الطلب والتوصيل لتنفيذ عمليات الشراء، وتحتفظ بها
+              كانت النسخة الحقيقية من ميرت ستعالج بيانات الطلب والتوصيل لتنفيذ عمليات الشراء، وتحتفظ بها
               للمدة التي تفرضها الأنظمة التجارية في المملكة العربية السعودية، ولا تشاركها إلا مع مزوّد خدمة
               الدفع وشركة الشحن. وكانت ستستجيب لطلبات الاطلاع على البيانات وحذفها خلال ثلاثين يومًا، ولن تبيع
               بيانات العملاء أبدًا.
@@ -139,7 +139,7 @@ export default async function PrivacyPage() {
           <Section id="images" title={title(4)}>
             <p>
               الصور في هذا الموقع مواد مؤقتة من Unsplash، مستخدمة بموجب ترخيص Unsplash. الأشخاص الظاهرون
-              فيها لا صلة لهم بـ MERIT ولا يؤيدونها. المصادر مدرجة في{' '}
+              فيها لا صلة لهم بميرت ولا يؤيدونها. المصادر مدرجة في{' '}
               <code dir="ltr">public/img/CREDITS.md</code>.
             </p>
           </Section>

@@ -1,4 +1,4 @@
-import { IBM_Plex_Sans_Arabic, Inter_Tight } from 'next/font/google';
+import { IBM_Plex_Sans_Arabic, Inter_Tight, Kufam, Markazi_Text } from 'next/font/google';
 
 /**
  * The brand face is Neue Haas Grotesk (Monotype). It needs a web licence, so
@@ -23,7 +23,31 @@ const arabic = IBM_Plex_Sans_Arabic({
   display: 'swap',
 });
 
-export const fontVariables = `${grotesk.variable} ${arabic.variable}`;
+/**
+ * Arabic display: Kufam, a heavy compact kufi. It sets the Arabic headlines
+ * and poster words the way Inter Tight 800 sets the Latin ones — dense, dark,
+ * built on a flat baseline — instead of the body face blown up.
+ */
+const arabicDisplay = Kufam({
+  subsets: ['arabic'],
+  weight: ['600', '700', '800'],
+  variable: '--font-arabic-display',
+  display: 'swap',
+});
+
+/**
+ * Arabic editorial: Markazi Text, a modern naskh for the quotes and the
+ * story text. Arabic has no italic; a second, written hand is how the house
+ * voice changes register.
+ */
+const arabicEditorial = Markazi_Text({
+  subsets: ['arabic'],
+  weight: ['400', '500', '600'],
+  variable: '--font-arabic-editorial',
+  display: 'swap',
+});
+
+export const fontVariables = `${grotesk.variable} ${arabic.variable} ${arabicDisplay.variable} ${arabicEditorial.variable}`;
 
 /**
  * The type stack for Arabic pages. Each next/font family ends in an adjusted
@@ -34,3 +58,5 @@ export const fontVariables = `${grotesk.variable} ${arabic.variable}`;
  */
 const face = (f: { style: { fontFamily: string } }) => f.style.fontFamily.split(',')[0].trim();
 export const arabicStack = `${face(grotesk)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabic.style.fontFamily}`;
+export const arabicDisplayStack = `${face(grotesk)}, ${face(arabicDisplay)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabicDisplay.style.fontFamily}`;
+export const arabicEditorialStack = `${face(grotesk)}, ${face(arabicEditorial)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabicEditorial.style.fontFamily}`;

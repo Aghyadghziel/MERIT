@@ -3,7 +3,7 @@
 import Link from '@/i18n/link';
 import { useLayoutEffect, useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
-import { useT } from '@/i18n/client';
+import { useLocale, useT } from '@/i18n/client';
 import { cn } from '@/lib/cn';
 import { setupGsap } from '@/lib/gsap';
 
@@ -22,6 +22,29 @@ const WORD = cn(
 );
 
 /**
+ * The Arabic name of the campaign, خطّ المسطرة, in Kufam. Arabic words are
+ * wider than the four-letter Latin pair, so they are set a size down to keep
+ * the same margin to the window, and at a line height that clears the dots.
+ */
+const WORD_AR = cn(
+  'group-data-[layout=narrow]/words:text-[length:min(15vw,17svh)]! group-data-[layout=wide]/words:text-[clamp(2.75rem,5.9vw,6.5rem)]!',
+  'font-extrabold !leading-[1.1]',
+);
+
+/**
+ * The word shown in one layout only. Wide, the pair sits either side of the
+ * window and reads right to left, so خطّ is the right-hand word (w2); stacked,
+ * it reads top to bottom, so خطّ is the upper one (w1).
+ */
+function Only({ layout, children }: { layout: 'wide' | 'narrow'; children: React.ReactNode }) {
+  return (
+    <span className={layout === 'wide' ? 'hidden group-data-[layout=wide]/words:inline' : 'group-data-[layout=wide]/words:hidden'}>
+      {children}
+    </span>
+  );
+}
+
+/**
  * The campaign, told in two beats. It arrives as a narrow window on the warm
  * white, set between the two words of its name. Scrolling pushes the window
  * open: the words are shoved off either edge at exactly the speed of the
@@ -32,6 +55,7 @@ const WORD = cn(
  */
 export function CampaignFeature() {
   const t = useT();
+  const ar = useLocale() === 'ar';
   const root = useRef<HTMLElement>(null);
 
   useLayoutEffect(() => {
@@ -155,11 +179,11 @@ export function CampaignFeature() {
 
         {/* The name of the campaign, either side of the window. Hidden once it is open. */}
         <div data-cf="words" aria-hidden dir="ltr" className="group/words pointer-events-none absolute inset-0 opacity-0">
-          <span data-cf="w1" className={cn(WORD, 'group-data-[layout=narrow]/words:bottom-[calc(75%+0.9rem)] group-data-[layout=wide]/words:right-[calc(61%+2.2vw)]')}>
-            Rule
+          <span data-cf="w1" className={cn(WORD, ar && WORD_AR, 'group-data-[layout=narrow]/words:bottom-[calc(75%+0.9rem)] group-data-[layout=wide]/words:right-[calc(61%+2.2vw)]')}>
+            {ar ? <><Only layout="narrow">خطّ</Only><Only layout="wide">المسطرة</Only></> : 'Rule'}
           </span>
-          <span data-cf="w2" className={cn(WORD, 'group-data-[layout=narrow]/words:top-[calc(79%+0.9rem)] group-data-[layout=wide]/words:left-[calc(61%+2.2vw)]')}>
-            Line
+          <span data-cf="w2" className={cn(WORD, ar && WORD_AR, 'group-data-[layout=narrow]/words:top-[calc(79%+0.9rem)] group-data-[layout=wide]/words:left-[calc(61%+2.2vw)]')}>
+            {ar ? <><Only layout="narrow">المسطرة</Only><Only layout="wide">خطّ</Only></> : 'Line'}
           </span>
         </div>
 

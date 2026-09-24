@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { useLayoutEffect, useRef } from 'react';
 import { Icon } from '@/components/ui/Icon';
@@ -62,7 +61,7 @@ export function CampaignFeature() {
           scrollTrigger: {
             trigger: stage,
             start: 'top top',
-            end: '+=175%',
+            end: '+=260%',
             pin: true,
             scrub: 0.6,
             anticipatePin: 1,
@@ -71,7 +70,23 @@ export function CampaignFeature() {
         });
 
         tl.fromTo(q('[data-cf="clip"]'), { clipPath: inset([t, r, b, l]) }, { clipPath: inset([0, 0, 0, 0]), ease, duration: 1 }, 0)
-          .fromTo(q('[data-cf="img"]'), { scale: 1.24, xPercent: wide ? -14 : 0, yPercent: wide ? 0 : 18 }, { scale: 1, xPercent: 0, yPercent: 0, ease, duration: 1 }, 0);
+          .fromTo(q('[data-cf="img"]'), { scale: 1.1 }, { scale: 1, ease, duration: 1 }, 0);
+
+        // The film follows the scroll across the whole pin.
+        const film = q(`[data-cf-film="${wide ? 'wide' : 'tall'}"]`)[0] as HTMLVideoElement | undefined;
+        if (film) {
+          film.poster = `/video/studio-${wide ? 'wide' : 'tall'}-first.webp`;
+          // iOS will not decode a video that has never played: start and stop it once.
+          film.play().then(() => { film.pause(); film.currentTime = 0; }).catch(() => {});
+          const state = { t: 0 };
+          let queued = false;
+          const seek = () => {
+            queued = false;
+            if (film.readyState >= 1 && film.duration) film.currentTime = state.t * (film.duration - 0.04);
+          };
+          tl.to(state, { t: 1, ease: 'none', duration: 1.35, onUpdate: () => { if (!queued) { queued = true; requestAnimationFrame(seek); } } }, 0);
+          film.addEventListener('loadedmetadata', seek);
+        }
 
         // The words ride the edges of the window, so they look pushed by it.
         if (wide) {
@@ -86,7 +101,7 @@ export function CampaignFeature() {
           .fromTo(q('[data-cf="shade"]'), { opacity: 0 }, { opacity: 1, duration: 0.45 }, 0.7)
           .fromTo(q('[data-cf="line"]'), { yPercent: 112 }, { yPercent: 0, ease: 'power3.out', stagger: 0.09, duration: 0.5 }, 0.84)
           .fromTo(q('[data-cf="meta"]'), { opacity: 0, y: 18 }, { opacity: 1, y: 0, ease: 'power2.out', stagger: 0.06, duration: 0.4 }, 1.02)
-          .to({}, { duration: 0.4 });
+          .to({}, { duration: 0.1 });
 
         // Tabbing onto the links while the window is still shut jumps the
         // scroll to the opened frame, so keyboard focus never lands on copy
@@ -100,6 +115,7 @@ export function CampaignFeature() {
         return () => {
           stage.removeEventListener('focusin', onFocus);
           delete words.dataset.layout;
+          if (film) film.poster = `/video/studio-${wide ? 'wide' : 'tall'}-last.webp`;
         };
       },
     );
@@ -120,11 +136,17 @@ export function CampaignFeature() {
       <div data-cf="stage" className="relative h-svh min-h-[20rem] overflow-hidden">
         {/* The picture. Clipped to a window at first; the server renders it open. */}
         <div data-cf="clip" className="absolute inset-0 overflow-hidden bg-ink">
-          <div data-cf="img" className="absolute inset-0 will-change-transform">
-            <Image src="/img/campaign-rule-line-wide.webp" alt="A model in a pale cropped jacket and trousers against a brown plaster wall." fill
-              sizes="100vw" className="hidden -scale-x-100 object-cover object-[30%_center] md:landscape:block" />
-            <Image src="/img/campaign-rule-line.webp" alt="A model in a pale cropped jacket and trousers against a brown plaster wall." fill
-              sizes="100vw" className="object-cover object-[26%_center] md:landscape:hidden" />
+          {/* The film: a model in the black leather jacket on a wooden box in a
+              dark studio. It plays with the scroll, forward and back: she looks
+              away, pulls the jacket onto her shoulder and turns back as the
+              camera closes in. Encoded all-intra so any frame can be shown
+              instantly. The server paints its last frame (the opened state). */}
+          <div data-cf="img" role="img" aria-label="A model in the black leather jacket, seated on a wooden box in a dark studio, pulls the jacket up onto her shoulder."
+            className="absolute inset-0 will-change-transform">
+            <video data-cf-film="wide" src="/video/studio-wide.mp4" poster="/video/studio-wide-last.webp" muted playsInline preload="auto"
+              disablePictureInPicture aria-hidden tabIndex={-1} className="hidden h-full w-full object-cover md:landscape:block" />
+            <video data-cf-film="tall" src="/video/studio-tall.mp4" poster="/video/studio-tall-last.webp" muted playsInline preload="auto"
+              disablePictureInPicture aria-hidden tabIndex={-1} className="h-full w-full object-cover md:landscape:hidden" />
           </div>
           <div data-cf="shade" aria-hidden className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/25" />
         </div>

@@ -16,7 +16,6 @@ import { imageKind } from './_parts/media';
 import { alsoConsider, completeLook } from './_parts/pairing';
 import { Rail } from './_parts/Rail';
 
-export const dynamicParams = false;
 export const generateStaticParams = () => products.map((p) => ({ slug: p.slug }));
 
 export async function generateMetadata({ params }: PageProps<'/[lang]/products/[slug]'>): Promise<Metadata> {

@@ -22,7 +22,6 @@ import { localizeProduct } from '@/i18n/products';
 import { getLocale, getT } from '@/i18n/server';
 import { count, localizeStory, storyQuote } from '@/i18n/stories';
 
-export const dynamicParams = false;
 export const generateStaticParams = () => stories.map((s) => ({ slug: s.slug }));
 
 export async function generateMetadata({ params }: PageProps<'/[lang]/editorial/[slug]'>): Promise<Metadata> {

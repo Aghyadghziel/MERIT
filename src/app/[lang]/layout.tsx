@@ -10,7 +10,7 @@ import { MotionRoot } from '@/components/providers/Motion';
 import { StoreProvider } from '@/components/providers/Store';
 import { UiProvider } from '@/components/providers/Ui';
 import { BRAND } from '@/lib/brand';
-import { fontVariables } from '@/lib/fonts';
+import { arabicStack, fontVariables } from '@/lib/fonts';
 import { LocaleProvider } from '@/i18n/client';
 import { dirOf, LOCALES } from '@/i18n/config';
 import { getLocale, getT } from '@/i18n/server';
@@ -91,7 +91,11 @@ const ORGANISATION = {
 export function generateStaticParams() {
   return LOCALES.map((lang) => ({ lang }));
 }
-export const dynamicParams = false;
+// No `dynamicParams = false` here or on the slug pages: this layout is the
+// root, so a param outside the list would 404 before any layout renders and
+// fall back to Next's bare error page. Unknown paths render on demand and call
+// notFound() instead, which shows the house 404 in the right language. The
+// proxy only ever hands this segment 'en' or 'ar'.
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const locale = await getLocale();
@@ -100,7 +104,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     // data-scroll-behavior tells Next to switch the smooth scrolling in
     // globals.css off while it resets the scroll on a route change; without
     // it, the reset animates and a new page can land part-way down.
-    <html lang={locale} dir={dirOf(locale)} className={fontVariables} data-scroll-behavior="smooth">
+    <html lang={locale} dir={dirOf(locale)} className={fontVariables} data-scroll-behavior="smooth"
+      style={locale === 'ar' ? ({ '--font-ar-stack': arabicStack } as React.CSSProperties) : undefined}>
       <head>
         <noscript><style dangerouslySetInnerHTML={{ __html: NO_SCRIPT }} /></noscript>
       </head>

@@ -590,13 +590,13 @@ html.cursor-in .house-cursor { opacity: 1; }
 }
 
 /* ─── Arabic (html[lang=ar], dir=rtl) ───────────────────────────────────
-   IBM Plex Sans Arabic comes first: it only covers Arabic code points, so
-   Latin runs fall through to the grotesk. (Behind the grotesk, its
-   Arial-based fallback face would catch the Arabic.) Arabic is never tracked (letters must join) and needs more
+   Latin runs keep the grotesk and Arabic characters use IBM Plex Sans
+   Arabic: --font-ar-stack is set on <html> by the layout (see
+   arabicStack in lib/fonts.ts for why the order matters). Arabic is never tracked (letters must join) and needs more
    line height than the tight Latin display settings allow. */
 html:lang(ar) {
-  --font-display: var(--font-arabic), var(--font-grotesk), "Neue Haas Grotesk Display Pro", Arial, sans-serif;
-  --font-sans: var(--font-arabic), var(--font-grotesk), "Neue Haas Grotesk Text Pro", Arial, sans-serif;
+  --font-display: var(--font-ar-stack), Arial, sans-serif;
+  --font-sans: var(--font-ar-stack), Arial, sans-serif;
 }
 /* Latin display runs marked lang="en" (numbers, the 404) keep their tracking. */
 html:lang(ar) body, html:lang(ar) body *:not(:lang(en)) { letter-spacing: 0 !important; }

@@ -21,10 +21,16 @@ const arabic = IBM_Plex_Sans_Arabic({
   weight: ['400', '500', '600', '700'],
   variable: '--font-arabic',
   display: 'swap',
-  // No metric-matched Arial fallback: on Arabic pages this face comes first
-  // (it only covers Arabic code points), and an adjusted Arial in the stack
-  // would catch the Latin runs before Inter Tight.
-  adjustFontFallback: false,
 });
 
 export const fontVariables = `${grotesk.variable} ${arabic.variable}`;
+
+/**
+ * The type stack for Arabic pages. Each next/font family ends in an adjusted
+ * local Arial with no unicode-range, and Plex ships Latin glyphs too, so
+ * neither variable can simply go first. Inter Tight's own face comes first:
+ * it has no Arabic, so Latin runs ("Axis", "Foundation") stay in the grotesk
+ * and Arabic falls through to Plex before any Arial.
+ */
+const face = (f: { style: { fontFamily: string } }) => f.style.fontFamily.split(',')[0].trim();
+export const arabicStack = `${face(grotesk)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabic.style.fontFamily}`;

@@ -20,7 +20,6 @@ import { localizeProduct } from '@/i18n/products';
 import { getLocale, getT } from '@/i18n/server';
 import { count, localizeCollection, localizeStory } from '@/i18n/stories';
 
-export const dynamicParams = false;
 export const generateStaticParams = () => collections.map((c) => ({ slug: c.slug }));
 
 export async function generateMetadata({ params }: PageProps<'/[lang]/collections/[slug]'>): Promise<Metadata> {

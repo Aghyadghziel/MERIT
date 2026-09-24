@@ -10,9 +10,9 @@ import { cn } from '@/lib/cn';
 export async function generateMetadata(): Promise<Metadata> {
   const ar = (await getLocale()) === 'ar';
   return {
-    title: ar ? 'المتاجر' : 'Stores',
+    title: ar ? 'فروعنا' : 'Stores',
     description: ar
-      ? 'متجر ميرت الرئيسي على طريق العروبة في الرياض، ومشغل جدة بموعد مسبق.'
+      ? 'فرع ميرت الرئيسي على طريق العروبة في الرياض، ومشغل جدة بموعد.'
       : 'The MERIT flagship on Al Urubah Road in Riyadh, and the Jeddah atelier, by appointment.',
     alternates: { canonical: ar ? '/ar/stores' : '/stores', languages: { en: '/stores', ar: '/ar/stores' } },
   };
@@ -64,33 +64,33 @@ const ROOMS: Record<'en' | 'ar', Room[]> = {
     {
       id: 'riyadh',
       city: 'الرياض',
-      kind: 'المتجر الرئيسي',
-      when: 'مفتوح يوميًا',
+      kind: 'الفرع الرئيسي',
+      when: 'مفتوح كل يوم',
       dark: false,
       address: ['طريق العروبة', 'العليا، الرياض 12244'],
-      hours: [['من السبت إلى الخميس', '10:00 — 22:00'], ['الجمعة', '16:00 — 22:00']],
-      room: ['التشكيلة كاملة', 'تعديلات فورية أثناء انتظارك', 'رفّ الأرشيف في آخر الصالة', 'إصلاح بسعر التكلفة لأي قطعة من ميرت'],
-      image: { src: 'campaign-studio', width: 1400, height: 1750, alt: 'عارضة ببدلة فاتحة اللون جالسة على كرسي معدني في استوديو أبيض، بالأبيض والأسود', position: '50% 30%', sizes: IMG_SIZES },
-      cta: { label: 'راسل المتجر الرئيسي', href: '/contact' },
+      hours: [['من السبت للخميس', 'من 10 الصبح لين 10 الليل'], ['الجمعة', 'من 4 العصر لين 10 الليل']],
+      room: ['التشكيلة كاملة', 'تعديلات على طول وأنت تنتظر', 'راك الأرشيف في آخر الصالة', 'تصليح بسعر التكلفة لأي قطعة من ميرت'],
+      image: { src: 'campaign-studio', width: 1400, height: 1750, alt: 'مودل ببدلة فاتحة جالسة على كرسي حديد في استوديو أبيض، أبيض وأسود', position: '50% 30%', sizes: IMG_SIZES },
+      cta: { label: 'راسل الفرع الرئيسي', href: '/contact' },
     },
     {
       id: 'jeddah',
       city: 'جدة',
       kind: 'المشغل',
-      when: 'بموعد مسبق',
+      when: 'بموعد',
       dark: true,
       address: ['حي الروضة', 'جدة 23434'],
-      hours: [['من الأحد إلى الخميس', 'بموعد مسبق']],
-      room: ['البروفات والقياسات', 'خياطة حسب المقاس', 'ساعة واحدة في كل مرة، تُحجز كتابيًا'],
-      image: { src: 'cat-tailoring', width: 1400, height: 1750, alt: 'عارضة ببدلة بيضاء مفصّلة أمام جدار رمادي، بالأبيض والأسود', position: '50% 30%', sizes: IMG_SIZES },
-      cta: { label: 'راسلنا لحجز ساعة', href: '/contact' },
+      hours: [['من الأحد للخميس', 'بموعد']],
+      room: ['البروفات والمقاسات', 'تفصيل على مقاسك', 'ساعة وحدة كل مرة، تحجزها برسالة'],
+      image: { src: 'cat-tailoring', width: 1400, height: 1750, alt: 'مودل ببدلة بيضاء مفصّلة قدام جدار رمادي، أبيض وأسود', position: '50% 30%', sizes: IMG_SIZES },
+      cta: { label: 'راسلنا واحجز ساعة', href: '/contact' },
     },
   ],
 };
 
 const STOCKISTS = {
   en: ['Dubai', 'Kuwait City', 'Beirut'],
-  ar: ['دبي', 'مدينة الكويت', 'بيروت'],
+  ar: ['دبي', 'الكويت', 'بيروت'],
 };
 
 const ARROW = 'h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1';
@@ -108,11 +108,11 @@ export default async function StoresPage() {
     <>
       <section className="page pt-(--nav-h)" aria-labelledby="stores-title">
         <div className="flex items-baseline justify-between gap-6 pt-[clamp(2.5rem,1.25rem+5.5vw,7.5rem)]">
-          <p className="label" data-reveal>{ar ? 'المتاجر' : 'Stores'}</p>
-          <p className="label-sm nums text-mute" data-reveal>{ar ? '02 صالتان' : '02 rooms'}</p>
+          <p className="label" data-reveal>{ar ? 'فروعنا' : 'Stores'}</p>
+          <p className="label-sm nums text-mute" data-reveal>{ar ? '02 صالتين' : '02 rooms'}</p>
         </div>
         <h1 id="stores-title" className={cn('mt-[clamp(1.5rem,0.75rem+3vw,4rem)] text-[clamp(3.5rem,0.75rem+11.5vw,13.5rem)] font-semibold leading-[0.84] tracking-[-0.06em]', LINE_ROOM)}>
-          <Lines text={ar ? 'صالتان.' : 'Two rooms.'} />
+          <Lines text={ar ? 'صالتين.' : 'Two rooms.'} />
         </h1>
         <div className="grid-page mt-[clamp(2rem,1rem+3.5vw,4.5rem)]">
           <p
@@ -120,12 +120,12 @@ export default async function StoresPage() {
             data-reveal
           >
             {ar
-              ? 'كل شيء يُباع هنا وفي صالتين. وكلتاهما مُتخيَّلة، شأنهما شأن بقية هذا الموقع.'
+              ? 'كل شي ينباع هنا وفي صالتين. والثنتين من الخيال، زي باقي الموقع.'
               : 'Everything is sold here and in two rooms. Both are invented, along with the rest of this site.'}
           </p>
         </div>
 
-        <nav aria-label={ar ? 'الصالتان' : 'Rooms'} className="mt-[clamp(2.5rem,1.5rem+4vw,6rem)]">
+        <nav aria-label={ar ? 'الصالتين' : 'Rooms'} className="mt-[clamp(2.5rem,1.5rem+4vw,6rem)]">
           <ul className="grid grid-cols-2 gap-x-(--gutter)">
             {rooms.map((r, i) => (
               <li key={r.id} className="border-t border-ink" data-reveal>
@@ -223,15 +223,15 @@ export default async function StoresPage() {
       </div>
 
       <section className="page section-y" aria-labelledby="stockists-title">
-        <SectionHead index={3} title={ar ? 'نقاط البيع' : 'Stockists'} id="stockists-title" tone="ink" note={ar ? 'تشكيلة الفهرس فقط' : 'Index range only'} />
+        <SectionHead index={3} title={ar ? 'محلات تبيع لنا' : 'Stockists'} id="stockists-title" tone="ink" note={ar ? 'تشكيلة الفهرس بس' : 'Index range only'} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-8">
           <p className={cn('display-lg col-span-4 max-w-[15ch] md:col-span-6 lg:col-span-7', LINE_ROOM)}>
-            <Lines text={ar ? 'لا نبيع عبر المتاجر الكبرى.' : 'Not sold through department stores.'} />
+            <Lines text={ar ? 'ما نبيع في المولات الكبيرة.' : 'Not sold through department stores.'} />
           </p>
           <div className="col-span-4 self-end md:col-span-4 lg:col-span-4 lg:col-start-9" data-reveal>
             <p className="body-lg text-ink-3">
               {ar
-                ? 'تحمل قائمة قصيرة من المتاجر المستقلة تشكيلة الفهرس في دبي ومدينة الكويت وبيروت. راسلنا لمعرفة العناوين.'
+                ? 'فيه كم محل مستقل يبيع تشكيلة الفهرس في دبي والكويت وبيروت. راسلنا وناخذك للعناوين.'
                 : 'A short list of independent rooms carries the Index range in Dubai, Kuwait City and Beirut. Write to us for addresses.'}
             </p>
             <ul className="mt-6 border-t border-line">
@@ -240,7 +240,7 @@ export default async function StoresPage() {
               ))}
             </ul>
             <Link href="/contact" className="label group mt-8 inline-flex min-h-11 items-center gap-2">
-              {ar ? 'راسلنا لمعرفة العناوين' : 'Write for addresses'}
+              {ar ? 'راسلنا عشان العناوين' : 'Write for addresses'}
               <Icon name="arrowR" className={ARROW} />
             </Link>
           </div>

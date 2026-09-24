@@ -8,9 +8,9 @@ import { Icon } from '@/components/ui/Icon';
 export async function generateMetadata(): Promise<Metadata> {
   const ar = (await getLocale()) === 'ar';
   return {
-    title: ar ? 'إتمام الشراء' : 'Checkout',
+    title: ar ? 'كمّل الطلب' : 'Checkout',
     description: ar
-      ? 'ميرت موقع تصوّري. لا توجد بوابة دفع، ولا يمكن شراء أي شيء.'
+      ? 'ميرت موقع تجريبي. ما فيه بوابة دفع، وما تقدر تشتري شي.'
       : 'MERIT is a concept site. There is no payment processor, and nothing can be bought.',
     robots: { index: false, follow: false },
   };

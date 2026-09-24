@@ -99,9 +99,9 @@ export function SearchResults() {
   const nCollections = results.other.filter((h) => h.kind === 'collection').length;
   const nStories = results.other.filter((h) => h.kind === 'story').length;
   const tally = [
-    found.length ? countOf(found.length, locale, ['piece', 'pieces'], ['قطعة واحدة', 'قطعتان', 'قطع', 'قطعة']) : '',
-    nCollections ? countOf(nCollections, locale, ['collection', 'collections'], ['مجموعة واحدة', 'مجموعتان', 'مجموعات', 'مجموعة']) : '',
-    nStories ? countOf(nStories, locale, ['story', 'stories'], ['قصة واحدة', 'قصتان', 'قصص', 'قصة']) : '',
+    found.length ? countOf(found.length, locale, ['piece', 'pieces'], ['قطعة وحدة', 'قطعتين', 'قطع', 'قطعة']) : '',
+    nCollections ? countOf(nCollections, locale, ['collection', 'collections'], ['مجموعة وحدة', 'مجموعتين', 'مجموعات', 'مجموعة']) : '',
+    nStories ? countOf(nStories, locale, ['story', 'stories'], ['قصة وحدة', 'قصتين', 'قصص', 'قصة']) : '',
   ].filter(Boolean);
   const status = !term
     ? t('Pieces, collections and stories')

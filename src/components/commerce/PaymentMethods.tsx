@@ -24,7 +24,7 @@ export function PaymentMethods({ className, tone = 'ink' }: { className?: string
           </li>
         ))}
       </ul>
-      <p className={cn('label-sm', bone ? 'text-mute-ink' : 'text-mute')}>غير مفعّلة — موقع تصوّري</p>
+      <p className={cn('label-sm', bone ? 'text-mute-ink' : 'text-mute')}>مو مفعّلة — موقع تجريبي</p>
     </div>
   );
 }

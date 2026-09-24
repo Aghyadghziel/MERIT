@@ -8,7 +8,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'دليل المقاسات' : 'Size guide',
     description: ar
-      ? 'قياسات ميرت للنساء والرجال والبناطيل والأحذية، بالسنتيمتر والإنش.'
+      ? 'مقاسات ميرت للنساء والرجال والبناطيل والأحذية، بالسنتي والإنش.'
       : 'MERIT measurements for women, men, trousers and footwear, in centimetres and inches.',
     alternates: { canonical: ar ? '/ar/size-guide' : '/size-guide', languages: { en: '/size-guide', ar: '/ar/size-guide' } },
   };
@@ -20,7 +20,7 @@ const HEAD = {
   men: { en: ['Size', 'Chest', 'Waist', 'Neck', 'UK / US', 'EU'], ar: ['المقاس', 'الصدر', 'الخصر', 'الرقبة', 'UK / US', 'EU'] },
   trousers: {
     en: ['Waist size', 'Waist', 'Hip', 'Inside leg', 'Leg opening'],
-    ar: ['مقاس الخصر', 'الخصر', 'الورك', 'طول الساق الداخلي', 'فتحة الساق'],
+    ar: ['مقاس الخصر', 'الخصر', 'الورك', 'طول الرجل من الداخل', 'فتحة الرجل'],
   },
 };
 
@@ -70,10 +70,10 @@ const MEASURE = {
     ['Inside leg', 'From the crotch seam of a trouser that fits you, down the inside of the leg to the hem.'],
   ],
   ar: [
-    ['الصدر', 'حول أعرض جزء منه، مع إبقاء الشريط مستويًا تحت الإبطين والذراعين إلى الأسفل.'],
-    ['الخصر', 'عند أضيق جزء، وغالبًا فوق السُّرّة مباشرة. لا تشدّ الشريط.'],
-    ['الورك', 'حول أعرض جزء منه، على بُعد عشرين سنتيمترًا تقريبًا أسفل الخصر.'],
-    ['طول الساق الداخلي', 'من درزة المنشعب في بنطال يناسبك، نزولًا على الجانب الداخلي للساق حتى الحاشية.'],
+    ['الصدر', 'حول أعرض مكان فيه، وخلّ الشريط مستوي تحت الإبط ويدينك نازلة.'],
+    ['الخصر', 'عند أضيق مكان، وغالبًا فوق السرة على طول. لا تشد الشريط.'],
+    ['الورك', 'حول أعرض مكان فيه، تقريبًا عشرين سنتي تحت الخصر.'],
+    ['طول الرجل من الداخل', 'من درزة الوسط في بنطلون جاي عليك، نازل على الجهة الداخلية للرجل لين الطرف.'],
   ],
 };
 
@@ -120,7 +120,7 @@ export default async function SizeGuidePage() {
     <TextPage
       eyebrow={l('Measurements', 'القياسات')}
       title={l('Size guide.', 'دليل المقاسات.')}
-      standfirst={l('Every figure below is taken from the finished garment, not from a body.', 'كل رقم أدناه مأخوذ من القطعة بعد اكتمالها، لا من الجسم.')}
+      standfirst={l('Every figure below is taken from the finished garment, not from a body.', 'كل رقم تحت مأخوذ من القطعة بعد ما خلصت، مو من الجسم.')}
       toc={[
         { id: 'women', label: l('Women', 'النساء') },
         { id: 'men', label: l('Men', 'الرجال') },
@@ -130,15 +130,15 @@ export default async function SizeGuidePage() {
       ]}
       aside={<Units ar={ar} />}
     >
-      <Table ar={ar} id="women" title={l('Women', 'النساء')} caption={l('Ready to wear, sizes XS to XL.', 'ملابس جاهزة، من XS إلى XL.')} chart={{ ...WOMEN, head: HEAD.women[locale] }} />
-      <Table ar={ar} id="men" title={l('Men', 'الرجال')} caption={l('Tailoring and outerwear, sizes 44 to 52.', 'الخياطة والمعاطف، من 44 إلى 52.')} chart={{ ...MEN, head: HEAD.men[locale] }} />
+      <Table ar={ar} id="women" title={l('Women', 'النساء')} caption={l('Ready to wear, sizes XS to XL.', 'ملابس جاهزة، من XS لين XL.')} chart={{ ...WOMEN, head: HEAD.women[locale] }} />
+      <Table ar={ar} id="men" title={l('Men', 'الرجال')} caption={l('Tailoring and outerwear, sizes 44 to 52.', 'التفصيل والمعاطف، من 44 لين 52.')} chart={{ ...MEN, head: HEAD.men[locale] }} />
       <Table
         ar={ar}
         id="trousers"
         title={l('Trousers', 'البناطيل')}
         caption={l(
           'Waist sizes are in inches, taken from the finished waistband. Inside leg is before any alteration.',
-          'مقاسات الخصر بالإنش، مأخوذة من حزام الخصر النهائي. وطول الساق الداخلي قبل أي تعديل.',
+          'مقاسات الخصر بالإنش، مأخوذة من الحزام بعد ما خلص. وطول الرجل من الداخل قبل أي تعديل.',
         )}
         chart={{ ...TROUSERS, head: HEAD.trousers[locale] }}
       />
@@ -147,7 +147,7 @@ export default async function SizeGuidePage() {
         <p>
           {l(
             'Sized in EU, running true on a standard width. The Pivot mule is cut on a square last and reads a half size small across the toe; take the next size up if your foot is wide. The Plinth derby runs true.',
-            'المقاسات بالنظام الأوروبي (EU)، ومطابقة للمقاس المعتاد على عرض قياسي. حذاء ارتكاز المفتوح من الخلف مصنوع على قالب مربّع، ويأتي أصغر بنصف مقاس عند مقدّمة القدم؛ اختر المقاس التالي إن كانت قدمك عريضة. أما حذاء قاعدة من طراز ديربي فمطابق للمقاس.',
+            'المقاسات أوروبية (EU)، ومقاسك العادي على عرض عادي. حذاء ارتكاز المفتوح من ورا مسوّى على قالب مربّع، ويجي أصغر بنص مقاس عند مقدمة الرجل، فإذا رجلك عريضة خذ المقاس اللي بعده. أما حذاء قاعدة الديربي فمقاسك نفسه.',
           )}
         </p>
       </Section>
@@ -165,9 +165,9 @@ export default async function SizeGuidePage() {
         <p className="mt-8 max-w-[56ch] text-sm leading-relaxed text-mute">
           {ar ? (
             <>
-              بين مقاسين، أو غير متأكد من قطعة بعينها؟{' '}
-              <Link href="/contact" className="link-rule text-ink">راسل خدمة العملاء</Link> بقياساتك واسم
-              القطعة، وسنخبرك بالمقاس المناسب.
+              محتار بين مقاسين، أو مو متأكد من قطعة معيّنة؟{' '}
+              <Link href="/contact" className="link-rule text-ink">راسل خدمة العملاء</Link> بمقاساتك واسم
+              القطعة، ونقول لك وش المقاس اللي يناسبك.
             </>
           ) : (
             <>
@@ -188,7 +188,7 @@ function Table({ ar, id, title, caption, chart }: { ar: boolean; id: string; tit
     <Section id={id} title={title} plain>
       <p className="-mt-4 mb-6 max-w-[56ch] text-sm leading-relaxed text-mute">
         {ar ? (
-          <>{caption} القياسات أدناه بـ<span className={CM}>السنتيمتر</span><span className={IN}>الإنش</span>.</>
+          <>{caption} المقاسات تحت بـ<span className={CM}>السنتي</span><span className={IN}>الإنش</span>.</>
         ) : (
           <>{caption} The measurements below are in <span className={CM}>centimetres</span><span className={IN}>inches</span>.</>
         )}
@@ -238,7 +238,7 @@ function Table({ ar, id, title, caption, chart }: { ar: boolean; id: string; tit
           </tbody>
         </table>
       </div>
-      <p className="label-sm mt-3 text-mute md:hidden">{ar ? 'اسحب الجدول لرؤية كل الأعمدة' : 'Swipe the table for every column'}</p>
+      <p className="label-sm mt-3 text-mute md:hidden">{ar ? 'اسحب الجدول عشان تشوف كل الأعمدة' : 'Swipe the table for every column'}</p>
     </Section>
   );
 }

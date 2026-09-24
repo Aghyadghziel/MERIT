@@ -159,7 +159,7 @@ const shopMenu = (gender: 'women' | 'men', base: string, t: T, locale: Locale): 
     },
     viewAll: { label: t(women ? "View all women's" : "View all men's"), href: base },
     note: t(women ? '{n} pieces, women and unisex' : '{n} pieces, men and unisex', {
-      n: countOf(pieces, locale, ['', ''], ['قطعة واحدة', 'قطعتان', 'قطع', 'قطعة']).trim(),
+      n: countOf(pieces, locale, ['', ''], ['قطعة وحدة', 'قطعتين', 'قطع', 'قطعة']).trim(),
     }),
   };
 };

@@ -9,9 +9,9 @@ import { BRAND } from '@/lib/brand';
 export async function generateMetadata(): Promise<Metadata> {
   const ar = (await getLocale()) === 'ar';
   return {
-    title: ar ? 'تواصل معنا' : 'Contact',
+    title: ar ? 'كلّمنا' : 'Contact',
     description: ar
-      ? 'راسل ميرت بخصوص طلب أو تعديل أو موعد في الرياض أو جدة.'
+      ? 'راسل ميرت عن طلب أو تعديل أو موعد في الرياض أو جدة.'
       : 'Write to MERIT about an order, an alteration, or an appointment in Riyadh or Jeddah.',
     alternates: { canonical: ar ? '/ar/contact' : '/contact', languages: { en: '/contact', ar: '/ar/contact' } },
   };
@@ -25,10 +25,10 @@ const BEFORE = {
     { label: 'Stores', note: 'The Riyadh flagship and the Jeddah atelier', href: '/stores' },
   ],
   ar: [
-    { label: 'الأسئلة الشائعة', note: 'المقاسات والتوصيل والإرجاع والعناية', href: '/faq' },
-    { label: 'الشحن والإرجاع', note: 'المُدد والتكاليف ومهلة الثلاثين يومًا', href: '/shipping-returns' },
-    { label: 'دليل المقاسات', note: 'القياسات النهائية، بالسنتيمتر أو الإنش', href: '/size-guide' },
-    { label: 'المتاجر', note: 'المتجر الرئيسي في الرياض ومشغل جدة', href: '/stores' },
+    { label: 'أسئلة تتكرر', note: 'المقاسات والتوصيل والإرجاع والعناية', href: '/faq' },
+    { label: 'الشحن والإرجاع', note: 'المدة والتكلفة، والإرجاع خلال ثلاثين يوم', href: '/shipping-returns' },
+    { label: 'دليل المقاسات', note: 'المقاسات النهائية، بالسنتي أو الإنش', href: '/size-guide' },
+    { label: 'فروعنا', note: 'الفرع الرئيسي في الرياض ومشغل جدة', href: '/stores' },
   ],
 };
 
@@ -42,18 +42,18 @@ export default async function ContactPage() {
       eyebrow={ar ? 'خدمة العملاء' : 'Client care'}
       title={ar ? 'راسلنا.' : 'Write to us.'}
       standfirst={ar
-        ? 'شخص واحد يقرأ كل ما يصل إلى هنا، ويردّ خلال يوم عمل.'
+        ? 'شخص واحد يقرأ كل شي يوصل هنا، ويرد خلال يوم عمل.'
         : 'One person reads everything that arrives here and answers within a working day.'}
       aside={
         <dl className="grid grid-cols-1 gap-x-(--gutter) gap-y-8 border-t border-ink pt-6 sm:grid-cols-2 lg:grid-cols-1 lg:border-0 lg:pt-0">
           <div>
-            <dt className="label-sm text-mute">{ar ? 'البريد الإلكتروني' : 'Email'}</dt>
+            <dt className="label-sm text-mute">{ar ? 'الإيميل' : 'Email'}</dt>
             <dd className={VALUE}>
               <a href={`mailto:${BRAND.email}`} className="link-rule break-all">{BRAND.email}</a>
             </dd>
           </div>
           <div>
-            <dt className="label-sm text-mute">{ar ? 'الهاتف' : 'Telephone'}</dt>
+            <dt className="label-sm text-mute">{ar ? 'الجوال' : 'Telephone'}</dt>
             <dd className={`${VALUE} nums`}><span dir="ltr">{BRAND.phone}</span></dd>
           </div>
           {/* On the Arabic site, WhatsApp: how a Saudi customer reaches a shop.
@@ -63,15 +63,15 @@ export default async function ContactPage() {
               <dt className="label-sm text-mute">واتساب</dt>
               <dd className={VALUE}>
                 على الرقم نفسه
-                <span className="block text-mute">رقم تجريبي، لا يستقبل رسائل</span>
+                <span className="block text-mute">رقم تجريبي، ما يستقبل رسايل</span>
               </dd>
             </div>
           ) : null}
           <div>
-            <dt className="label-sm text-mute">{ar ? 'ساعات العمل' : 'Hours'}</dt>
+            <dt className="label-sm text-mute">{ar ? 'أوقات الدوام' : 'Hours'}</dt>
             <dd className={VALUE}>
-              {ar ? 'من الأحد إلى الخميس' : 'Sunday to Thursday'}
-              <span className="nums block text-mute">{ar ? 'من 9 صباحًا إلى 6 مساءً بتوقيت السعودية' : '09:00 — 18:00 AST'}</span>
+              {ar ? 'من الأحد للخميس' : 'Sunday to Thursday'}
+              <span className="nums block text-mute">{ar ? 'من 9 الصبح لين 6 المغرب بتوقيت السعودية' : '09:00 — 18:00 AST'}</span>
             </dd>
           </div>
           <div>
@@ -85,7 +85,7 @@ export default async function ContactPage() {
             <dd className="mt-2 max-w-[30ch] text-sm leading-relaxed text-mute">
               {ar ? (
                 <>
-                  تُحجز البروفات في مشغل جدة كتابيًا — اختر «موعد» في النموذج.{' '}
+                  البروفات في مشغل جدة تنحجز برسالة — اختر «موعد» في النموذج.{' '}
                   <Link href="/stores#jeddah" className="link-rule text-ink">المشغل</Link>
                 </>
               ) : (
@@ -103,7 +103,7 @@ export default async function ContactPage() {
       <ContactForm />
 
       <nav aria-labelledby="before-title" className="mt-[clamp(4rem,2.5rem+5vw,8rem)]">
-        <p id="before-title" className="label-sm text-mute" data-reveal>{ar ? 'قبل أن تكتب' : 'Before you write'}</p>
+        <p id="before-title" className="label-sm text-mute" data-reveal>{ar ? 'قبل ما تكتب' : 'Before you write'}</p>
         <ul className="mt-4 border-t border-ink">
           {BEFORE[locale].map((b) => (
             <li key={b.href} className="border-b border-line" data-reveal>

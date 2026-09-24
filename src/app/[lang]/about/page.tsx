@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'عن الدار' : 'About',
     description: ar
-      ? 'ميرت علامة أزياء معاصرة من الرياض، تصنع الخياطة والمعاطف والتريكو بكميات قليلة.'
+      ? 'ميرت علامة أزياء معاصرة من الرياض، تسوّي التفصيل والمعاطف والتريكو بكميات قليلة.'
       : 'MERIT is a contemporary fashion label based in Riyadh, making tailoring, outerwear and knitwear in small counts.',
     alternates: { canonical: ar ? '/ar/about' : '/about', languages: { en: '/about', ar: '/ar/about' } },
   };
@@ -28,20 +28,20 @@ const L = (ar: boolean) => (p: Pair) => (ar ? p.ar : p.en);
 const FACTS: [Pair, Pair][] = [
   [{ en: 'Founded', ar: 'التأسيس' }, { en: `${BRAND.founded}, ${BRAND.city}`, ar: `${BRAND.founded}، الرياض` }],
   [{ en: 'Made in', ar: 'بلد الصنع' }, { en: 'Italy, Portugal, Scotland', ar: 'إيطاليا، البرتغال، اسكتلندا' }],
-  [{ en: 'Collections a year', ar: 'المجموعات في السنة' }, { en: 'Two, plus a permanent range', ar: 'مجموعتان، إلى جانب تشكيلة دائمة' }],
-  [{ en: 'Sold', ar: 'البيع' }, { en: 'Directly, and in two rooms', ar: 'مباشرةً، وفي صالتين' }],
+  [{ en: 'Collections a year', ar: 'المجموعات في السنة' }, { en: 'Two, plus a permanent range', ar: 'مجموعتين، ومعها تشكيلة ثابتة' }],
+  [{ en: 'Sold', ar: 'البيع' }, { en: 'Directly, and in two rooms', ar: 'مباشر، وفي صالتين' }],
 ];
 
 const PROPORTION: [Pair, Pair][] = [
-  [{ en: 'Jacket', ar: 'السترة' }, { en: 'Drawn to end where the trouser reads best.', ar: 'تُرسَم لتنتهي حيث يبدو البنطال في أحسن حالاته.' }],
-  [{ en: 'Knit', ar: 'التريكو' }, { en: 'Cut to sit over its waistband.', ar: 'يُقصّ ليستقر فوق حزام خصر البنطال.' }],
-  [{ en: 'Coat', ar: 'المعطف' }, { en: 'Long enough to cover both.', ar: 'طويل بما يكفي ليغطيهما معًا.' }],
+  [{ en: 'Jacket', ar: 'الجاكيت' }, { en: 'Drawn to end where the trouser reads best.', ar: 'يوقف عند المكان اللي يطلع فيه البنطلون أحلى شي.' }],
+  [{ en: 'Knit', ar: 'التريكو' }, { en: 'Cut to sit over its waistband.', ar: 'مقصوص يجلس فوق حزام البنطلون.' }],
+  [{ en: 'Coat', ar: 'المعطف' }, { en: 'Long enough to cover both.', ar: 'طويل لين يغطي الثنين.' }],
 ];
 
 const SEASON_OF: Record<string, Pair> = {
   foundation: { en: 'Autumn', ar: 'الخريف' },
   atrium: { en: 'Spring', ar: 'الربيع' },
-  index: { en: 'Permanent', ar: 'دائمة' },
+  index: { en: 'Permanent', ar: 'ثابتة' },
 };
 const SEASONS = collections.filter((c) => c.slug in SEASON_OF);
 
@@ -49,39 +49,39 @@ const MAKERS = [
   {
     key: 'biella',
     place: { en: 'Biella', ar: 'بييلا' }, country: { en: 'Italy', ar: 'إيطاليا' },
-    what: { en: 'Tailoring and trousers', ar: 'الخياطة والبناطيل' },
-    detail: { en: 'Made outside the town, in a factory of thirty-one people.', ar: 'تُصنع خارج البلدة، في مصنع يعمل فيه واحد وثلاثون شخصًا.' },
-    img: 'material-wool', alt: { en: 'Grey-green wool cloth, close up', ar: 'قماش صوف رمادي مخضرّ، عن قرب' },
+    what: { en: 'Tailoring and trousers', ar: 'التفصيل والبناطيل' },
+    detail: { en: 'Made outside the town, in a factory of thirty-one people.', ar: 'تنصنع برا البلدة، في مصنع فيه واحد وثلاثين شخص.' },
+    img: 'material-wool', alt: { en: 'Grey-green wool cloth, close up', ar: 'قماش صوف رمادي مخضّر، من قريب' },
   },
   {
     key: 'portugal',
     place: { en: 'Portugal', ar: 'البرتغال' }, country: { en: 'Portugal', ar: 'البرتغال' },
     what: { en: 'Outerwear and shirting', ar: 'المعاطف والقمصان' },
-    detail: { en: 'Made in the north of the country.', ar: 'تُصنع في شمال البلاد.' },
-    img: 'material-linen', alt: { en: 'Undyed linen cloth, close up', ar: 'قماش كتان غير مصبوغ، عن قرب' },
+    detail: { en: 'Made in the north of the country.', ar: 'تنصنع في شمال البرتغال.' },
+    img: 'material-linen', alt: { en: 'Undyed linen cloth, close up', ar: 'قماش كتان بدون صبغ، من قريب' },
   },
   {
     key: 'hawick',
     place: { en: 'Hawick', ar: 'هاويك' }, country: { en: 'Scotland', ar: 'اسكتلندا' },
     what: { en: 'Knitwear', ar: 'التريكو' },
-    detail: { en: 'Framed in Hawick, in the Scottish Borders.', ar: 'يُحاك على الأنوال في هاويك، في منطقة الحدود الاسكتلندية.' },
-    img: 'material-fold', alt: { en: 'Black cloth folded on white', ar: 'قماش أسود مطويّ على خلفية بيضاء' },
+    detail: { en: 'Framed in Hawick, in the Scottish Borders.', ar: 'ينحاك على الأنوال في هاويك، على الحدود الاسكتلندية.' },
+    img: 'material-fold', alt: { en: 'Black cloth folded on white', ar: 'قماش أسود مطوي على خلفية بيضاء' },
   },
 ] as const;
 
 /** Struck through on the page; a screen reader hears the "No" in front. The
     Arabic reads as لا + an indefinite noun: "no mid-season markdowns". */
 const REFUSALS: Pair[] = [
-  { en: 'Mid-season markdowns.', ar: 'تخفيضات في منتصف الموسم.' },
+  { en: 'Mid-season markdowns.', ar: 'تخفيضات نص الموسم.' },
   { en: 'Fabricated scarcity.', ar: 'ندرة مصطنعة.' },
-  { en: 'Discount codes for an email address.', ar: 'رموز خصم مقابل عنوان بريد إلكتروني.' },
+  { en: 'Discount codes for an email address.', ar: 'أكواد خصم مقابل إيميلك.' },
 ];
 
 const ARROW = 'h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1';
 
 const BASTED_ALT: Pair = {
   en: "A navy jacket basted in white thread on a tailor's stand, a houndstooth waistcoat hanging behind it",
-  ar: 'سترة كحلية مسرّجة بخيط أبيض على مجسّم خيّاط، وخلفها صديري بنقشة هاوندستوث معلّق',
+  ar: 'جاكيت كحلي مسرّج بخيط أبيض على مانيكان خيّاط، ووراه صديري هاوندستوث معلّق',
 };
 
 /**
@@ -100,7 +100,7 @@ export default async function AboutPage() {
         <div className="page pt-[clamp(1.75rem,0.75rem+3.5vw,4.5rem)]">
           <div className="flex items-baseline justify-between gap-6">
             <p className="label" data-reveal>{ar ? 'الدار' : 'The house'}</p>
-            <p className="label nums" data-reveal>{ar ? `الرياض — منذ ${BRAND.founded}` : `${BRAND.city} — since ${BRAND.founded}`}</p>
+            <p className="label nums" data-reveal>{ar ? `الرياض — من ${BRAND.founded}` : `${BRAND.city} — since ${BRAND.founded}`}</p>
           </div>
 
           {/* A runway frame, graded to the house greys: the dark crowd fills
@@ -118,9 +118,9 @@ export default async function AboutPage() {
             id="about-title"
             className={`mt-[clamp(1.75rem,1rem+3vw,4rem)] text-[clamp(2.75rem,0.9rem+7.4vw,9rem)] font-semibold leading-[0.88] tracking-[-0.055em] ${LINE_ROOM}`}
           >
-            <span className="block"><Lines text={ar ? 'بنية هادئة،' : 'Quiet structure,'} /></span>
+            <span className="block"><Lines text={ar ? 'قَصّة هادية،' : 'Quiet structure,'} /></span>
             <Drift from={12} to={0} start="top 80%" end="bottom 10%" className="md:whitespace-nowrap">
-              <Lines text={ar ? 'وحركة معبّرة.' : 'expressive movement.'} />
+              <Lines text={ar ? 'وحركة تتكلّم.' : 'expressive movement.'} />
             </Drift>
           </h1>
         </div>
@@ -134,7 +134,7 @@ export default async function AboutPage() {
           data-reveal
         >
           {ar
-            ? 'تصنع ميرت أشياء قليلة، وتواصل صنعها طويلًا. تبقى البنية ثابتة كي يتحرك القماش.'
+            ? 'ميرت تسوّي أشياء قليلة، وتكمّل تسوّيها سنين. القَصّة تبقى ثابتة عشان القماش يتحرك.'
             : 'MERIT makes a small number of things and makes them for a long time. The structure stays still so the cloth can move.'}
         </p>
 
@@ -170,9 +170,9 @@ export default async function AboutPage() {
           />
         </Unfold>
         <figcaption className="page mt-4 flex flex-col gap-3 sm:flex-row sm:items-baseline sm:justify-between">
-          <span className="label-sm text-mute">{ar ? 'سترة مسطرة مسرّجةً، قبل نزع الخيط الأبيض' : 'The Rule jacket, basted, before the white thread comes out'}</span>
+          <span className="label-sm text-mute">{ar ? 'جاكيت مسطرة مسرّج، قبل ما ينشال الخيط الأبيض' : 'The Rule jacket, basted, before the white thread comes out'}</span>
           <Link href="/editorial/on-making-the-basted-jacket" className="label group inline-flex min-h-11 items-center gap-2 sm:-my-3.5">
-            {ar ? 'عن صنع السترة المسرّجة' : 'On making the basted jacket'}
+            {ar ? 'كيف نسوّي الجاكيت المسرّج' : 'On making the basted jacket'}
             <Icon name="arrowR" className={ARROW} />
           </Link>
         </figcaption>
@@ -180,15 +180,15 @@ export default async function AboutPage() {
 
       {/* ─── 01 The idea ───────────────────────────────────────────────── */}
       <section className="page section-y" aria-labelledby="ch-idea">
-        <SectionHead index={1} title={ar ? 'الفكرة' : 'The idea'} id="ch-idea" tone="ink" note={ar ? `تأسست عام ${BRAND.founded}` : `Set up in ${BRAND.founded}`} />
+        <SectionHead index={1} title={ar ? 'الفكرة' : 'The idea'} id="ch-idea" tone="ink" note={ar ? `بدينا في ${BRAND.founded}` : `Set up in ${BRAND.founded}`} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-12">
           <p className={`display-lg col-span-4 max-w-[19ch] md:col-span-6 lg:col-span-10 ${LINE_ROOM}`}>
-            <Lines text={ar ? 'قصّات قليلة تُقصّ كما ينبغي، ويُعاد إصدارها بدل أن تُستبدَل.' : 'Cut a small number of shapes properly, and re-issue them rather than replace them.'} />
+            <Lines text={ar ? 'قَصّات قليلة نسوّيها صح، ونرجّعها بدل ما نبدّلها.' : 'Cut a small number of shapes properly, and re-issue them rather than replace them.'} />
           </p>
 
           <div className="col-span-4 md:col-span-3 lg:col-span-4 lg:mt-8">
             <div className="frame frame-1-1" data-reveal-img>
-              <Image src="/img/statement-detail.webp" alt={ar ? 'حزام صوف رمادي معقود عند خصر معطف، عن قرب' : 'A grey wool belt knotted at the waist of a coat, close up'} width={1400} height={1400} sizes="(min-width:1024px) 30vw, (min-width:768px) 48vw, 100vw" />
+              <Image src="/img/statement-detail.webp" alt={ar ? 'حزام صوف رمادي معقود على خصر معطف، من قريب' : 'A grey wool belt knotted at the waist of a coat, close up'} width={1400} height={1400} sizes="(min-width:1024px) 30vw, (min-width:768px) 48vw, 100vw" />
             </div>
           </div>
 
@@ -196,14 +196,14 @@ export default async function AboutPage() {
             {ar ? (
               <>
                 <p className="body-lg">
-                  تأسست ميرت عام {BRAND.founded} على يد قاطع باترونات ومشترٍ أمضيا عقدًا من الزمن يشاهدان
-                  القماش الجيد يتحوّل إلى ملابس لا تصمد أكثر من موسم واحد. وُجدت العلامة لتفعل العكس، انطلاقًا
-                  من قوالب باترونات خاصة بها.
+                  بدت ميرت في {BRAND.founded} على يد قاطع باترونات ومشتري، قعدوا عشر سنين يشوفون القماش
+                  الزين يتحوّل لملابس ما تكمّل أكثر من موسم. فجات العلامة عشان تسوّي العكس، وبدت من
+                  قوالب باترونات حقتها.
                 </p>
                 <p className="body-lg">
-                  شعار الدار: بنية هادئة، وحركة معبّرة. البنية هي الجزء الذي لا تراه — صدر مدعّم بالكانفاس،
-                  وحزام خصر مبطّن، وحاشية عميقة بما يكفي لتنسدل. أما الحركة فهي ما يفعله القماش حين تكفّ تلك
-                  البنية عن مقاومته.
+                  شعار الدار: قَصّة هادية، وحركة تتكلّم. القَصّة هي الشي اللي ما تشوفه — صدر مدعوم بالكانفاس،
+                  وحزام مبطّن، وطرف عميق يكفي إنه ينسدل. والحركة هي اللي يسوّيها القماش لما القَصّة تخليه
+                  على راحته.
                 </p>
               </>
             ) : (
@@ -226,22 +226,22 @@ export default async function AboutPage() {
 
       {/* ─── 02 How the range is built ─────────────────────────────────── */}
       <section className="page pb-(--section)" aria-labelledby="ch-range">
-        <SectionHead index={2} title={ar ? 'كيف تُبنى التشكيلة' : 'How the range is built'} id="ch-range" tone="ink" note={ar ? 'قطعة واحدة' : 'One garment'} />
+        <SectionHead index={2} title={ar ? 'كيف نبني التشكيلة' : 'How the range is built'} id="ch-range" tone="ink" note={ar ? 'قطعة وحدة' : 'One garment'} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-12">
           <figure className="col-span-4 md:col-span-3 lg:col-span-5">
             <div className="frame frame-4-5" data-reveal-img>
-              <Image src="/img/trouser-column-3.webp" alt={ar ? 'عارضة جالسة على كرسي خشبي عالٍ، ترتدي بنطالًا واسعًا بلون الحجر وقميصًا أبيض' : 'A model seated on a wooden stool in wide stone trousers and a white shirt'} width={1400} height={1750} sizes="(min-width:1024px) 40vw, (min-width:768px) 48vw, 100vw" />
+              <Image src="/img/trouser-column-3.webp" alt={ar ? 'مودل جالسة على كرسي خشب عالي، لابسة بنطلون واسع بلون الحجر وقميص أبيض' : 'A model seated on a wooden stool in wide stone trousers and a white shirt'} width={1400} height={1750} sizes="(min-width:1024px) 40vw, (min-width:768px) 48vw, 100vw" />
             </div>
-            <figcaption className="label-sm mt-3 text-mute">{ar ? 'بنطال عمود — القطعة التي تُقاس عليها التشكيلة كلها' : 'The Column trouser — the garment the range is measured against'}</figcaption>
+            <figcaption className="label-sm mt-3 text-mute">{ar ? 'بنطلون عمود — القطعة اللي نقيس عليها التشكيلة كلها' : 'The Column trouser — the garment the range is measured against'}</figcaption>
           </figure>
 
           <div className="col-span-4 md:col-span-3 lg:col-span-6 lg:col-start-7 lg:pt-4">
             <p className={`display-lg max-w-[14ch] ${LINE_ROOM}`}>
-              <Lines text={ar ? 'كل شيء يُقاس تناسبه على قطعة واحدة.' : 'Everything is proportioned against one garment.'} />
+              <Lines text={ar ? 'كل شي نقيسه على قطعة وحدة.' : 'Everything is proportioned against one garment.'} />
             </p>
             <p className="body-lg mt-6 max-w-[46ch] text-ink-3" data-reveal>
               {ar
-                ? 'بنطال عمود. كل قطعة أخرى تُرسَم نسبةً إليه، ولهذا تظهر التشكيلة في الصور تشكيلةً واحدة متماسكة.'
+                ? 'بنطلون عمود. كل قطعة ثانية نرسمها على قده، وعشان كذا التشكيلة تطلع في الصور كأنها قطعة وحدة.'
                 : 'The Column trouser. Every other piece is drawn in relation to it, which is why the range photographs as a range.'}
             </p>
             <dl className="mt-10 border-t border-ink">
@@ -256,7 +256,7 @@ export default async function AboutPage() {
         </div>
 
         <div className="mt-[clamp(4rem,2.5rem+5vw,8rem)]">
-          <p className="label text-mute" data-reveal>{ar ? 'موسمان، حول تشكيلة دائمة' : 'Two seasons, around a permanent range'}</p>
+          <p className="label text-mute" data-reveal>{ar ? 'موسمين، وبينهم تشكيلة ثابتة' : 'Two seasons, around a permanent range'}</p>
           <ul className="mt-5 grid grid-cols-1 gap-x-(--gutter) md:grid-cols-3">
             {SEASONS.map((c) => (
               <li key={c.slug} className="border-t border-ink" data-reveal>
@@ -269,7 +269,7 @@ export default async function AboutPage() {
                   <span className="mt-4 block max-w-[32ch] text-sm leading-relaxed text-mute">
                     {c.slug === 'index'
                       ? (ar
-                        ? 'تُقصّ من الباترونات نفسها كل عام، ولا تتغيّر إلا حين يكون فيها خطأ.'
+                        ? 'نقصّها من نفس الباترونات كل سنة، وما تتغيّر إلا إذا فيها غلط.'
                         : 'Cut from the same patterns every year, and changed only when something is wrong with it.')
                       : t(c.statement)}
                   </span>
@@ -282,14 +282,14 @@ export default async function AboutPage() {
 
       {/* ─── 03 Where things are made ──────────────────────────────────── */}
       <section className="page pb-(--section)" aria-labelledby="ch-made">
-        <SectionHead index={3} title={ar ? 'أين تُصنع القطع' : 'Where things are made'} id="ch-made" tone="ink" note={ar ? 'ثلاث دول' : 'Three countries'} />
+        <SectionHead index={3} title={ar ? 'وين تنصنع القطع' : 'Where things are made'} id="ch-made" tone="ink" note={ar ? 'ثلاث دول' : 'Three countries'} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] gap-y-8">
           <p className={`display-lg col-span-4 max-w-[13ch] md:col-span-4 lg:col-span-7 ${LINE_ROOM}`}>
-            <Lines text={ar ? 'الصناعة ليست سرًّا.' : 'The making is not a secret.'} />
+            <Lines text={ar ? 'الصنعة مو سر.' : 'The making is not a secret.'} />
           </p>
           <p className="body-lg col-span-4 max-w-[40ch] self-end text-ink-3 md:col-span-4 lg:col-span-4 lg:col-start-9" data-reveal>
             {ar
-              ? 'نزور كلًّا منها مرتين في السنة، ونذكر اسمه في صفحة كل منتج.'
+              ? 'نزور كل واحد منهم مرتين في السنة، ونكتب اسمه في صفحة كل قطعة.'
               : 'We visit each of them twice a year, and we name them on every product page.'}
           </p>
         </div>
@@ -325,11 +325,11 @@ export default async function AboutPage() {
         <div className="grid-page mt-[clamp(3.5rem,2rem+5vw,8rem)] gap-y-6">
           <p className="body-lg col-span-4 max-w-[34ch] text-ink-3 md:col-span-3 lg:col-span-4" data-reveal>
             {ar
-              ? 'الكميات صغيرة — معظم القطع تُقصّ بالمئات القليلة، وقطع العروض بالعشرات.'
+              ? 'الكميات صغيرة — أغلب القطع نقصّ منها كم مية، وقطع العروض بالعشرات.'
               : 'Counts are small — most pieces are cut in the low hundreds, runway pieces in the dozens.'}
           </p>
           <p className={`display-lg col-span-4 md:col-span-6 lg:col-span-8 lg:col-start-5 ${LINE_ROOM}`}>
-            <Lines text={ar ? 'حين تنفد الكمية، تنتهي.' : 'When a count is finished it is finished.'} />
+            <Lines text={ar ? 'إذا خلصت الكمية، خلصت.' : 'When a count is finished it is finished.'} />
           </p>
         </div>
       </section>
@@ -337,7 +337,7 @@ export default async function AboutPage() {
       {/* ─── 04 What we do not do — the graphite room ─────────────────── */}
       <section className="on-ink section-y bg-graphite text-bone" aria-labelledby="ch-not">
         <div className="page">
-          <SectionHead index={4} title={ar ? 'ما لا نفعله' : 'What we do not do'} id="ch-not" tone="ink" />
+          <SectionHead index={4} title={ar ? 'أشياء ما نسوّيها' : 'What we do not do'} id="ch-not" tone="ink" />
           <ul className="mt-[clamp(2.5rem,1.5rem+4vw,6rem)] space-y-[clamp(0.5rem,0.25rem+1vw,1.25rem)]">
             {REFUSALS.map((r) => (
               <li key={r.en} className="max-w-[16ch] text-[clamp(2.25rem,0.8rem+5.6vw,7.25rem)] font-semibold leading-[0.96] tracking-[-0.05em]" data-reveal>
@@ -349,7 +349,7 @@ export default async function AboutPage() {
           <div className="grid-page mt-[clamp(3rem,2rem+4vw,6rem)]">
             <p className="body-lg col-span-4 max-w-[44ch] text-bone/80 md:col-span-4 lg:col-span-5 lg:col-start-8" data-reveal>
               {ar
-                ? 'تُحدَّد الأسعار مرة واحدة وتبقى ثابتة طوال عمر القطعة، والتخفيض الوحيد هو الذي يأتي في نهاية الموسم.'
+                ? 'نحدد السعر مرة وحدة ويبقى ثابت طول عمر القطعة، والتخفيض الوحيد يجي في آخر الموسم.'
                 : 'Prices are set once and hold for the life of the piece, and the sale at the end of a season is the only one.'}
             </p>
           </div>
@@ -358,7 +358,7 @@ export default async function AboutPage() {
 
       {/* ─── 05 This site ──────────────────────────────────────────────── */}
       <section className="page section-y" aria-labelledby="ch-site">
-        <SectionHead index={5} title={ar ? 'هذا الموقع' : 'This site'} id="ch-site" tone="ink" note={ar ? 'مشروع تصوّري' : 'A concept'} />
+        <SectionHead index={5} title={ar ? 'هذا الموقع' : 'This site'} id="ch-site" tone="ink" note={ar ? 'مشروع تجريبي' : 'A concept'} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] items-start gap-y-10">
           <div className="col-span-2 md:col-span-2 lg:col-span-3" aria-hidden data-reveal-img>
             <div><Wordmark symbol className="h-auto w-full" /></div>
@@ -367,10 +367,10 @@ export default async function AboutPage() {
             <p className="text-[clamp(1.375rem,1rem+1.5vw,2.625rem)] font-medium leading-[1.14] tracking-[-0.03em]" data-reveal>
               {ar ? (
                 <>
-                  ميرت علامة خيالية، بُنيت لتوضيح ما يمكن أن يكون عليه متجر أزياء إلكتروني. القطع والمصانع
-                  والكميات والأسعار والمتاجر ومستويات المخزون هنا كلها مُختلَقة، والصور مؤقتة، ولا يمكن شراء
-                  أي شيء.{' '}
-                  <Link href="/stores" className="link-rule">والمتاجر</Link> غير موجودة هي الأخرى.
+                  ميرت علامة من الخيال، سوّيناها عشان نوري كيف ممكن يكون متجر أزياء أونلاين. القطع والمصانع
+                  والكميات والأسعار والفروع والمخزون كلها مو حقيقية، والصور مؤقتة، وما تقدر تشتري أي
+                  شي.{' '}
+                  <Link href="/stores" className="link-rule">والفروع</Link> بعد مو موجودة.
                 </>
               ) : (
                 <>
@@ -385,7 +385,7 @@ export default async function AboutPage() {
               <Link href="/collections" className="btn btn-solid">
                 {ar ? 'تصفّح المجموعات' : 'See the collections'} <Icon name="arrowR" className="h-3.5 w-3.5" />
               </Link>
-              <Link href="/stores" className="btn">{ar ? 'الصالتان' : 'The two rooms'}</Link>
+              <Link href="/stores" className="btn">{ar ? 'الصالتين' : 'The two rooms'}</Link>
             </div>
           </div>
         </div>

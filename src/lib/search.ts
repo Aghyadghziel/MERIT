@@ -16,7 +16,7 @@ export const SUGGESTED = [
  * The Arabic suggestions: the words an Arabic reader would type, not the
  * English ones translated. Any that finds nothing is dropped by the caller.
  */
-const SUGGESTED_AR = ['معطف', 'بليزر', 'بنطال واسع', 'كشمير', 'الأساس', 'العرض الأول'];
+const SUGGESTED_AR = ['معطف', 'بليزر', 'بنطلون واسع', 'كشمير', 'الأساس', 'العرض الأول'];
 
 export const suggestedFor = (locale: Locale) => (locale === 'ar' ? SUGGESTED_AR : SUGGESTED);
 

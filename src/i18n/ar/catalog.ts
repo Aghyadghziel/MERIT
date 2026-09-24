@@ -1,7 +1,7 @@
 /**
  * Arabic strings for the catalogue itself, keyed by the English source:
  * categories, colours, sizes, statuses, sort and price labels, seasons.
- * Any page can render these through t(). Story titles and collection
+ * Any page can render these through t(). Short labels, in white Saudi. Story titles and collection
  * statements belong to editorial.ts.
  */
 export const catalog: Record<string, string> = {
@@ -47,13 +47,13 @@ export const catalog: Record<string, string> = {
   // ─── Status ────────────────────────────────────────────────────────────
   New: 'جديد',
   Sale: 'تخفيض',
-  'Sold out': 'نفدت الكمية',
+  'Sold out': 'خلصت',
   Runway: 'عرض أزياء',
   Limited: 'إصدار محدود',
-  'Low stock': 'كمية محدودة',
-  'In stock': 'متوفّر',
+  'Low stock': 'باقي القليل',
+  'In stock': 'موجود',
   'On sale': 'مخفّض',
-  'Out of stock': 'غير متوفّر',
+  'Out of stock': 'خلصان',
 
   // ─── Who it is for ─────────────────────────────────────────────────────
   Women: 'النساء',
@@ -70,10 +70,10 @@ export const catalog: Record<string, string> = {
   'One size': 'مقاس واحد',
 
   // ─── Sort and price ────────────────────────────────────────────────────
-  Featured: 'المختارة',
+  Featured: 'اختياراتنا',
   Newest: 'الأحدث',
-  'Price, low to high': 'السعر: من الأقل إلى الأعلى',
-  'Price, high to low': 'السعر: من الأعلى إلى الأقل',
+  'Price, low to high': 'السعر: من الأرخص للأغلى',
+  'Price, high to low': 'السعر: من الأغلى للأرخص',
   'Under 1,000': 'أقل من 1,000',
   '1,000 – 2,500': 'من 1,000 إلى 2,500',
   '2,500 – 4,000': 'من 2,500 إلى 4,000',
@@ -88,7 +88,7 @@ export const catalog: Record<string, string> = {
   // ─── Seasons and kickers ───────────────────────────────────────────────
   'Autumn Winter': 'خريف وشتاء',
   'Spring Summer': 'ربيع وصيف',
-  Permanent: 'دائمة',
+  Permanent: 'ثابتة',
   Atelier: 'المشغل',
   Campaign: 'حملة',
   'Autumn Winter 2026': 'خريف وشتاء 2026',

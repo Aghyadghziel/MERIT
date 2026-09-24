@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     template: `%s — ${BRAND.name}`,
   },
   description: ar
-    ? 'ميرت علامة أزياء معاصرة من الرياض. خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة.'
+    ? 'ميرت علامة أزياء معاصرة من الرياض. تفصيل ومعاطف وتريكو نسوّيها بكميات قليلة ونبيعها مباشرة.'
     : 'MERIT is a contemporary fashion label based in Riyadh. Tailoring, outerwear and knitwear made in small counts, sold directly.',
   applicationName: BRAND.name,
   alternates: { canonical: ar ? '/ar' : '/', languages: { en: '/', ar: '/ar' } },
@@ -41,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
     siteName: BRAND.name,
     title: ar ? `${BRAND.name} — أزياء معاصرة من الرياض` : `${BRAND.name} — Contemporary fashion, Riyadh`,
     description: ar
-      ? 'خياطة ومعاطف وتريكو تُصنع بكميات قليلة وتُباع مباشرة من الرياض.'
+      ? 'تفصيل ومعاطف وتريكو بكميات قليلة، مباشرة من الرياض.'
       : 'Tailoring, outerwear and knitwear made in small counts, sold directly from Riyadh.',
     url: ar ? '/ar' : '/',
     locale: ar ? 'ar_SA' : 'en_SA',
@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
   twitter: {
     card: 'summary_large_image',
     title: ar ? `${BRAND.name} — أزياء معاصرة من الرياض` : `${BRAND.name} — Contemporary fashion, Riyadh`,
-    description: ar ? 'خياطة ومعاطف وتريكو تُصنع بكميات قليلة.' : 'Tailoring, outerwear and knitwear made in small counts.',
+    description: ar ? 'تفصيل ومعاطف وتريكو بكميات قليلة.' : 'Tailoring, outerwear and knitwear made in small counts.',
     images: ['/img/campaign-rule-line-wide.webp'],
   },
   robots: { index: true, follow: true },

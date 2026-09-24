@@ -25,13 +25,13 @@ export const lineKey = (l: Line) => `${l.slug}|${l.colour}|${l.size}`;
 
 /**
  * "1 piece", "3 pieces". Arabic counts in its own grammar: one and two are
- * words (قطعة واحدة، قطعتان), three to ten take the plural, eleven and up the
+ * words (قطعة وحدة، قطعتين), three to ten take the plural, eleven and up the
  * singular again.
  */
 export function countPieces(n: number, locale: Locale) {
   if (locale !== 'ar') return plural(n, 'piece');
-  if (n === 1) return 'قطعة واحدة';
-  if (n === 2) return 'قطعتان';
+  if (n === 1) return 'قطعة وحدة';
+  if (n === 2) return 'قطعتين';
   if (n >= 3 && n <= 10) return `${n} قطع`;
   return `${n} قطعة`;
 }

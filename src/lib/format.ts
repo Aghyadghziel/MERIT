@@ -30,21 +30,21 @@ export const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /**
  * Arabic counts take four forms: one and two are words of their own
- * ("قطعة واحدة", "قطعتان"), 3–10 take the plural, and 0 and 11 up take the
+ * ("قطعة وحدة", "قطعتين"), 3–10 take the plural, and 0 and 11 up take the
  * singular after the number. Keyed by the English singular passed to plural().
  */
 type ArCount = { one: string; two: string; few: string; many: string };
 const AR_COUNT: Record<string, ArCount> = {
-  piece: { one: 'قطعة واحدة', two: 'قطعتان', few: 'قطع', many: 'قطعة' },
-  collection: { one: 'مجموعة واحدة', two: 'مجموعتان', few: 'مجموعات', many: 'مجموعة' },
-  story: { one: 'قصة واحدة', two: 'قصتان', few: 'قصص', many: 'قصة' },
-  colour: { one: 'لون واحد', two: 'لونان', few: 'ألوان', many: 'لونًا' },
-  size: { one: 'مقاس واحد', two: 'مقاسان', few: 'مقاسات', many: 'مقاسًا' },
-  look: { one: 'إطلالة واحدة', two: 'إطلالتان', few: 'إطلالات', many: 'إطلالة' },
-  result: { one: 'نتيجة واحدة', two: 'نتيجتان', few: 'نتائج', many: 'نتيجة' },
-  item: { one: 'قطعة واحدة', two: 'قطعتان', few: 'قطع', many: 'قطعة' },
-  minute: { one: 'دقيقة واحدة', two: 'دقيقتان', few: 'دقائق', many: 'دقيقة' },
-  day: { one: 'يوم واحد', two: 'يومان', few: 'أيام', many: 'يومًا' },
+  piece: { one: 'قطعة وحدة', two: 'قطعتين', few: 'قطع', many: 'قطعة' },
+  collection: { one: 'مجموعة وحدة', two: 'مجموعتين', few: 'مجموعات', many: 'مجموعة' },
+  story: { one: 'قصة وحدة', two: 'قصتين', few: 'قصص', many: 'قصة' },
+  colour: { one: 'لون واحد', two: 'لونين', few: 'ألوان', many: 'لونًا' },
+  size: { one: 'مقاس واحد', two: 'مقاسين', few: 'مقاسات', many: 'مقاسًا' },
+  look: { one: 'إطلالة وحدة', two: 'إطلالتين', few: 'إطلالات', many: 'إطلالة' },
+  result: { one: 'نتيجة وحدة', two: 'نتيجتين', few: 'نتائج', many: 'نتيجة' },
+  item: { one: 'قطعة وحدة', two: 'قطعتين', few: 'قطع', many: 'قطعة' },
+  minute: { one: 'دقيقة وحدة', two: 'دقيقتين', few: 'دقايق', many: 'دقيقة' },
+  day: { one: 'يوم واحد', two: 'يومين', few: 'أيام', many: 'يومًا' },
 };
 
 export function pluralAr(n: number, f: ArCount) {

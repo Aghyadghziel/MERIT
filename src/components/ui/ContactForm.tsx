@@ -17,7 +17,7 @@ const MIN = 10;
 function characters(n: number, ar: boolean) {
   if (!ar) return `${n} ${n === 1 ? 'character' : 'characters'}`;
   if (n === 1) return 'حرف واحد';
-  if (n === 2) return 'حرفان';
+  if (n === 2) return 'حرفين';
   if (n % 100 >= 3 && n % 100 <= 10) return `${n} أحرف`;
   return `${n} ${n % 100 >= 11 ? 'حرفًا' : 'حرف'}`;
 }
@@ -150,7 +150,7 @@ export function ContactForm() {
         <p className="max-w-[38ch] text-xs leading-relaxed text-mute sm:text-end">
           {ar ? (
             <>
-              موقع تصوّري: يتحقق هذا النموذج مما تكتبه، ثم يخبرك صراحةً بأن شيئًا لم يُرسَل. راجع{' '}
+              موقع تجريبي: النموذج يتأكد من اللي تكتبه، وبعدين يقول لك بصراحة إن ما انرسل شي. شوف{' '}
               <Link href="/privacy" className="link-rule text-ink">سياسة الخصوصية</Link>.
             </>
           ) : (

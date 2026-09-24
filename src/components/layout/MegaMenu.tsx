@@ -25,7 +25,7 @@ type Props = {
 function caption(l: MenuLink, fallback: string, locale: Locale) {
   if (!l.meta) return fallback;
   if (!/^\d+$/.test(l.meta)) return l.meta;
-  return countOf(Number(l.meta), locale, ['piece', 'pieces'], ['قطعة واحدة', 'قطعتان', 'قطع', 'قطعة'], () => l.meta as string);
+  return countOf(Number(l.meta), locale, ['piece', 'pieces'], ['قطعة وحدة', 'قطعتين', 'قطع', 'قطعة'], () => l.meta as string);
 }
 
 const SHUT = 'inset(0% 0% 100% 0%)';

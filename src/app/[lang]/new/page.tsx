@@ -60,7 +60,7 @@ export default async function NewPage() {
       campaign={{
         image: 'campaign-rule-line-wide',
         tall: 'campaign-rule-line',
-        kicker: t('Autumn Winter 2026 — الأساس'),
+        kicker: t('Autumn Winter 2026 — Foundation'),
         alt: t(alt('campaign-rule-line-wide')),
       }}
       stories={[

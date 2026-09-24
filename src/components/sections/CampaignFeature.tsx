@@ -22,7 +22,7 @@ const WORD = cn(
 );
 
 /**
- * The Arabic name of the campaign, خطّ المسطرة, in Badeen Display. Arabic words are
+ * The Arabic name of the campaign, خطّ المسطرة, in Jomhuria. Arabic words are
  * wider than the four-letter Latin pair, so they are set a size down to keep
  * the same margin to the window, and at a line height that clears the dots.
  */

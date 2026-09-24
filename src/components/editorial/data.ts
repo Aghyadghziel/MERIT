@@ -98,19 +98,19 @@ const INK: Record<string, [left: number, right: number]> = {
 };
 
 /**
- * The same, for the Arabic words that stand as posters, in Badeen Display (the
- * Arabic poster face; Arabic is never tracked): where the first stroke starts
+ * The same, for the Arabic words that stand as posters, in Jomhuria (the
+ * Arabic display face, size-adjusted in lib/fonts.ts; Arabic is never tracked): where the first stroke starts
  * and the last one ends, measured from the right, since the word runs that way.
  */
 const INK_AR: Record<string, [start: number, end: number]> = {
   // The page names, as src/i18n/ar/editorial.ts gives them for Collections and Editorial.
-  'المجموعات': [0.01, 4.747],
-  'المجلة': [0.01, 2.708],
+  'المجموعات': [0.029, 4.371],
+  'المجلة': [0.029, 2.519],
   // The collections, by their Arabic names (src/i18n/ar/catalog.ts).
-  'الأساس': [0.01, 3.52],
-  'الفناء': [0.01, 2.459],
-  'الفهرس': [0.01, 3.489],
-  'العرض الأول': [0.01, 5.286],
+  'الأساس': [0.029, 2.654],
+  'الفناء': [0.029, 1.995],
+  'الفهرس': [0.029, 2.91],
+  'العرض الأول': [0.029, 4.659],
 };
 
 const ARABIC = /[\u0600-\u06FF]/;
@@ -136,9 +136,9 @@ export function posterFit(
   const untrack = arabic ? 0 : TRACK * Math.max(0, [...text].length - 1);
   const ink = arabic ? INK_AR[text] : INK[text.toUpperCase()];
   if (!ink) {
-    // An unmeasured Arabic word: Badeen averages about 0.6em a character.
+    // An unmeasured Arabic word: Jomhuria averages about 0.5em a character.
     const em = arabic
-      ? [...text].length * 0.6
+      ? [...text].length * 0.5
       : [...text.toUpperCase()].reduce((w, c) => w + (EM[c] ?? 0.62), 0) * 1.012;
     return { fontSize: size(em), flatSize: size(em + untrack), marginInlineStart: '0', dir };
   }

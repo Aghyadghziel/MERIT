@@ -601,26 +601,23 @@ html:lang(ar) {
   --font-editorial: var(--font-ar-editorial-stack), var(--font-ar-stack), Arial, serif;
 }
 /* Arabic display type. Latin headlines are the grotesk at 600–800; Arabic
-   ones get faces of their own, never the body face blown up.
-   Headlines: Alyamama, a sharp modern Arabic, at 800 for every heading and
-   inline size from 1.5rem, and at its full 900 for the large display
-   utilities and every clamp that starts at 2rem or more (attribute
-   prefixes 2–9 and 16).
-   Posters: Badeen Display, an ultra-black face that sits a word on one flat
-   line, like the poured logotype. Single words only — sentences in it close
-   up — so it is opt-in: .ar-poster (the marquee, the category index, the
-   campaign's name, collection names) and the one-word .display-poster. It
-   has one weight, and font-synthesis-weight is off, so nothing fakes it. */
+   ones are Jomhuria, never the body face blown up: tall, condensed, high
+   contrast, the look of an Arabic fashion-magazine cover. It is size-adjusted
+   in lib/fonts.ts, so it takes the same font-sizes as the Latin. It covers
+   every heading, the display utilities, every inline clamp that starts at
+   1.5rem or more (attribute prefixes 1.5–1.9, 2–9 and 16), and .ar-poster
+   (the marquee, the category index, the campaign's name, collection names).
+   It has one weight, and font-synthesis-weight is off, so nothing fakes it. */
 html:lang(ar) :is(h2, h3, .display, .display-md, .display-sm,
   [class*="text-[clamp(1.5"], [class*="text-[clamp(1.6"], [class*="text-[clamp(1.7"], [class*="text-[clamp(1.8"], [class*="text-[clamp(1.9"]) {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 400;
 }
 html:lang(ar) :is(h1, .display-xl, .display-lg,
   [class*="text-[clamp(2"], [class*="text-[clamp(3"], [class*="text-[clamp(4"], [class*="text-[clamp(5"],
   [class*="text-[clamp(6"], [class*="text-[clamp(7"], [class*="text-[clamp(8"], [class*="text-[clamp(9"], [class*="text-[clamp(16"]) {
   font-family: var(--font-display);
-  font-weight: 900;
+  font-weight: 400;
 }
 html:lang(ar) :is(.ar-poster, .display-poster) {
   font-family: var(--font-poster);

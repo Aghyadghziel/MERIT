@@ -10,7 +10,7 @@ import { MotionRoot } from '@/components/providers/Motion';
 import { StoreProvider } from '@/components/providers/Store';
 import { UiProvider } from '@/components/providers/Ui';
 import { BRAND } from '@/lib/brand';
-import { arabicDisplayStack, arabicEditorialStack, arabicStack, fontVariables } from '@/lib/fonts';
+import { arabicDisplayStack, arabicEditorialStack, arabicHeadStack, arabicStack, fontVariables } from '@/lib/fonts';
 import { LocaleProvider } from '@/i18n/client';
 import { dirOf, LOCALES } from '@/i18n/config';
 import { getLocale, getT } from '@/i18n/server';
@@ -108,6 +108,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       style={locale === 'ar' ? ({
         '--font-ar-stack': arabicStack,
         '--font-ar-display-stack': arabicDisplayStack,
+        '--font-ar-head-stack': arabicHeadStack,
         '--font-ar-editorial-stack': arabicEditorialStack,
       } as React.CSSProperties) : undefined}>
       <head>

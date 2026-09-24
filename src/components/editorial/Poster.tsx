@@ -28,7 +28,7 @@ export function Poster({ text, as: Tag = 'p', cap, className, id, reveal = true 
           stroke still lands on the left edge it was measured from. */}
       <span
         dir={dir}
-        className="block whitespace-nowrap text-(length:--poster) font-semibold uppercase leading-[0.8] tracking-[-0.055em] [&:lang(ar)]:text-(length:--poster-flat)"
+        className="ar-poster block whitespace-nowrap text-(length:--poster) font-semibold uppercase leading-[0.8] tracking-[-0.055em] [&:lang(ar)]:text-(length:--poster-flat)"
         style={style}
       >
         {reveal ? <Mask text={text} /> : text}

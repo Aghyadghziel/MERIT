@@ -53,7 +53,7 @@ export async function CollectionBand({ collection }: { collection: Collection })
               id="band-title"
               text={t(collection.name)}
               max={0.42}
-              className="-ms-[0.045em] text-[clamp(3.25rem,0.5rem+12vw,15rem)] font-semibold uppercase leading-[0.8] tracking-[-0.06em]"
+              className="ar-poster -ms-[0.045em] text-[clamp(3.25rem,0.5rem+12vw,15rem)] font-semibold uppercase leading-[0.8] tracking-[-0.06em]"
             />
           </div>
           <div className="mt-8 grid gap-6 md:mt-10 md:grid-cols-12 md:items-end md:gap-(--gutter)">

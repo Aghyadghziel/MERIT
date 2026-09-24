@@ -1,4 +1,4 @@
-import { IBM_Plex_Sans_Arabic, Inter_Tight, Kufam, Markazi_Text } from 'next/font/google';
+import { Alyamama, Badeen_Display, IBM_Plex_Sans_Arabic, Inter_Tight, Markazi_Text } from 'next/font/google';
 
 /**
  * The brand face is Neue Haas Grotesk (Monotype). It needs a web licence, so
@@ -24,14 +24,27 @@ const arabic = IBM_Plex_Sans_Arabic({
 });
 
 /**
- * Arabic display: Kufam, a heavy compact kufi. It sets the Arabic headlines
- * and poster words the way Inter Tight 800 sets the Latin ones — dense, dark,
- * built on a flat baseline — instead of the body face blown up.
+ * Arabic poster type: Badeen Display, an ultra-black display face that sits
+ * the whole word on one flat line — the Arabic answer to the heavy, poured
+ * MERIT logotype. It has one weight and is for large sizes only: headlines,
+ * collection names, the campaign, the category index.
  */
-const arabicDisplay = Kufam({
+const arabicDisplay = Badeen_Display({
   subsets: ['arabic'],
-  weight: ['600', '700', '800'],
+  weight: '400',
   variable: '--font-arabic-display',
+  display: 'swap',
+});
+
+/**
+ * Arabic headings below poster size: Alyamama, a sharp modern Arabic named
+ * for the Yamama, the region around Riyadh. Set heavy, it carries the smaller
+ * headlines where Badeen's black would close up.
+ */
+const arabicHead = Alyamama({
+  subsets: ['arabic'],
+  weight: ['500', '700', '800', '900'],
+  variable: '--font-arabic-head',
   display: 'swap',
 });
 
@@ -47,7 +60,7 @@ const arabicEditorial = Markazi_Text({
   display: 'swap',
 });
 
-export const fontVariables = `${grotesk.variable} ${arabic.variable} ${arabicDisplay.variable} ${arabicEditorial.variable}`;
+export const fontVariables = `${grotesk.variable} ${arabic.variable} ${arabicDisplay.variable} ${arabicHead.variable} ${arabicEditorial.variable}`;
 
 /**
  * The type stack for Arabic pages. Each next/font family ends in an adjusted
@@ -59,4 +72,5 @@ export const fontVariables = `${grotesk.variable} ${arabic.variable} ${arabicDis
 const face = (f: { style: { fontFamily: string } }) => f.style.fontFamily.split(',')[0].trim();
 export const arabicStack = `${face(grotesk)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabic.style.fontFamily}`;
 export const arabicDisplayStack = `${face(grotesk)}, ${face(arabicDisplay)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabicDisplay.style.fontFamily}`;
+export const arabicHeadStack = `${face(grotesk)}, ${face(arabicHead)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabicHead.style.fontFamily}`;
 export const arabicEditorialStack = `${face(grotesk)}, ${face(arabicEditorial)}, ${face(arabic)}, ${grotesk.style.fontFamily}, ${arabicEditorial.style.fontFamily}`;

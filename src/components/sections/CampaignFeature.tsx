@@ -22,13 +22,13 @@ const WORD = cn(
 );
 
 /**
- * The Arabic name of the campaign, خطّ المسطرة, in Kufam. Arabic words are
+ * The Arabic name of the campaign, خطّ المسطرة, in Badeen Display. Arabic words are
  * wider than the four-letter Latin pair, so they are set a size down to keep
  * the same margin to the window, and at a line height that clears the dots.
  */
 const WORD_AR = cn(
   'group-data-[layout=narrow]/words:text-[length:min(15vw,17svh)]! group-data-[layout=wide]/words:text-[clamp(2.75rem,5.9vw,6.5rem)]!',
-  'font-extrabold !leading-[1.1]',
+  'ar-poster !leading-[1.1]',
 );
 
 /**

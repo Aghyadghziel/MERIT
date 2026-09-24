@@ -67,7 +67,7 @@ export function Marquee() {
     <div className="flex shrink-0 items-center gap-[clamp(1.5rem,3vw,3.25rem)] pe-[clamp(1.5rem,3vw,3.25rem)]" aria-hidden={hidden || undefined}>
       {WORDS.map((w) => (
         <span key={w} className="flex items-center gap-[clamp(1.5rem,3vw,3.25rem)]">
-          <span className="whitespace-nowrap text-[clamp(2.25rem,1rem+4.4vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]">{t(w)}</span>
+          <span className="ar-poster whitespace-nowrap text-[clamp(2.25rem,1rem+4.4vw,5.5rem)] font-semibold uppercase leading-[0.9] tracking-[-0.045em]">{t(w)}</span>
           <Wordmark symbol className="h-[clamp(1.25rem,0.8rem+1.9vw,3rem)] w-auto shrink-0 text-stone" />
         </span>
       ))}

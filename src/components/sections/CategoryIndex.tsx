@@ -195,10 +195,10 @@ export function CategoryIndex() {
                   <span
                     data-reveal-line
                     className={cn(
-                      'min-w-0 flex-1 whitespace-nowrap text-[clamp(2.1rem,0.5rem+7.4vw,9rem)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]',
+                      'ar-poster min-w-0 flex-1 whitespace-nowrap text-[clamp(2.1rem,0.5rem+7.4vw,9rem)] font-semibold uppercase leading-[0.84] tracking-[-0.06em]',
                       'transition-[color,transform] duration-500 ease-[cubic-bezier(.22,1,.36,1)]',
                       ar ? 'md:group-hover:-translate-x-5' : 'md:group-hover:translate-x-5',
-                      // Kufam runs wider than the Latin caps, and «الملابس الخارجية»
+                      // Badeen runs wider than the Latin caps, and «الملابس الخارجية»
                       // is the longest word here: on a phone it would run under
                       // the picture, so Arabic steps down a size there.
                       ar && 'max-md:text-[length:min(7.6vw,2.1rem)]!',

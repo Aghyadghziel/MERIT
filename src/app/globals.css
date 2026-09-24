@@ -595,20 +595,36 @@ html.cursor-in .house-cursor { opacity: 1; }
    arabicStack in lib/fonts.ts for why the order matters). Arabic is never tracked (letters must join) and needs more
    line height than the tight Latin display settings allow. */
 html:lang(ar) {
-  --font-display: var(--font-ar-display-stack), var(--font-ar-stack), Arial, sans-serif;
+  --font-display: var(--font-ar-head-stack), var(--font-ar-stack), Arial, sans-serif;
+  --font-poster: var(--font-ar-display-stack), var(--font-ar-head-stack), Arial, sans-serif;
   --font-sans: var(--font-ar-stack), Arial, sans-serif;
   --font-editorial: var(--font-ar-editorial-stack), var(--font-ar-stack), Arial, serif;
 }
 /* Arabic display type. Latin headlines are the grotesk at 600–800; Arabic
-   ones are Kufam, never the body face blown up. That covers the headings and
-   the display utilities, and every size written inline as a clamp that
-   starts at 1.5rem or more (the attribute prefixes below: 1.5–1.9, 2–9, 16).
-   Smaller clamps are body copy and stay in Plex. */
-html:lang(ar) :is(h1, h2, .display, .display-xl, .display-lg, .display-md, .display-poster,
-  [class*="text-[clamp(1.5"], [class*="text-[clamp(1.6"], [class*="text-[clamp(1.7"], [class*="text-[clamp(1.8"], [class*="text-[clamp(1.9"],
+   ones get faces of their own, never the body face blown up.
+   Headlines: Alyamama, a sharp modern Arabic, at 800 for every heading and
+   inline size from 1.5rem, and at its full 900 for the large display
+   utilities and every clamp that starts at 2rem or more (attribute
+   prefixes 2–9 and 16).
+   Posters: Badeen Display, an ultra-black face that sits a word on one flat
+   line, like the poured logotype. Single words only — sentences in it close
+   up — so it is opt-in: .ar-poster (the marquee, the category index, the
+   campaign's name, collection names) and the one-word .display-poster. It
+   has one weight, and font-synthesis-weight is off, so nothing fakes it. */
+html:lang(ar) :is(h2, h3, .display, .display-md, .display-sm,
+  [class*="text-[clamp(1.5"], [class*="text-[clamp(1.6"], [class*="text-[clamp(1.7"], [class*="text-[clamp(1.8"], [class*="text-[clamp(1.9"]) {
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+html:lang(ar) :is(h1, .display-xl, .display-lg,
   [class*="text-[clamp(2"], [class*="text-[clamp(3"], [class*="text-[clamp(4"], [class*="text-[clamp(5"],
   [class*="text-[clamp(6"], [class*="text-[clamp(7"], [class*="text-[clamp(8"], [class*="text-[clamp(9"], [class*="text-[clamp(16"]) {
   font-family: var(--font-display);
+  font-weight: 900;
+}
+html:lang(ar) :is(.ar-poster, .display-poster) {
+  font-family: var(--font-poster);
+  font-weight: 400;
 }
 /* The written hand: quotes and story text in Markazi (naskh). Arabic has no
    italic, so this is how the voice changes register. */

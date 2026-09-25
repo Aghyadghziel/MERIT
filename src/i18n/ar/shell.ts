@@ -70,14 +70,14 @@ export const shell: Record<string, string> = {
   'Terms of sale': 'شروط البيع',
   Cookies: 'ملفات الكوكيز',
   'Riyadh — Flagship': 'الرياض — الفرع الرئيسي',
-  'Al Urubah Road, Al Olaya': 'طريق العروبة، العليا',
+  'Al Urubah Road, opening soon': 'طريق العروبة، نفتح قريب',
   'Jeddah — Atelier': 'جدة — المشغل',
-  'Al Rawdah District, by appointment': 'حي الروضة، بموعد',
+  'Al Rawdah District, opening soon': 'حي الروضة، نفتح قريب',
   'All stores': 'كل الفروع',
   'Back to top': 'ارجع فوق',
   'local time': 'بتوقيت الرياض',
-  'A concept site. {name} is not a real company: the garments, prices, stock and stores here are invented, and nothing can be bought.':
-    'هذا موقع تجريبي. {name} مو شركة حقيقية: القطع والأسعار والمخزون والفروع كلها من الخيال، وما تقدر تشتري منه شي.',
+  'Online payment and our rooms in Riyadh and Jeddah are coming soon. To order now, write to {email}.':
+    'الدفع أونلاين وصالاتنا في الرياض وجدة قريب. وللطلب الحين راسلنا على {email}',
 
   // ─── Currency ────────────────────────────────────────────────────────────
   Currency: 'العملة',
@@ -96,10 +96,10 @@ export const shell: Record<string, string> = {
   Subscribe: 'اشترك',
   'Enter an email address.': 'اكتب إيميلك.',
   'That does not look like an email address.': 'هذا ما يبان إيميل صحيح.',
-  'Noted —': 'وصلت —',
-  'This is a concept site, so no address is stored and no letter will arrive.':
-    'هذا موقع تجريبي، فما نحفظ أي إيميل ولا راح توصلك رسايل.',
-  'Unsubscribe in one click. See the': 'تلغي الاشتراك بضغطة. شوف',
+  'Almost there —': 'باقي خطوة —',
+  'Your email app opened with the request ready. Press send there, and we will add you to the list.':
+    'انفتح تطبيق الإيميل والطلب جاهز. اضغط إرسال من هناك، ونضيفك للقائمة.',
+  'Joining opens your own email app. See the': 'الاشتراك يفتح تطبيق الإيميل عندك. شوف',
   'privacy policy': 'سياسة الخصوصية',
 
   // ─── Search overlay ──────────────────────────────────────────────────────

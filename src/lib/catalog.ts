@@ -1,9 +1,7 @@
 /**
- * MERIT catalogue — placeholder data for a fictional label.
+ * MERIT catalogue: the range, its prices and stock.
  *
- * Everything here is invented: the products, the mills, the prices and the
- * stock. Nothing claims to be a real garment or a real supplier. Names come
- * from one lexicon on purpose — printing and architecture — so the range reads
+ * Names come from one lexicon on purpose — printing and architecture — so the range reads
  * as a range: Rule, Column, Margin, Baseline, Folio, Plane, Atrium, Meridian.
  */
 

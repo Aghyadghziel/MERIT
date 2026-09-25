@@ -6,12 +6,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const ar = (await getLocale()) === 'ar';
   return {
     title: ar ? 'شروط البيع' : 'Terms of sale',
-    description: ar ? 'الشروط التي كانت ستحكم أي طلب من ميرت.' : 'The terms that would govern a MERIT order.',
+    description: ar ? 'شروط الشراء من ميرت.' : 'The terms for buying from MERIT.',
     alternates: { canonical: ar ? '/ar/terms' : '/terms', languages: { en: '/terms', ar: '/ar/terms' } },
   };
 }
 
-const IDS = ['company', 'products', 'orders', 'real', 'content'] as const;
+const IDS = ['company', 'products', 'orders', 'law', 'content'] as const;
 
 /**
  * The terms in each language, section by section, in the order of IDS. Each
@@ -21,37 +21,36 @@ const COPY = {
   en: {
     eyebrow: 'Legal',
     title: 'Terms of sale.',
-    standfirst: 'MERIT is a fictional label built as a demonstration. Nothing here can be bought, so nothing below creates an obligation on anyone.',
+    standfirst: 'The terms for buying from MERIT. Online payment is coming soon; until then, orders are arranged with us directly by email or Instagram.',
     sections: [
       {
         title: 'The company',
         body: [
-          'MERIT and Merit Atelier are invented names. There is no registered company, no commercial registration number and no VAT registration behind this site. Any resemblance to a real label is unintended.',
+          'MERIT is a fashion label from Riyadh, Saudi Arabia. You can reach us at themeritbrand@gmail.com.',
         ],
       },
       {
         title: 'Products and prices',
         body: [
-          'Every garment, material, mill, count, stock level and price shown is invented for the purposes of the demonstration. Prices are displayed in Saudi riyals; other currencies are converted at a fixed indicative rate and are not live.',
+          'Prices are shown in Saudi riyals. Other currencies are converted at a fixed indicative rate and are not live; the price in riyals is the one that applies.',
         ],
       },
       {
         title: 'Orders',
         body: [
-          'The checkout is deliberately not connected to a payment processor. No order can be placed, no card can be charged and nothing will be shipped.',
+          'Online payment is coming soon. Until then, to order a piece, email themeritbrand@gmail.com or message @meritbrands on Instagram, and we will confirm availability, price and delivery with you before anything is paid.',
         ],
       },
       {
-        title: 'What a real version would say',
+        title: 'Law and returns',
         body: [
-          'A live MERIT would form a contract at the point of dispatch rather than payment, would be governed by the laws of the Kingdom of Saudi Arabia, and would set out the statutory right to return within the periods stated in the shipping and returns page.',
-          'This paragraph stands in for that text.',
+          'These terms are governed by the laws of the Kingdom of Saudi Arabia. Returns follow the periods set out on the shipping and returns page.',
         ],
       },
       {
         title: 'Content',
         body: [
-          'The design, code, wordmark and written copy on this site were made for it. The photography is placeholder material from Unsplash, used under the Unsplash Licence and credited in the repository.',
+          'The design, code, wordmark and written copy on this site were made for MERIT. Some photographs are from Unsplash, used under the Unsplash Licence.',
         ],
       },
     ],
@@ -59,37 +58,36 @@ const COPY = {
   ar: {
     eyebrow: 'الشؤون القانونية',
     title: 'شروط البيع.',
-    standfirst: 'ميرت علامة خيالية بُنيت للعرض والتوضيح. لا يمكن شراء أي شيء هنا، ولذلك لا يُنشئ أيٌّ مما يلي التزامًا على أحد.',
+    standfirst: 'شروط الشراء من ميرت. الدفع الإلكتروني قريبًا، وحتى ذلك الحين تُرتَّب الطلبات معنا مباشرةً عبر البريد الإلكتروني أو إنستغرام.',
     sections: [
       {
         title: 'الشركة',
         body: [
-          'ميرت (MERIT) وMerit Atelier اسمان مُختلَقان. لا توجد خلف هذا الموقع شركة مسجّلة، ولا رقم سجل تجاري، ولا تسجيل في ضريبة القيمة المضافة. وأي تشابه مع علامة حقيقية غير مقصود.',
+          'ميرت (MERIT) علامة أزياء من الرياض في المملكة العربية السعودية. يمكنك مراسلتنا على themeritbrand@gmail.com.',
         ],
       },
       {
         title: 'المنتجات والأسعار',
         body: [
-          'كل قطعة وخامة ومصنع وكمية ومستوى مخزون وسعر معروض هنا مُختلَق لأغراض العرض. تُعرض الأسعار بالريال السعودي، وتُحوَّل العملات الأخرى بسعر صرف استرشادي ثابت لا يُحدَّث لحظيًا.',
+          'تُعرض الأسعار بالريال السعودي، وتُحوَّل العملات الأخرى بسعر صرف استرشادي ثابت لا يُحدَّث لحظيًا، والسعر المعتمد هو السعر بالريال.',
         ],
       },
       {
         title: 'الطلبات',
         body: [
-          'صفحة الدفع غير مربوطة بأي مزوّد لخدمات الدفع، وذلك عن قصد. لا يمكن تقديم أي طلب، ولا خصم أي مبلغ من أي بطاقة، ولن يُشحن أي شيء.',
+          'الدفع الإلكتروني قريبًا. وحتى ذلك الحين، لطلب أي قطعة راسلنا على themeritbrand@gmail.com أو على حساب ‎@meritbrands في إنستغرام، وسنؤكد معك التوفر والسعر والتوصيل قبل دفع أي مبلغ.',
         ],
       },
       {
-        title: 'ما كانت ستقوله النسخة الحقيقية',
+        title: 'الأنظمة والإرجاع',
         body: [
-          'كانت النسخة الحقيقية من ميرت ستُبرم العقد عند شحن الطلب لا عند الدفع، وستخضع لأنظمة المملكة العربية السعودية، وستنصّ على الحق النظامي في الإرجاع خلال المُدد المذكورة في صفحة الشحن والإرجاع.',
-          'تقوم هذه الفقرة مقام ذلك النص.',
+          'تخضع هذه الشروط لأنظمة المملكة العربية السعودية، ويتم الإرجاع خلال المُدد المذكورة في صفحة الشحن والإرجاع.',
         ],
       },
       {
         title: 'المحتوى',
         body: [
-          'التصميم والشيفرة البرمجية والشعار النصي والنصوص المكتوبة في هذا الموقع أُعدّت خصيصًا له. أما الصور فمواد مؤقتة من Unsplash، مستخدمة بموجب ترخيص Unsplash ومنسوبة إلى أصحابها في المستودع.',
+          'التصميم والشيفرة البرمجية والشعار النصي والنصوص المكتوبة في هذا الموقع أُعدّت خصيصًا لميرت. وبعض الصور من Unsplash، مستخدمة بموجب ترخيص Unsplash.',
         ],
       },
     ],

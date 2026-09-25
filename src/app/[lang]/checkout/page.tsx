@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { getLocale, getT } from '@/i18n/server';
 import Link from '@/i18n/link';
 import { MaskHeadline } from '@/components/commerce/CartView';
-import { CheckoutNotice } from '@/components/commerce/CheckoutNotice';
+import { CheckoutNotice, OrderActions } from '@/components/commerce/CheckoutNotice';
 import { Icon } from '@/components/ui/Icon';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -10,17 +10,17 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'كمّل الطلب' : 'Checkout',
     description: ar
-      ? 'ميرت موقع تجريبي. ما فيه بوابة دفع، وما تقدر تشتري شي.'
-      : 'MERIT is a concept site. There is no payment processor, and nothing can be bought.',
+      ? 'الدفع أونلاين قريب. أرسل لنا طلبك بالإيميل أو على إنستغرام.'
+      : 'Online payment is coming soon. Send us your order by email or on Instagram.',
     robots: { index: false, follow: false },
   };
 }
 
 /**
- * There is no payment processor behind this and there never will be, so the
- * page says exactly that rather than imitating a checkout. It is the one room
+ * Online payment is not open yet, so the page says so rather than imitating a
+ * checkout, and turns the bag into a ready email instead. It is the one room
  * of the site set in graphite: the bag is left behind, the lights go down, and
- * the order slip shows what would have happened — and that none of it did.
+ * the order slip lists what you are about to send.
  */
 export default async function CheckoutPage() {
   const t = await getT();
@@ -31,22 +31,26 @@ export default async function CheckoutPage() {
           <div className="flex items-center gap-4" data-reveal>
             <p className="label">{t('Checkout')}</p>
             <span aria-hidden className="h-px w-10 bg-line-ink-2" />
-            <p className="label text-mute-ink">{t('A concept site')}</p>
+            <p className="label text-mute-ink">{t('Payment coming soon')}</p>
           </div>
 
           <h1 id="checkout-title" className="display-xl mt-8 max-w-[11ch]">
-            <MaskHeadline text={t('Nothing here can be bought.')} />
+            <MaskHeadline text={t('Order by message.')} />
           </h1>
 
           <p className="body-lg mt-10 max-w-[34rem] text-bone/85" data-reveal>
-            {t('MERIT is not a real company. There is no payment processor connected to this page, no order will be placed, and nothing you have put in the bag will be charged or shipped.')}
+            {t('Online payment is coming soon. Until then, send us your order by email or on Instagram, and we will confirm the size, stock, price and delivery with you before anything is paid.')}
           </p>
           <p className="mt-5 max-w-[34rem] text-sm leading-relaxed text-mute-ink" data-reveal>
-            {t('Everything else works as it would in a real store: the bag, the wishlist, the currency, the stock on each size. This is the one place where pretending would be dishonest.')}
+            {t('The email button writes the order for you: every piece in your bag, with its colour, size and price.')}
           </p>
 
-          <div className="mt-10 flex flex-wrap gap-3" data-reveal>
-            <Link href="/cart" className="btn btn-solid group">
+          <div className="mt-10" data-reveal>
+            <OrderActions />
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-3" data-reveal>
+            <Link href="/cart" className="btn group">
               <Icon name="arrowL" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
               {t('Back to the bag')}
             </Link>

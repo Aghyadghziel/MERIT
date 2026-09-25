@@ -81,21 +81,21 @@ export function AccountView() {
         <div className="flex flex-col px-(--gutter) pb-[clamp(3rem,2rem+4vw,6rem)] pt-[clamp(2.5rem,1.5rem+4vw,6.5rem)] lg:px-[clamp(2.5rem,0.5rem+4.5vw,7rem)]">
           <div className="flex items-baseline justify-between gap-4" data-reveal>
             <p className="label">{t('Account')}</p>
-            <p className="label text-mute">{t('Not connected')}</p>
+            <p className="label text-mute">{t('Coming soon')}</p>
           </div>
 
           <h1 className="mt-6 text-[clamp(3.25rem,1rem+7.5vw,8.5rem)] font-semibold leading-[0.86] tracking-[-0.055em]">
-            <MaskHeadline text={t(sentTo ? 'No accounts.' : 'Sign in.')} />
+            <MaskHeadline text={t(sentTo ? 'Accounts soon.' : 'Sign in.')} />
           </h1>
 
           <div className="mt-[clamp(2rem,1.5rem+2vw,3.5rem)] max-w-[26rem]">
             {sentTo ? (
               <div>
                 <p ref={status} tabIndex={-1} className="display-sm" style={{ outline: 'none' }}>
-                  {t('Nothing was sent to')} <Address value={sentTo} />.
+                  {t('Not yet: nothing was sent to')} <Address value={sentTo} />.
                 </p>
                 <p className="mt-4 text-sm leading-relaxed text-mute">
-                  {t('MERIT is a concept site with no sign-in and no order history. Your bag and wishlist are kept in this browser instead, and they survive a reload without an account.')}
+                  {t('Accounts and order history are coming soon. Until then, your bag and wishlist are kept in this browser, and they survive a reload without an account.')}
                 </p>
                 <button type="button" className="btn btn-ghost group mt-8" onClick={back}>
                   <Icon name="arrowL" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-x-1 rtl:group-hover:translate-x-1" />
@@ -134,7 +134,7 @@ export function AccountView() {
                   <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                 </button>
                 <p id="account-note" className="mt-4 text-xs leading-relaxed text-mute">
-                  {t('Accounts are not connected on this concept site: no code is sent, and nothing is stored beyond this browser.')}
+                  {t('Accounts are coming soon: no code is sent yet, and nothing is stored beyond this browser.')}
                 </p>
               </form>
             )}
@@ -148,7 +148,7 @@ export function AccountView() {
             <ul className="grid grid-cols-3" data-reveal>
               <DeviceCell href="/cart" value={bag} label={t('Bag')} aria={t('Shopping bag, {pieces}', { pieces: pieces(bag) })} />
               <DeviceCell href="/wishlist" value={saved} label={t('Saved')} aria={t('Wishlist, {pieces} saved', { pieces: pieces(saved) })} />
-              <DeviceCell value={0} label={t('Orders')} note={t('Concept site')} />
+              <DeviceCell value={0} label={t('Orders')} note={t('Coming soon')} />
             </ul>
           </section>
         </div>
@@ -199,7 +199,7 @@ function DeviceCell({
         <Link href={href} className="group block pb-2 pe-3 pt-5" aria-label={aria}>{body}</Link>
       ) : (
         <div className="pb-2 pe-3 pt-5">
-          <span className="sr-only">{t('Orders: none, as nothing can be bought on this concept site.')}</span>
+          <span className="sr-only">{t('Orders: none yet, as online orders open soon.')}</span>
           <span aria-hidden>{body}</span>
         </div>
       )}

@@ -1,11 +1,9 @@
 # Photography credits
 
-All photography on this site is **placeholder material from Unsplash**, used under the
-[Unsplash Licence](https://unsplash.com/license). It stands in for the commissioned campaign
-photography a real label would shoot, and it is the first thing that would be replaced.
+Photography from **Unsplash** on this site is used under the
+[Unsplash Licence](https://unsplash.com/license).
 
-The people pictured are not associated with MERIT and do not endorse it. MERIT is a fictional
-label; see `/about` and `/terms`.
+The people pictured in those photographs are not associated with MERIT and do not endorse it.
 
 ## Before this goes anywhere public
 

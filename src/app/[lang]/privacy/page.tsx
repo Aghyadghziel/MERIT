@@ -46,33 +46,33 @@ const KEYS = [
   },
 ];
 
-const IDS = ['keeps', 'cookies', 'forms', 'real', 'images'] as const;
+const IDS = ['keeps', 'cookies', 'forms', 'orders', 'images'] as const;
 
 const COPY = {
   en: {
     eyebrow: 'Legal',
     title: 'Privacy policy.',
-    standfirst: 'MERIT is a concept site. Nothing you type here is transmitted anywhere, and nothing is stored on a server, because there is no server behind it.',
+    standfirst: 'MERIT keeps nothing about you on a server. There are no accounts or online payments yet, and your bag and wishlist stay in this browser.',
     facts: [
       { label: 'Cookies', value: '0', note: 'None set, by us or anyone else.' },
       { label: 'Tracking scripts', value: '0', note: 'No analytics, no advertising pixels.' },
       { label: 'Kept in your browser', value: String(KEYS.length), unit: 'keys', note: 'Local storage only. Never sent.' },
-      { label: 'Forms that send', value: '0', note: 'Nothing typed here leaves the page.' },
+      { label: 'Forms that send', value: '0', note: 'The contact form opens your own email app.' },
     ],
-    toc: ['What this site keeps', 'Cookies', 'Forms', 'What a real version would say', 'Images'],
+    toc: ['What this site keeps', 'Cookies', 'Forms', 'Orders', 'Images'],
   },
   ar: {
     eyebrow: 'الشؤون القانونية',
     title: 'سياسة الخصوصية.',
-    standfirst: 'ميرت موقع تصوّري. لا يُرسَل أي شيء تكتبه هنا إلى أي جهة، ولا يُحفظ شيء على خادم، لأنه لا يوجد خادم خلف هذا الموقع.',
+    standfirst: 'لا تحفظ ميرت أي بيانات عنك على خادم. لا توجد حسابات ولا دفع إلكتروني حتى الآن، وتبقى سلتك ومفضّلتك في هذا المتصفح.',
     facts: [
       { label: 'ملفات تعريف الارتباط', value: '0', note: 'لا شيء، لا منّا ولا من غيرنا.' },
       { label: 'نصوص التتبّع', value: '0', note: 'لا أدوات تحليل، ولا وحدات بكسل إعلانية.' },
       // Every count this key list is likely to reach (3–10) takes the plural form.
       { label: 'محفوظ في متصفحك', value: String(KEYS.length), unit: 'مفاتيح', note: 'في التخزين المحلي فقط. لا يُرسَل أبدًا.' },
-      { label: 'نماذج تُرسِل', value: '0', note: 'لا شيء مما تكتبه هنا يغادر الصفحة.' },
+      { label: 'نماذج تُرسِل', value: '0', note: 'نموذج التواصل يفتح تطبيق البريد لديك.' },
     ],
-    toc: ['ما يحفظه هذا الموقع', 'ملفات تعريف الارتباط', 'النماذج', 'ما كانت ستقوله النسخة الحقيقية', 'الصور'],
+    toc: ['ما يحفظه هذا الموقع', 'ملفات تعريف الارتباط', 'النماذج', 'الطلبات', 'الصور'],
   },
 };
 
@@ -121,26 +121,23 @@ export default async function PrivacyPage() {
 
           <Section id="forms" title={title(2)}>
             <p>
-              يتحقق نموذج النشرة البريدية ونموذج التواصل مما تكتبه، ثم يخبرانك صراحةً بأن شيئًا لم يُرسَل.
-              ولا يُسجَّل أي عنوان.
+              يفتح نموذج التواصل تطبيق البريد في جهازك برسالة جاهزة إلى ميرت، فترسلها أنت بنفسك، ولا يرسل
+              الموقع شيئًا. وكذلك نموذج النشرة البريدية: يفتح رسالة طلب اشتراك ترسلها أنت، ولا يُسجِّل الموقع أي عنوان.
             </p>
           </Section>
 
-          <Section id="real" title={title(3)}>
+          <Section id="orders" title={title(3)}>
             <p>
-              كانت النسخة الحقيقية من ميرت ستعالج بيانات الطلب والتوصيل لتنفيذ عمليات الشراء، وتحتفظ بها
-              للمدة التي تفرضها الأنظمة التجارية في المملكة العربية السعودية، ولا تشاركها إلا مع مزوّد خدمة
-              الدفع وشركة الشحن. وكانت ستستجيب لطلبات الاطلاع على البيانات وحذفها خلال ثلاثين يومًا، ولن تبيع
-              بيانات العملاء أبدًا.
+              الدفع الإلكتروني قريبًا. وحتى ذلك الحين تُرتَّب الطلبات معنا مباشرةً عبر البريد الإلكتروني أو
+              إنستغرام، ولا نستخدم ما تشاركه معنا إلا لتنفيذ طلبك وتوصيله. وسنحدّث هذه السياسة قبل إطلاق
+              الدفع الإلكتروني.
             </p>
-            <p>كُتبت هذه الفقرة هنا ليكون الإغفال ظاهرًا لا عَرَضيًا.</p>
           </Section>
 
           <Section id="images" title={title(4)}>
             <p>
-              الصور في هذا الموقع مواد مؤقتة من Unsplash، مستخدمة بموجب ترخيص Unsplash. الأشخاص الظاهرون
-              فيها لا صلة لهم بميرت ولا يؤيدونها. المصادر مدرجة في{' '}
-              <code dir="ltr">public/img/CREDITS.md</code>.
+              بعض الصور في هذا الموقع من Unsplash، مستخدمة بموجب ترخيص Unsplash. الأشخاص الظاهرون فيها لا
+              صلة لهم بميرت.
             </p>
           </Section>
         </>
@@ -164,26 +161,24 @@ export default async function PrivacyPage() {
 
           <Section id="forms" title={title(2)}>
             <p>
-              The newsletter form and the contact form validate what you type and then tell you plainly
-              that nothing was sent. No address is recorded.
+              The contact form opens your own email app with a ready message to MERIT, which you send
+              yourself; the site sends nothing. The newsletter form works the same way, and no address
+              is recorded by the site.
             </p>
           </Section>
 
-          <Section id="real" title={title(3)}>
+          <Section id="orders" title={title(3)}>
             <p>
-              A live MERIT would process order and delivery details to fulfil purchases, hold them for the
-              period required by Saudi commercial law, and share them only with the payment processor and
-              the courier. It would answer access and deletion requests within thirty days and would never
-              sell customer data.
+              Online payment is coming soon. Until then, orders are arranged with us directly by email or
+              Instagram, and what you share is used only to fulfil and deliver your order. This policy will
+              be updated before online payment opens.
             </p>
-            <p>That paragraph is written here so the omission is visible rather than accidental.</p>
           </Section>
 
           <Section id="images" title={title(4)}>
             <p>
-              The photography on this site is placeholder material from Unsplash, used under the Unsplash
-              Licence. The people in it are not associated with MERIT and do not endorse it. Sources are
-              listed in <code>public/img/CREDITS.md</code>.
+              Some photographs on this site are from Unsplash, used under the Unsplash Licence. The people
+              in them are not associated with MERIT.
             </p>
           </Section>
         </>

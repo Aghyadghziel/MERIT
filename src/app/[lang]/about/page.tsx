@@ -356,9 +356,9 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      {/* ─── 05 This site ──────────────────────────────────────────────── */}
+      {/* ─── 05 Ordering ───────────────────────────────────────────────── */}
       <section className="page section-y" aria-labelledby="ch-site">
-        <SectionHead index={5} title={ar ? 'هذا الموقع' : 'This site'} id="ch-site" tone="ink" note={ar ? 'مشروع تجريبي' : 'A concept'} />
+        <SectionHead index={5} title={ar ? 'الطلب' : 'Ordering'} id="ch-site" tone="ink" note={ar ? 'الدفع أونلاين قريب' : 'Online payment soon'} />
         <div className="grid-page mt-[clamp(2.5rem,1.5rem+4vw,6rem)] items-start gap-y-10">
           <div className="col-span-2 md:col-span-2 lg:col-span-3" aria-hidden data-reveal-img>
             <div><Wordmark symbol className="h-auto w-full" /></div>
@@ -367,17 +367,15 @@ export default async function AboutPage() {
             <p className="text-[clamp(1.375rem,1rem+1.5vw,2.625rem)] font-medium leading-[1.14] tracking-[-0.03em]" data-reveal>
               {ar ? (
                 <>
-                  ميرت علامة من الخيال، سوّيناها عشان نوري كيف ممكن يكون متجر أزياء أونلاين. القطع والمصانع
-                  والكميات والأسعار والفروع والمخزون كلها مو حقيقية، والصور مؤقتة، وما تقدر تشتري أي
-                  شي.{' '}
-                  <Link href="/stores" className="link-rule">والفروع</Link> بعد مو موجودة.
+                  الدفع أونلاين قريب. لين ذاك الوقت، اختر قطعك من هنا وأرسل لنا طلبك بالإيميل أو على
+                  إنستغرام، ونأكد معك المقاس والسعر والتوصيل.{' '}
+                  <Link href="/stores" className="link-rule">وصالاتنا</Link> في الرياض وجدة تفتح قريب بعد.
                 </>
               ) : (
                 <>
-                  MERIT is a fictional label, built as a demonstration of what a fashion storefront can be.
-                  The garments, mills, counts, prices, stores and stock levels here are invented, the
-                  photography is placeholder, and nothing can be bought.{' '}
-                  <Link href="/stores" className="link-rule">The stores</Link> do not exist either.
+                  Online payment is coming soon. Until then, pick your pieces here and send us your order by
+                  email or on Instagram, and we will confirm the size, price and delivery with you.{' '}
+                  <Link href="/stores" className="link-rule">Our rooms</Link> in Riyadh and Jeddah open soon too.
                 </>
               )}
             </p>

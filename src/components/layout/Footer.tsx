@@ -97,11 +97,11 @@ export function Footer() {
             <address className="mt-5 space-y-4 text-[0.9375rem] not-italic leading-snug">
               <span className="block">
                 <span className="block">{t('Riyadh — Flagship')}</span>
-                <span className="block text-mute-ink">{t('Al Urubah Road, Al Olaya')}</span>
+                <span className="block text-mute-ink">{t('Al Urubah Road, opening soon')}</span>
               </span>
               <span className="block">
                 <span className="block">{t('Jeddah — Atelier')}</span>
-                <span className="block text-mute-ink">{t('Al Rawdah District, by appointment')}</span>
+                <span className="block text-mute-ink">{t('Al Rawdah District, opening soon')}</span>
               </span>
             </address>
             <Link href="/stores" className="label link-arrow mt-6 min-h-11">
@@ -151,7 +151,7 @@ export function Footer() {
             </span>
           </p>
           <p className="col-span-4 max-w-lg md:col-span-3 lg:col-span-5">
-            {t('A concept site. {name} is not a real company: the garments, prices, stock and stores here are invented, and nothing can be bought.', { name: BRAND.name })}
+            {t('Online payment and our rooms in Riyadh and Jeddah are coming soon. To order now, write to {email}.', { email: BRAND.email })}
           </p>
           <p className="label-sm col-span-4 md:col-span-6 lg:col-span-3 lg:text-end">
             <RiyadhClock />

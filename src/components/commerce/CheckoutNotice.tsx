@@ -7,6 +7,9 @@ import { Wordmark } from '@/components/ui/Wordmark';
 import { PaymentMethods } from '@/components/commerce/PaymentMethods';
 import { getProduct } from '@/lib/catalog';
 import { hijriDate } from '@/lib/saudi';
+import { BRAND } from '@/lib/brand';
+import { formatPrice } from '@/lib/format';
+import { Icon } from '@/components/ui/Icon';
 import { cn } from '@/lib/cn';
 import { EASE, reduced, setupGsap } from '@/lib/gsap';
 import { useLocale, useT } from '@/i18n/client';
@@ -20,9 +23,9 @@ const today = (locale: Locale) =>
   }).format(new Date());
 
 /**
- * The order that would have been placed, printed as a slip — and every line
- * that would make it real says plainly that it did not happen: no order
- * number, no payment, nothing charged. It feeds down out of the slot like
+ * The bag, printed as an order slip. Online payment is not open yet, so the
+ * lines that need it say so: the order number and shipping follow once we
+ * confirm by message, and nothing is charged here. It feeds down out of the slot like
  * paper from a till — masked at the slot line, so it is never seen above it —
  * once, and simply sits there for anyone who prefers less motion.
  */
@@ -112,9 +115,9 @@ export function CheckoutNotice() {
             <div className="mx-[clamp(1.25rem,0.9rem+1.2vw,2rem)] mt-5 border-t-2 border-ink" />
 
             <dl className="space-y-2 px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pt-5 text-sm">
-              <SlipRow label={t('Order number')}>{t('Not issued')}</SlipRow>
-              <SlipRow label={t('Payment')}>{t('Not connected')}</SlipRow>
-              <SlipRow label={t('Shipping')}>{t('Not scheduled')}</SlipRow>
+              <SlipRow label={t('Order number')}>{t('After we confirm')}</SlipRow>
+              <SlipRow label={t('Payment')}>{t('Coming soon')}</SlipRow>
+              <SlipRow label={t('Shipping')}>{t('Once confirmed')}</SlipRow>
             </dl>
             {locale === 'ar' ? <PaymentMethods className="px-[clamp(1.25rem,0.9rem+1.2vw,2rem)] pt-4" /> : null}
 
@@ -157,6 +160,49 @@ function Perforation({ className }: { className?: string }) {
   return (
     <div aria-hidden className={cn('relative my-5 h-px', className)}>
       <div className="mx-[clamp(1.25rem,0.9rem+1.2vw,2rem)] border-t border-dashed border-line-2" />
+    </div>
+  );
+}
+
+/**
+ * Until online payment opens, an order is a message: the email button writes
+ * every piece in the bag (colour, size, price in riyals) into a ready email to
+ * MERIT, and Instagram is the other way in.
+ */
+export function OrderActions() {
+  const { bag, subtotal, count, ready } = useStore();
+  const locale = useLocale();
+  const t = useT();
+
+  const lines = bag.flatMap((line) => {
+    const found = getProduct(line.slug);
+    if (!found) return [];
+    const p = localizeProduct(found, locale);
+    return [`${line.qty}× ${p.name} — ${t(line.colour)} · ${t(line.size)} — ${formatPrice(p.price * line.qty, 'SAR', locale)}`];
+  });
+  const body = [
+    t('Hello MERIT, I would like to order:'),
+    '',
+    ...lines,
+    '',
+    `${t('Subtotal')}: ${formatPrice(subtotal, 'SAR', locale)}`,
+    '',
+    t('My name:'),
+    t('My city:'),
+  ].join('\n');
+  const mail = `mailto:${BRAND.email}?subject=${encodeURIComponent(t('Order from the MERIT site'))}&body=${encodeURIComponent(body)}`;
+
+  return (
+    <div className="flex flex-wrap gap-3">
+      {ready && count > 0 ? (
+        <a href={mail} className="btn btn-solid group">
+          {t('Send the order by email')}
+          <Icon name="arrowR" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
+        </a>
+      ) : null}
+      <a href={BRAND.instagram} target="_blank" rel="noopener" className="btn">
+        {t('Message us on Instagram')}
+      </a>
     </div>
   );
 }

@@ -3,8 +3,8 @@ import { PAYMENT_METHODS } from '@/lib/saudi';
 
 /**
  * The payment methods a Saudi reader expects to see, for the Arabic pages.
- * Each is a name in a hairline box, and the row says in words that none of
- * them is connected: MERIT is a concept and nothing can be paid for.
+ * Each is a name in a hairline box, and the row says in words that online
+ * payment is not open yet.
  */
 export function PaymentMethods({ className, tone = 'ink' }: { className?: string; tone?: 'ink' | 'bone' }) {
   const bone = tone === 'bone';
@@ -24,7 +24,7 @@ export function PaymentMethods({ className, tone = 'ink' }: { className?: string
           </li>
         ))}
       </ul>
-      <p className={cn('label-sm', bone ? 'text-mute-ink' : 'text-mute')}>مو مفعّلة — موقع تجريبي</p>
+      <p className={cn('label-sm', bone ? 'text-mute-ink' : 'text-mute')}>تتفعّل قريب</p>
     </div>
   );
 }

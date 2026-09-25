@@ -412,7 +412,7 @@ export function CartView() {
                     <Icon name="arrowR" className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
                   </Link>
                   <p className="mt-3 text-xs leading-relaxed text-mute-ink">
-                    {t('MERIT is a concept store. Checkout shows what would happen next; nothing is charged.')}
+                    {t('Online payment is coming soon. For now, checkout sends your order to us by email.')}
                   </p>
                   {locale === 'ar' ? <PaymentMethods tone="bone" className="mt-4" /> : null}
                 </div>

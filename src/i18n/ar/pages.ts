@@ -22,10 +22,10 @@ export const pages: Record<string, string> = {
   'Tell us who you are.': 'قول لنا مين أنت.',
   'We need a working email address to reply to.': 'نحتاج إيميل صحيح عشان نرد عليك.',
   'A sentence or two, so we can answer properly.': 'اكتب لنا سطر أو سطرين، عشان نرد عليك صح.',
-  'Not sent — concept site': 'ما انرسلت — موقع تجريبي',
+  'Almost sent': 'باقي خطوة',
   'Thank you, {name}.': 'شكرًا يا {name}.',
-  'This is a concept site, so the message was not sent anywhere and no address was stored. On a real MERIT you would have an answer within a working day.':
-    'هذا موقع تجريبي، فالرسالة ما راحت لأي مكان وما حفظنا إيميلك. لو كانت ميرت حقيقية، كان وصلك الرد خلال يوم عمل.',
+  'Your email app should now be open with the message ready. Press send there. If it did not open, write to us at {email}.':
+    'المفروض إن تطبيق الإيميل انفتح والرسالة جاهزة، اضغط إرسال من هناك. وإذا ما انفتح، راسلنا على {email}',
   'Write another': 'اكتب رسالة ثانية',
   'Write to client care': 'راسل خدمة العملاء',
   'Your name': 'اسمك',

@@ -1,6 +1,6 @@
 # MERIT
 
-A concept storefront for a fictional contemporary fashion label based in Riyadh.
+The storefront for MERIT, a contemporary fashion label based in Riyadh.
 
 Built around one idea — **quiet structure, expressive movement**. The interface is a set of
 hairlines that content hangs from; the photography and the motion carry the personality.
@@ -27,7 +27,7 @@ npm run build
 | `src/app/globals.css` | Design tokens, the rule system, type scale, motion gate |
 | `src/lib/brand.ts` | Wordmark geometry — the letters are drawn, not typeset |
 | `tools/logo/build.mjs` | Renders that geometry to `public/brand/*.svg` |
-| `src/lib/catalog.ts` | Products, collections and editorial. All invented |
+| `src/lib/catalog.ts` | Products, collections and editorial |
 | `src/lib/filter.ts` | Facets, filtering and the query-string encoding |
 | `src/lib/search.ts` | The weighted predictive search |
 | `src/components/providers/` | Bag, wishlist, currency (`Store`), overlays (`Ui`), reveals (`Motion`) |
@@ -60,5 +60,6 @@ is never left blank.
 
 ## Honest by design
 
-There is no payment processor, no authentication and no order history, and the site says so
-in those places rather than imitating them. Prices, stock, mills, counts and stores are invented.
+Online payment, accounts and order history are not connected yet, and the site says so ("coming
+soon") in those places rather than imitating them. Until then, checkout and the contact and
+newsletter forms open a ready email to MERIT.

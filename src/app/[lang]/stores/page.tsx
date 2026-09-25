@@ -12,8 +12,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: ar ? 'فروعنا' : 'Stores',
     description: ar
-      ? 'فرع ميرت الرئيسي على طريق العروبة في الرياض، ومشغل جدة بموعد.'
-      : 'The MERIT flagship on Al Urubah Road in Riyadh, and the Jeddah atelier, by appointment.',
+      ? 'فرع ميرت الرئيسي على طريق العروبة في الرياض ومشغل جدة، ويفتحان قريبًا.'
+      : 'The MERIT flagship on Al Urubah Road in Riyadh and the Jeddah atelier, both opening soon.',
     alternates: { canonical: ar ? '/ar/stores' : '/stores', languages: { en: '/stores', ar: '/ar/stores' } },
   };
 }
@@ -39,25 +39,25 @@ const ROOMS: Record<'en' | 'ar', Room[]> = {
       id: 'riyadh',
       city: 'Riyadh',
       kind: 'Flagship',
-      when: 'Open every day',
+      when: 'Opening soon',
       dark: false,
       address: ['Al Urubah Road', 'Al Olaya, Riyadh 12244'],
       hours: [['Saturday to Thursday', '10:00 — 22:00'], ['Friday', '16:00 — 22:00']],
       room: ['The full range', 'Alterations while you wait', 'The archive rail at the back', 'Repairs at cost, for any MERIT piece'],
       image: { src: 'campaign-studio', width: 1400, height: 1750, alt: 'A model in a pale suit seated on a steel chair in a white studio, in black and white', position: '50% 30%', sizes: IMG_SIZES },
-      cta: { label: 'Write to the flagship', href: '/contact' },
+      cta: { label: 'Ask about the opening', href: '/contact' },
     },
     {
       id: 'jeddah',
       city: 'Jeddah',
       kind: 'Atelier',
-      when: 'By appointment',
+      when: 'Opening soon',
       dark: true,
       address: ['Al Rawdah District', 'Jeddah 23434'],
       hours: [['Sunday to Thursday', 'By appointment']],
       room: ['Fittings', 'Made-to-measure tailoring', 'An hour at a time, booked in writing'],
       image: { src: 'cat-tailoring', width: 1400, height: 1750, alt: 'A model in a white tailored suit against a grey wall, in black and white', position: '50% 30%', sizes: IMG_SIZES },
-      cta: { label: 'Write to book an hour', href: '/contact' },
+      cta: { label: 'Ask about the opening', href: '/contact' },
     },
   ],
   ar: [
@@ -65,25 +65,25 @@ const ROOMS: Record<'en' | 'ar', Room[]> = {
       id: 'riyadh',
       city: 'الرياض',
       kind: 'الفرع الرئيسي',
-      when: 'مفتوح كل يوم',
+      when: 'نفتح قريب',
       dark: false,
       address: ['طريق العروبة', 'العليا، الرياض 12244'],
       hours: [['من السبت للخميس', 'من 10 الصبح لين 10 الليل'], ['الجمعة', 'من 4 العصر لين 10 الليل']],
       room: ['التشكيلة كاملة', 'تعديلات على طول وأنت تنتظر', 'راك الأرشيف في آخر الصالة', 'تصليح بسعر التكلفة لأي قطعة من ميرت'],
       image: { src: 'campaign-studio', width: 1400, height: 1750, alt: 'مودل ببدلة فاتحة جالسة على كرسي حديد في استوديو أبيض، أبيض وأسود', position: '50% 30%', sizes: IMG_SIZES },
-      cta: { label: 'راسل الفرع الرئيسي', href: '/contact' },
+      cta: { label: 'اسألنا عن الافتتاح', href: '/contact' },
     },
     {
       id: 'jeddah',
       city: 'جدة',
       kind: 'المشغل',
-      when: 'بموعد',
+      when: 'نفتح قريب',
       dark: true,
       address: ['حي الروضة', 'جدة 23434'],
       hours: [['من الأحد للخميس', 'بموعد']],
       room: ['البروفات والمقاسات', 'تفصيل على مقاسك', 'ساعة وحدة كل مرة، تحجزها برسالة'],
       image: { src: 'cat-tailoring', width: 1400, height: 1750, alt: 'مودل ببدلة بيضاء مفصّلة قدام جدار رمادي، أبيض وأسود', position: '50% 30%', sizes: IMG_SIZES },
-      cta: { label: 'راسلنا واحجز ساعة', href: '/contact' },
+      cta: { label: 'اسألنا عن الافتتاح', href: '/contact' },
     },
   ],
 };
@@ -98,7 +98,7 @@ const ARROW = 'h-3.5 w-3.5 transition-transform duration-300 group-hover:transla
 /**
  * Two rooms, side by side and lit differently: the flagship in daylight, the
  * atelier in graphite. Each carries only what a visitor needs — where, when,
- * what happens inside — and both are plainly marked as invented.
+ * what happens inside — and both are marked as opening soon.
  */
 export default async function StoresPage() {
   const locale = await getLocale();
@@ -120,8 +120,8 @@ export default async function StoresPage() {
             data-reveal
           >
             {ar
-              ? 'كل شي ينباع هنا وفي صالتين. والثنتين من الخيال، زي باقي الموقع.'
-              : 'Everything is sold here and in two rooms. Both are invented, along with the rest of this site.'}
+              ? 'كل شي ينباع هنا، وقريب في صالتين لنا: الفرع الرئيسي في الرياض والمشغل في جدة.'
+              : 'Everything is sold here, and soon in two rooms of our own: the flagship in Riyadh and the atelier in Jeddah.'}
           </p>
         </div>
 
@@ -187,7 +187,7 @@ export default async function StoresPage() {
               </div>
 
               <div data-reveal>
-                <dt className={cn('label-sm', r.dark ? 'text-mute-ink' : 'text-mute')}>{ar ? 'ساعات العمل' : 'Hours'}</dt>
+                <dt className={cn('label-sm', r.dark ? 'text-mute-ink' : 'text-mute')}>{ar ? 'الدوام بعد الافتتاح' : 'Hours from opening'}</dt>
                 <dd className="mt-3 space-y-2">
                   {r.hours.map(([d, t]) => (
                     <p key={d} className="flex items-baseline justify-between gap-4 border-b border-current/15 pb-2 text-sm">

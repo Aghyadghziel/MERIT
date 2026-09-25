@@ -4,6 +4,7 @@ import Link from '@/i18n/link';
 import { useEffect, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useLocale, useT } from '@/i18n/client';
+import { BRAND } from '@/lib/brand';
 import { cn } from '@/lib/cn';
 
 type Key = 'name' | 'email' | 'message';
@@ -23,8 +24,8 @@ function characters(n: number, ar: boolean) {
 }
 
 /**
- * Validated properly, then told the truth: there is no inbox behind this form,
- * so it says so instead of pretending to send.
+ * Validated properly, then handed to the reader's own email app as a ready
+ * message to MERIT: the site has no mail server, so it never pretends to send.
  *
  * Four numbered lines, set large, with the subject as a row of choices rather
  * than a menu — one tap instead of three on a phone. On a failed submit the
@@ -58,18 +59,20 @@ export function ContactForm() {
       form.current?.querySelector<HTMLElement>(`#contact-${first}`)?.focus();
       return;
     }
+    const body = `${values.message.trim()}\n\n${values.name.trim()}\n${values.email.trim()}`;
+    window.location.href = `mailto:${BRAND.email}?subject=${encodeURIComponent(`${t(values.subject)} — MERIT`)}&body=${encodeURIComponent(body)}`;
     setSent(true);
   };
 
   if (sent) {
     return (
       <div className="border-t border-ink pt-8" role="status">
-        <p className="label-sm text-mute">{t('Not sent — concept site')}</p>
+        <p className="label-sm text-mute">{t('Almost sent')}</p>
         <p ref={done} tabIndex={-1} className="display-lg mt-6 outline-none">
           {t('Thank you, {name}.', { name: values.name.trim().split(/\s+/)[0] })}
         </p>
         <p className="body-lg mt-6 max-w-[46ch] text-ink-3">
-          {t('This is a concept site, so the message was not sent anywhere and no address was stored. On a real MERIT you would have an answer within a working day.')}
+          {t('Your email app should now be open with the message ready. Press send there. If it did not open, write to us at {email}.', { email: BRAND.email })}
         </p>
         <button
           type="button"
@@ -150,13 +153,13 @@ export function ContactForm() {
         <p className="max-w-[38ch] text-xs leading-relaxed text-mute sm:text-end">
           {ar ? (
             <>
-              موقع تجريبي: النموذج يتأكد من اللي تكتبه، وبعدين يقول لك بصراحة إن ما انرسل شي. شوف{' '}
+              النموذج يفتح تطبيق الإيميل عندك والرسالة جاهزة توصل لميرت. شوف{' '}
               <Link href="/privacy" className="link-rule text-ink">سياسة الخصوصية</Link>.
             </>
           ) : (
             <>
-              A concept site: this form checks what you write, then tells you plainly that nothing was
-              sent. See the <Link href="/privacy" className="link-rule text-ink">privacy policy</Link>.
+              This form opens your email app with the message ready to send to MERIT. See the{' '}
+              <Link href="/privacy" className="link-rule text-ink">privacy policy</Link>.
             </>
           )}
         </p>

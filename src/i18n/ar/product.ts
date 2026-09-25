@@ -132,8 +132,8 @@ export const product: Record<string, string> = {
   'Shown in {code} at an indicative rate. Prices are set in SAR.':
     'معروضة بالـ{code} بسعر صرف تقريبي. الأسعار الأصلية بالريال.',
   Checkout: 'كمّل الطلب',
-  'MERIT is a concept store. Checkout shows what would happen next; nothing is charged.':
-    'ميرت متجر تجريبي. صفحة الطلب توريك وش كان بيصير بعدها، وما ينخصم منك ولا ريال.',
+  'Online payment is coming soon. For now, checkout sends your order to us by email.':
+    'الدفع أونلاين قريب. للحين، صفحة الطلب ترسل لنا طلبك بالإيميل.',
   'Riyadh and Jeddah in two working days.': 'الرياض وجدة خلال يومين عمل.',
   'Returns within thirty days, unworn.': 'ترجّعها خلال 30 يوم، بشرط ما تنلبس.',
   'Packed in unbleached cotton, no plastic.': 'نغلّفها بقطن طبيعي، بدون بلاستيك.',
@@ -153,18 +153,18 @@ export const product: Record<string, string> = {
   'The Index': 'الفهرس',
   '{pieces} in your wishlist': '{pieces} في المفضّلة',
   'You may also like': 'يمكن يعجبك',
-  'Free Gulf delivery over {amount}. A concept store: checkout explains, nothing is charged.':
+  'Free Gulf delivery over {amount}. Online payment is coming soon; order by email for now.':
     // formatPrice already ends "ر.س." here, so the sentence closes on the amount.
-    'متجر تجريبي: صفحة الطلب تشرح بس، وما ينخصم شي. والتوصيل ببلاش في الخليج للطلبات فوق {amount}',
+    'الدفع أونلاين قريب، واطلب بالإيميل للحين. والتوصيل ببلاش في الخليج للطلبات فوق {amount}',
   'View bag': 'شوف السلة',
 
   // ─── Checkout: the page and its order slip ─────────────────────────────
-  'A concept site': 'موقع تجريبي',
-  'Nothing here can be bought.': 'ما تقدر تشتري شي من هنا.',
-  'MERIT is not a real company. There is no payment processor connected to this page, no order will be placed, and nothing you have put in the bag will be charged or shipped.':
-    'ميرت مو شركة حقيقية. ما فيه بوابة دفع مربوطة بهالصفحة، وما راح ينسجّل أي طلب، ولا راح ينخصم منك شي أو ينشحن لك شي من السلة.',
-  'Everything else works as it would in a real store: the bag, the wishlist, the currency, the stock on each size. This is the one place where pretending would be dishonest.':
-    'غير كذا كل شي يشتغل زي أي متجر حقيقي: السلة، والمفضّلة، والعملة، والمخزون في كل مقاس. بس هنا لو مثّلنا إن الدفع شغّال بيكون كذب، فما سوّيناه.',
+  'Payment coming soon': 'الدفع قريب',
+  'Order by message.': 'اطلب برسالة.',
+  'Online payment is coming soon. Until then, send us your order by email or on Instagram, and we will confirm the size, stock, price and delivery with you before anything is paid.':
+    'الدفع أونلاين قريب. لين ذاك الوقت أرسل لنا طلبك بالإيميل أو على إنستغرام، ونأكد معك المقاس والتوفر والسعر والتوصيل قبل ما تدفع أي شي.',
+  'The email button writes the order for you: every piece in your bag, with its colour, size and price.':
+    'زر الإيميل يكتب لك الطلب جاهز: كل قطعة في سلتك بلونها ومقاسها وسعرها.',
   'Back to the bag': 'ارجع للسلة',
   'Keep looking': 'كمّل تصفّح',
   'Order slip': 'فاتورة الطلب',
@@ -172,40 +172,47 @@ export const product: Record<string, string> = {
   'The bag is empty.': 'السلة فاضية.',
   'Not calculated': 'ما انحسب',
   'Order number': 'رقم الطلب',
-  'Not issued': 'ما طلع',
+  'After we confirm': 'بعد التأكيد',
   Payment: 'الدفع',
-  'Not connected': 'مو مربوط',
+  'Coming soon': 'قريب',
   Shipping: 'الشحن',
-  'Not scheduled': 'ما تحدد',
+  'Once confirmed': 'بعد ما نأكد',
   Charged: 'اللي انخصم',
   'Kept for reference only. Your bag has not been changed.': 'للعرض بس. سلتك ما تغيّرت.',
 
-  // ─── Account (not connected) ───────────────────────────────────────────
+  'Send the order by email': 'أرسل الطلب بالإيميل',
+  'Message us on Instagram': 'راسلنا على إنستغرام',
+  'Order from the MERIT site': 'طلب من موقع ميرت',
+  'Hello MERIT, I would like to order:': 'هلا ميرت، أبي أطلب:',
+  'My name:': 'اسمي:',
+  'My city:': 'مدينتي:',
+  'Please add me to the MERIT newsletter.': 'أبي أنضم لنشرة ميرت.',
+
+  // ─── Account (coming soon) ───────────────────────────────────────────
   "A navy jacket on a tailor's dummy, basted in white thread before its first fitting":
     'جاكيت كحلي على مانيكان الخيّاط، مسرّج بخيط أبيض قبل أول قياس',
   'Basted, before the first fitting': 'مسرّج، قبل أول قياس',
   Account: 'حسابي',
   'Sign in.': 'سجّل دخولك.',
-  'No accounts.': 'ما فيه حسابات.',
-  'Nothing was sent to': 'ما انرسل شي لـ',
-  'MERIT is a concept site with no sign-in and no order history. Your bag and wishlist are kept in this browser instead, and they survive a reload without an account.':
-    'ميرت موقع تجريبي، ما فيه تسجيل دخول ولا سجل طلبات. سلتك ومفضّلتك محفوظة في هالمتصفح بدالها، وتبقى حتى لو حدّثت الصفحة، بدون حساب.',
+  'Accounts soon.': 'الحسابات قريب.',
+  'Not yet: nothing was sent to': 'للحين ما انرسل شي لـ',
+  'Accounts and order history are coming soon. Until then, your bag and wishlist are kept in this browser, and they survive a reload without an account.':
+    'الحسابات وسجل الطلبات قريب. لين ذاك الوقت، سلتك ومفضّلتك محفوظة في هالمتصفح، وتبقى حتى لو حدّثت الصفحة، بدون حساب.',
   'Use another address': 'استخدم إيميل ثاني',
   'Email address': 'إيميلك',
   'Enter your email address.': 'اكتب إيميلك.',
   'That address is missing something. Check it and try again.': 'الإيميل ناقصه شي. تأكد منه وجرّب مرة ثانية.',
   Continue: 'كمّل',
-  'Accounts are not connected on this concept site: no code is sent, and nothing is stored beyond this browser.':
-    'الحسابات مو شغّالة في هالموقع التجريبي: ما نرسل أي رمز، وما نحفظ شي برا هالمتصفح.',
+  'Accounts are coming soon: no code is sent yet, and nothing is stored beyond this browser.':
+    'الحسابات قريب: للحين ما نرسل أي رمز، وما نحفظ شي برا هالمتصفح.',
   'On this device': 'على هالجهاز',
   'No account needed': 'ما تحتاج حساب',
   Saved: 'المحفوظة',
   Orders: 'طلباتي',
-  'Concept site': 'موقع تجريبي',
   'Shopping bag, {pieces}': 'السلة، {pieces}',
   'Wishlist, {pieces} saved': 'المفضّلة، فيها {pieces}',
-  'Orders: none, as nothing can be bought on this concept site.':
-    'الطلبات: ولا شي، لأنك ما تقدر تشتري من هالموقع التجريبي.',
+  'Orders: none yet, as online orders open soon.':
+    'الطلبات: ولا شي للحين، الطلب أونلاين قريب.',
 
   // ─── Wishlist ──────────────────────────────────────────────────────────
   Wishlist: 'المفضّلة',

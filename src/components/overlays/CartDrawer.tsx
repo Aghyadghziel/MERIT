@@ -166,7 +166,7 @@ export function CartDrawer() {
               <RollingAmount value={subtotal} className="text-[2rem] font-semibold leading-[0.9] tracking-[-0.045em]" />
             </div>
             <p className="mt-3 text-xs leading-relaxed text-mute-ink" data-panel-item>
-              {t('Free Gulf delivery over {amount}. A concept store: checkout explains, nothing is charged.', {
+              {t('Free Gulf delivery over {amount}. Online payment is coming soon; order by email for now.', {
                 amount: formatPrice(FREE_SHIPPING, code, locale),
               })}
             </p>

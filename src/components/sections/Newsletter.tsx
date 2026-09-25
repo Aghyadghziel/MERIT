@@ -4,6 +4,7 @@ import Link from '@/i18n/link';
 import { useEffect, useId, useRef, useState } from 'react';
 import { Icon } from '@/components/ui/Icon';
 import { useT } from '@/i18n/client';
+import { BRAND } from '@/lib/brand';
 
 type State = 'idle' | 'error' | 'done';
 
@@ -11,8 +12,8 @@ type State = 'idle' | 'error' | 'done';
  * No popup, no discount, no countdown. One line, set large, at the top of the
  * black footer: the address is typed at display size on a single rule, and the
  * arrow at the end of the rule sends it. It validates on submit, says what is
- * wrong in words, and — because this is a concept site — says plainly that
- * nothing is sent anywhere.
+ * wrong in words, then opens the reader's own email app with a ready request
+ * to join, because the site has no mailing list server of its own.
  */
 export function Newsletter() {
   const [email, setEmail] = useState('');
@@ -44,6 +45,7 @@ export function Newsletter() {
     if (!value) return fail(t('Enter an email address.'));
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value)) return fail(t('That does not look like an email address.'));
     setError('');
+    window.location.href = `mailto:${BRAND.email}?subject=${encodeURIComponent(t('Newsletter'))}&body=${encodeURIComponent(`${t('Please add me to the MERIT newsletter.')}\n${value}`)}`;
     setState('done');
   };
 
@@ -62,9 +64,9 @@ export function Newsletter() {
           <div ref={done} tabIndex={-1} className="flex items-start gap-4 border-b border-bone pb-5 outline-offset-8" role="status">
             <Icon name="check" className="mt-2 h-5 w-5 shrink-0" />
             <p className="display-sm">
-              {t('Noted —')} <span className="break-all text-mute-ink" dir="ltr">{email.trim()}</span>.
+              {t('Almost there —')} <span className="break-all text-mute-ink" dir="ltr">{email.trim()}</span>.
               <span className="mt-2 block text-sm leading-relaxed text-mute-ink">
-                {t('This is a concept site, so no address is stored and no letter will arrive.')}
+                {t('Your email app opened with the request ready. Press send there, and we will add you to the list.')}
               </span>
             </p>
           </div>
@@ -109,7 +111,7 @@ export function Newsletter() {
                 </>
               ) : (
                 <span>
-                  {t('Unsubscribe in one click. See the')}{' '}
+                  {t('Joining opens your own email app. See the')}{' '}
                   <Link href="/privacy" className="text-bone underline decoration-line-ink-2 underline-offset-4 transition-colors hover:decoration-bone">
                     {t('privacy policy')}
                   </Link>.

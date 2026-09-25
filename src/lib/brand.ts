@@ -22,7 +22,7 @@ export const BRAND = {
   legal: 'Merit Atelier',
   city: 'Riyadh',
   country: 'Saudi Arabia',
-  founded: 2019,
+  founded: 2026,
   line: 'Quiet structure, expressive movement.',
   domain: 'https://www.meritbrand.store',
   email: 'themeritbrand@gmail.com',

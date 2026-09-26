@@ -85,6 +85,8 @@ export const home: Record<string, string> = {
   '{colour} {name}, laid flat, front view.': '{name} ({colour})، ممدود، من قدّام.',
   '{colour} — click to read': '{colour} — اضغط وشوف تفاصيله',
   'Move over the jacket to see it in {colour}': 'مرّر الماوس على الجاكيت وشوفه باللون {colour}',
+  '{colour} — tap to read': '{colour} — اضغط وشوف تفاصيله',
+  'Tap the jacket to see it in {colour}': 'اضغط على الجاكيت وشوفه باللون {colour}',
 
   // ─── Campaign ──────────────────────────────────────────────────────────
   'A model in the black leather jacket, seated on a wooden box in a dark studio, pulls the jacket up onto her shoulder.':

@@ -144,13 +144,15 @@ const ROOM = { l: 0.085, r: 0.08 };
  * outer ones.
  *
  * Portrait (phones, tablets upright): the logotype becomes a masthead across
- * the top, the room starts just under it, and the jackets and the corner lines
- * move inside the room.
+ * the top, the room starts just under it, the corner lines move inside the
+ * room, and the jackets leave it: they stand in a row under the room, one
+ * either side, so nothing crowds him on a narrow screen (--fr-below is the
+ * room's floor, raised to make space for that row).
  *
  * The first screen ends on a whole line of the strip below the room: on a
- * wide screen the whole strip, one row; on a phone or an upright tablet its
- * first row only (what he is wearing and its price), with the sizes starting
- * just past the fold. Too short for that, the room takes the screen alone.
+ * wide screen the whole strip, one row. Upright, the stage takes the whole
+ * screen and ends on the row of jackets; the strip starts at the fold. Too
+ * short for that, the room takes the screen alone.
  *
  * Container units: the stage is a size container, so cqw/cqh are the stage.
  * The custom properties are resolved where they are used (its children).
@@ -164,10 +166,11 @@ const GEOMETRY = `
   height: calc(100svh - var(--strip-h));
   min-height: 20rem;
   --fr-gap: clamp(1rem, 3.2cqh, 2.25rem);
+  --fr-below: var(--fr-gap);
   --fr-room-top: calc(var(--nav-h) + clamp(0.5rem, 100cqh - 42rem, 3.5rem));
-  --fr-h: calc(100cqh - var(--fr-gap) - var(--fr-room-top));
+  --fr-h: calc(100cqh - var(--fr-below) - var(--fr-room-top));
   --fr-w: calc(var(--fr-h) * ${n4(FRAME.width / FRAME.height)});
-  --fr-top: calc(100cqh - var(--fr-gap) - var(--fr-h));
+  --fr-top: calc(100cqh - var(--fr-below) - var(--fr-h));
   --fr-logo-w: min(100cqw - 2 * var(--gutter), var(--page));
   --fr-logo-h: calc(var(--fr-logo-w) / ${LOGO.ratio});
   --fr-shift: 0px;
@@ -191,17 +194,23 @@ const GEOMETRY = `
 }
 @media (max-aspect-ratio: 1/1) {
   .fr-stage {
+    height: 100svh;
     --fr-logo-w: calc(100cqw - 2 * var(--gutter));
     --fr-logo-x: var(--gutter);
     --fr-logo-y: calc(var(--nav-h) + clamp(0.25rem, 1.4cqh, 1.25rem));
-    --fr-h: min(92cqh - var(--fr-gap), 100cqh - var(--fr-gap) - var(--fr-logo-y) - var(--fr-logo-h) - 0.75rem);
-    --fr-rail-w: min(0.27 * var(--fr-w), 12rem);
-    --fr-rail-l: calc(var(--fr-room-l) + 0.625rem);
-    --fr-rail-r: calc(var(--fr-room-r) + 0.625rem);
+    /* The row of jackets under the room: a flat shot beside its name. */
+    --fr-thumb: clamp(4rem, 17cqw, 7rem);
+    --fr-row-h: max(var(--fr-thumb), 5.25rem);
+    --fr-gap: clamp(0.875rem, 2.4cqh, 1.75rem);
+    --fr-below: calc(var(--fr-gap) + var(--fr-row-h) + clamp(0.75rem, 2cqh, 1.5rem));
+    --fr-h: min(92cqh - var(--fr-below), 100cqh - var(--fr-below) - var(--fr-logo-y) - var(--fr-logo-h) - 0.75rem);
+    --fr-rail-w: min(50cqw - var(--gutter) - 0.375rem, 22rem);
+    --fr-rail-l: var(--gutter);
+    --fr-rail-r: var(--gutter);
   }
 }
 .fr-logo { position: absolute; left: var(--fr-logo-x); top: var(--fr-logo-y); width: var(--fr-logo-w); }
-.fr-model { position: absolute; bottom: var(--fr-gap); left: calc(50% - var(--fr-w) / 2 + var(--fr-shift)); width: var(--fr-w); height: var(--fr-h); }
+.fr-model { position: absolute; bottom: var(--fr-below); left: calc(50% - var(--fr-w) / 2 + var(--fr-shift)); width: var(--fr-w); height: var(--fr-h); }
 /* The room: a window on the film's own studio, cut inside the columns the
    film covers in every frame (ROOM), with a thin black frame and the shadow of
    a box standing on the page. */
@@ -221,16 +230,53 @@ const GEOMETRY = `
   .fr-name { white-space: nowrap; }
 }
 @media (max-aspect-ratio: 1/1) {
-  /* Upright, the jackets stand in the lower corners beside his legs, where
-     the room is widest, and the corner lines move up under the masthead. */
-  .fr-rail { top: auto; bottom: calc(var(--fr-gap) + clamp(0.75rem, 3cqh, 1.75rem)); }
-  .fr-meta { bottom: auto; top: calc(var(--fr-top) + 0.875rem); }
-  .fr-meta[data-side="l"] { left: calc(var(--fr-room-l) + 0.875rem); }
-  .fr-meta[data-side="r"] { right: calc(var(--fr-room-r) + 0.875rem); }
-  /* Inside the room the jackets stand beside him: while he dresses they step
-     back, so his hands and the jacket in them are what you watch. */
+  /* Upright, the room is too narrow to hang anything beside him: the jackets
+     stand in a row under it, sand at the left edge of the page and leather at
+     the right, each a flat shot with its name on the inner side. The corner
+     lines move up under the masthead. */
+  .fr-rail {
+    top: auto; bottom: var(--fr-gap); height: var(--fr-row-h);
+    flex-direction: row; align-items: center; gap: 0.5rem;
+  }
+  .fr-rail[data-side="r"] { flex-direction: row-reverse; }
+  .fr-rail [data-fr="hang"] { width: var(--fr-thumb); flex: none; }
+  /* The tag fills the row's height with the action at its foot, so the two
+     actions line up even when one name takes a line more than the other. */
+  .fr-rail [data-fr="tag"] {
+    display: flex; flex-direction: column; align-self: stretch;
+    flex: 1; min-width: 0; margin-top: 0; padding: 0.125rem 0 0;
+  }
+  .fr-rail [data-fr="tag"] > :last-child { margin-top: auto; }
+  /* Each line lines up on its jacket's side (left on the left tile, right on
+     the right) in either text direction: an auto margin across the column
+     pushes it there. */
+  .fr-rail[data-side="l"] [data-fr="tag"] > * { margin-right: auto; }
+  .fr-rail[data-side="r"] [data-fr="tag"] > * { margin-left: auto; }
+  .fr-meta { --fr-inset: 0.875rem; bottom: auto; top: calc(var(--fr-top) + var(--fr-inset)); }
+  .fr-meta[data-side="l"] { left: calc(var(--fr-room-l) + var(--fr-inset)); }
+  .fr-meta[data-side="r"] { right: calc(var(--fr-room-r) + var(--fr-inset)); }
+  /* Each corner keeps to its own side of his head, which is about 18% of the
+     frame wide: on a short or narrow phone the room is narrow, so the lines
+     get smaller with it and wrap before they could reach him. */
+  .fr-meta {
+    max-width: calc(var(--fr-w) * 0.325 - var(--fr-inset) - 0.25rem);
+    font-size: clamp(0.5625rem, var(--fr-w) * 0.036, 0.6875rem);
+  }
+  .fr-meta .label { font-size: inherit; }
+  html:lang(ar) .fr-stage .fr-meta:not(:lang(en)),
+  html:lang(ar) .fr-stage .fr-meta .label:not(:lang(en)) { font-size: clamp(0.6875rem, var(--fr-w) * 0.042, 0.8125rem); }
+  /* While he dresses the jackets step back, so his hands and the jacket in
+     them are what you watch. */
   .fr-rail { transition: opacity 0.45s var(--ease-out); }
-  .fr-stage[aria-busy="true"] .fr-rail { opacity: 0.28; }
+  .fr-stage[aria-busy="true"] .fr-rail { opacity: 0.4; }
+}
+@media (max-aspect-ratio: 1/1) and (max-width: 369px) {
+  /* A small phone: the names need the whole tag, so the counter goes, and
+     the corner lines sit closer to the corners. */
+  .fr-rail .fr-extra { display: none; }
+  .fr-rail .fr-extra + .fr-name { margin-top: 0; }
+  .fr-meta { --fr-inset: 0.625rem; letter-spacing: 0.08em; }
+  .fr-meta .label { letter-spacing: inherit; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .fr-stage [data-fr="logo"] { clip-path: inset(100% 0% 0% 0%); }

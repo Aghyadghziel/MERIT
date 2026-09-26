@@ -61,12 +61,21 @@ const CHASE = [0.2, 0.12, 0.075];
  * points drawn onto it with leader lines, and under the pointer the other
  * jacket wipes through in the same place (see REVEAL). Switch between the two jackets; each
  * point is also a row in the index beside it, and the two stay in step.
+ *
+ * A finger cannot hover, so on touch the same things answer to taps: a tap on
+ * a number reads that point out under the jacket (the index is a scroll away
+ * on a phone), and a tap on the jacket opens the hole there as a lens that
+ * stays open. While it is open a drag moves it, a tap inside it switches to
+ * the jacket it shows, and a tap anywhere else closes it and gives the page
+ * its scrolling back.
  */
 export function JacketAnatomy({ products }: { products: Record<string, Product | undefined> }) {
   const t = useT();
   const ar = useLocale() === 'ar';
   const [j, setJ] = useState(0);
   const [on, setOn] = useState<number | null>(null);
+  const [lens, setLens] = useState(false);
+  const pointer = useRef('mouse');
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const seen = useRef(false);
@@ -143,8 +152,13 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
     el.style.setProperty('-webkit-mask-image', m);
     el.style.setProperty('mask-image', m);
     if (chip.current) {
-      chip.current.style.transform = `translate(${a.x + h.r * 0.72}px, ${a.y + h.r * 0.72}px)`;
-      chip.current.style.opacity = String(Math.min(1, h.r / (REVEAL * w * 0.6)));
+      // Below and to the right of the hole, or flipped to the other side
+      // where that would run off the stage (a phone's stage is the screen).
+      const label = chip.current, off = h.r * 0.72;
+      const x = a.x + off + label.offsetWidth > w ? a.x - off - label.offsetWidth : a.x + off;
+      const y = a.y + off + label.offsetHeight > st.clientHeight ? a.y - off - label.offsetHeight : a.y + off;
+      label.style.transform = `translate(${Math.max(0, x)}px, ${Math.max(0, y)}px)`;
+      label.style.opacity = String(Math.min(1, h.r / (REVEAL * w * 0.6)));
     }
     const moving = Math.abs(target - h.r) > 0.3 || h.pts.some((p) => Math.abs(p.x - h.x) + Math.abs(p.y - h.y) > 0.3);
     h.raf = moving ? requestAnimationFrame(tick) : 0;
@@ -161,6 +175,55 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
   };
   const leave = () => { hover.current.in = false; kick(); };
   const other = j === 0 ? 1 : 0;
+
+  // ─── touch: the hole as a lens that stays where it was tapped ──────────
+  const lensOpen = useRef(false);
+  const openLens = (x: number, y: number) => {
+    const h = hover.current;
+    h.x = x; h.y = y;
+    if (h.r < 1) h.pts.forEach((p) => { p.x = x; p.y = y; });
+    h.in = true;
+    lensOpen.current = true;
+    setLens(true);
+    kick();
+  };
+  const closeLens = useCallback(() => {
+    if (!lensOpen.current) return;
+    lensOpen.current = false;
+    setLens(false);
+    hover.current.in = false;
+    kick();
+  }, [kick]);
+  // A touch anywhere off the stage closes the lens, so the page scrolls again.
+  useEffect(() => {
+    if (!lens) return;
+    const away = (e: PointerEvent) => { if (!stage.current?.contains(e.target as Node)) closeLens(); };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [lens, closeLens]);
+
+  const tap = (e: React.MouseEvent<HTMLDivElement>) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    const h = hover.current;
+    if (pointer.current !== 'touch') { if (h.r > 8) switchTo(other); return; }
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - r.left, y = e.clientY - r.top;
+    if (!lensOpen.current) { openLens(x, y); return; }
+    const inside = Math.hypot(x - h.pts[0].x, y - h.pts[0].y) < Math.max(h.r, 24);
+    closeLens();
+    if (inside) switchTo(other);
+  };
+
+  // A point is read on hover with a mouse, on keyboard focus, and on a tap
+  // (which toggles it) with a finger, where hover would only flicker.
+  const read = (i: number) => ({
+    onPointerEnter: (e: React.PointerEvent) => { if (e.pointerType !== 'touch') setOn(i); },
+    onPointerLeave: (e: React.PointerEvent) => { if (e.pointerType !== 'touch') setOn(null); },
+    onPointerUp: (e: React.PointerEvent) => { if (e.pointerType === 'touch') setOn((o) => (o === i ? null : i)); },
+    onFocus: (e: React.FocusEvent<HTMLElement>) => { if (e.currentTarget.matches(':focus-visible')) setOn(i); },
+    onBlur: () => setOn(null),
+  });
+  const point = on !== null ? jacket.points[on] : undefined;
 
   // Keyboard: arrows walk the points while the index has focus.
   useEffect(() => { setOn(null); }, [j]);
@@ -183,7 +246,7 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
                 const p = products[jk.key];
                 const sel = i === j;
                 return (
-                  <button key={jk.key} type="button" role="tab" aria-selected={sel} onClick={() => switchTo(i)}
+                  <button key={jk.key} type="button" role="tab" aria-selected={sel} onClick={() => { closeLens(); switchTo(i); }}
                     className={cn('group flex items-center gap-3 border p-2 pe-3 text-start transition-colors duration-300',
                       sel ? 'border-ink bg-ink text-bone' : 'border-ink/30 hover:border-ink')}>
                     <span className={cn('relative block aspect-square w-14 shrink-0 transition-colors duration-300', sel ? 'bg-bone/10' : 'bg-bone/50')}>
@@ -202,8 +265,7 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
             <ol className="mt-10 border-t border-ink/25">
               {jacket.points.map((p, i) => (
                 <li key={`${jacket.key}-${p.name}`} className="border-b border-ink/25">
-                  <button type="button" onPointerEnter={() => setOn(i)} onPointerLeave={() => setOn(null)}
-                    onFocus={() => setOn(i)} onBlur={() => setOn(null)}
+                  <button type="button" {...read(i)}
                     aria-describedby={`an-note-${i}`}
                     className="group flex w-full items-baseline gap-4 py-3.5 text-start">
                     <span className={cn('label-sm nums w-6 transition-colors', on === i ? 'text-ink' : 'text-graphite/70')}>{String(i + 1).padStart(2, '0')}</span>
@@ -235,9 +297,12 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
 
         {/* The jacket, the points, the reveal */}
         <div className="order-first col-span-4 md:col-span-6 lg:order-none lg:col-span-7 lg:col-start-6">
-          <div ref={stage} data-cursor-hide dir="ltr" className="relative mx-auto aspect-square w-full max-w-[min(100%,82svh)] select-none touch-pan-y"
-            onPointerMove={move} onPointerLeave={leave}
-            onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; if (hover.current.r > 8) switchTo(other); }}>
+          <div ref={stage} data-cursor-hide dir="ltr"
+            className={cn('relative mx-auto aspect-square w-full max-w-[min(100%,82svh)] select-none', lens ? 'touch-none' : 'touch-pan-y')}
+            onPointerDown={(e) => { pointer.current = e.pointerType; }}
+            onPointerMove={(e) => { if (e.pointerType !== 'touch' || lensOpen.current) move(e); }}
+            onPointerLeave={(e) => { if (e.pointerType !== 'touch') leave(); }}
+            onClick={tap}>
             <div data-an="jacket" className="absolute inset-0">
               {/* eslint-disable-next-line @next/next/no-img-element -- flat shot, alpha */}
               <img src={jacket.img} alt={t('{colour} {name}, laid flat, front view.', { colour: t(jacket.label), name: product?.name ?? t('jacket') })} width={1254} height={1254}
@@ -267,7 +332,7 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
               return (
                 <div key={`${jacket.key}-p${i}`}>
                   <button type="button" data-an="dot" aria-label={`${String(i + 1).padStart(2, '0')}: ${t(p.name)}. ${t(p.note)}`}
-                    onPointerEnter={() => setOn(i)} onPointerLeave={() => setOn(null)} onFocus={() => setOn(i)} onBlur={() => setOn(null)}
+                    {...read(i)}
                     className="absolute z-10 -ml-[22px] -mt-[22px] flex h-11 w-11 items-center justify-center"
                     style={{ left: `${p.x}%`, top: `${p.y}%` }}>
                     <span className={cn('absolute h-full w-full rounded-full border border-ink/40 transition-transform duration-500', on === i ? 'scale-100' : 'scale-50 opacity-0')} />
@@ -285,11 +350,27 @@ export function JacketAnatomy({ products }: { products: Record<string, Product |
             })}
 
             {/* what the hole shows, riding beside it */}
-            <div ref={chip} aria-hidden dir={ar ? 'rtl' : undefined} className="label-sm pointer-events-none absolute left-0 top-0 z-20 whitespace-nowrap bg-ink px-2.5 py-1.5 text-bone opacity-0 max-md:hidden">
-              {t('{colour} — click to read', { colour: t(JACKETS[other].label) })}
+            <div ref={chip} aria-hidden dir={ar ? 'rtl' : undefined} className="label-sm pointer-events-none absolute left-0 top-0 z-20 whitespace-nowrap bg-ink px-2.5 py-1.5 text-bone opacity-0">
+              <span className="pointer-coarse:hidden">{t('{colour} — click to read', { colour: t(JACKETS[other].label) })}</span>
+              <span className="hidden pointer-coarse:inline">{t('{colour} — tap to read', { colour: t(JACKETS[other].label) })}</span>
             </div>
           </div>
-          <p className="label-sm mt-4 text-center text-graphite">{t('Move over the jacket to see it in {colour}', { colour: ar ? t(JACKETS[other].label) : JACKETS[other].label.toLowerCase() })}</p>
+          {/* Under lg the index is a scroll away, so the point being read is
+              written here, under the jacket; otherwise, the hint. */}
+          <div className="mt-4 min-h-[2.75rem] text-center lg:min-h-0">
+            {point ? (
+              <p aria-hidden dir={ar ? 'rtl' : undefined} className="lg:hidden">
+                <span className="block text-[0.95rem] font-semibold leading-tight tracking-[-0.02em]">
+                  <span className="label-sm nums me-2 text-graphite">{String((on ?? 0) + 1).padStart(2, '0')}</span>{t(point.name)}
+                </span>
+                <span className="mt-1 block text-sm text-graphite">{t(point.note)}</span>
+              </p>
+            ) : null}
+            <p className={cn('label-sm text-graphite', point && 'max-lg:hidden')}>
+              <span className="pointer-coarse:hidden">{t('Move over the jacket to see it in {colour}', { colour: ar ? t(JACKETS[other].label) : JACKETS[other].label.toLowerCase() })}</span>
+              <span className="hidden pointer-coarse:inline">{t('Tap the jacket to see it in {colour}', { colour: ar ? t(JACKETS[other].label) : JACKETS[other].label.toLowerCase() })}</span>
+            </p>
+          </div>
         </div>
       </div>
     </section>
